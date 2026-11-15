@@ -324,10 +324,14 @@ button.cback:active{transform:scale(.985)}
 .btn{background:linear-gradient(180deg,var(--navy),var(--navy2));box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.25)}
 .btn.gray{background:var(--card2);box-shadow:none}.btn.red{background:var(--red);box-shadow:none}.btn.tint{box-shadow:none}
 .iconbtn.accent,.quick button.on,.undobar button{background:linear-gradient(180deg,var(--navy),var(--navy2))}
+.iconbtn.undo-r{width:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.iconbtn.undo-r:disabled{opacity:.3}
 .revstrip{--c:#6bd8eb;--cr:64,200,224;position:relative;display:flex;gap:14px;align-items:flex-start;border-radius:18px;padding:14px 16px;margin:0 0 14px;background:radial-gradient(120% 140% at 0% 0%,rgba(var(--cr),.2),rgba(var(--cr),0) 60%),linear-gradient(160deg,#2f3036,#1c1d21 80%);border:1px solid rgba(var(--cr),.4);box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .revstrip .ec-med{position:static;flex:none;width:42px;height:42px;font-size:15px}
 .revstrip .ec-k{margin-bottom:2px}
 .rs-t{font-size:17px;font-weight:700}
+.revstrip .rsdie{width:56px;height:56px;margin:10px 0 6px}
+.revstrip .rswheel{width:64px;height:64px;font-size:19px;margin:10px 0 6px}
 .rs-x{font-size:14px;color:var(--sec);margin-top:2px;line-height:1.35}
 .rs-v{font-size:14.5px;margin-top:5px}.rs-v span{color:var(--sec);font-size:13px}
 .revstrip.c-wuerfe{--c:#4da3ff;--cr:77,163,255}.revstrip.c-wertung{--c:#ffb340;--cr:255,159,10}.revstrip.c-bonus{--c:#d18cf7;--cr:191,90,242}.revstrip.c-spezial{--c:#ff6b88;--cr:255,55,95}
@@ -738,11 +742,12 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  const reveal=after?{type:'reveal',ev:ev.id,cat:target,res,kb,phase:((after==='fate'&&!ctx.fdie)||after==='wheel')?'spin':'done',who:p.name}:null;
  if(ev){S.cstat=S.cstat||{};S.cstat[ev.id]=(S.cstat[ev.id]||0)+(entry.final-Math.max(0,r))}
  let ni,redoNow=false;
- if(S.redo&&S.redo.active&&__sc===S.redo.pi){const nx=S.redo.next;ni=(nx!=null&&nx>=0&&nx!==__sc&&S.players[nx]&&openCats(S.players[nx]).length)?nx:nextIndex();S.redo=null}
+ if(S.redo&&S.redo.active&&__sc===S.redo.pi&&S.redo.resume){ni=S.redo.resume.pi;redoNow='resume'}
+ else if(S.redo&&S.redo.active&&__sc===S.redo.pi){const nx=S.redo.next;ni=(nx!=null&&nx>=0&&nx!==__sc&&S.players[nx]&&openCats(S.players[nx]).length)?nx:nextIndex();S.redo=null}
  else if(S.redo&&!S.redo.active&&__sc!==S.redo.pi){S.redo.next=nextIndex();S.redo.active=true;ni=S.redo.pi;redoNow=true}
  else ni=nextIndex();
- if(ni<0){S.screen='end'}else{S.cur=ni;if(redoNow){S.turn=S.redo.turn}else{S.turn=freshTurn();if(S.hold&&S.hold.pi===ni)applyHold(S.hold)}}S.hold=null;save();
- const __bm=!S.online&&S.players[S.cur]&&S.players[S.cur].bot&&!redoNow;if(!after&&S.screen!=='end'&&!S.players[__sc].bot){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),mode:__bm?'bot':'std',pi:__sc,cat:target,ent:JSON.stringify(entry),exp:Date.now()+10000,text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'};setTimeout(syncUndo,ui.undo.exp-Date.now()+100)}else ui.undo=null
+ if(ni<0){S.screen='end'}else{S.cur=ni;if(redoNow==='resume'){S.turn=S.redo.resume.turn;S.redo=null}else if(redoNow){S.turn=S.redo.turn}else{S.turn=freshTurn();if(S.hold&&S.hold.pi===ni)applyHold(S.hold)}}S.hold=null;save();
+ const __bm=!S.online&&S.players[S.cur]&&S.players[S.cur].bot&&redoNow!==true&&redoNow!=='resume';if(!after&&S.screen!=='end'&&!S.players[__sc].bot){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),mode:__bm?'bot':'std',pi:__sc,cat:target,ent:JSON.stringify(entry),bi:S.cur,exp:Infinity,text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'}}else ui.undo=null
  if(S.fx&&S.fx.seq>(ui.seenFx||0)){ui.seenFx=S.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(S.fx.kind,null),120)}
  render();window.scrollTo({top:0,behavior:'smooth'});
  if(reveal){sfx.reveal();if(S.lastReveal)ui.seenReveal=S.lastReveal.seq;ui.modal=null;renderModal();if(kb)toast(kbLabel(kb)+' für '+p.name)}
@@ -862,13 +867,13 @@ function setupHTML(){
 function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='digital';const done=CATS.length-openCats(p).length;
  const vi=(ui.viewP!=null&&ui.viewP!==S.cur&&S.players[ui.viewP])?ui.viewP:S.cur,viewing=vi!==S.cur;
  const act=canAct(),mine=!S.online||act;
- let h='<div class="top"><div><div class="eyebrow">'+(S.online?'Online · '+esc(S.online.code)+' · ':'')+'Runde '+(done+1)+' von '+CATS.length+'</div><div class="large">'+esc(p.name)+'</div></div><div style="display:flex;gap:8px;margin-top:4px">'+(!dig&&!viewing&&mine?'<button class="iconbtn accent" data-a="opendice">Würfel</button>':'')+'<button class="iconbtn" data-a="board">Tabelle</button><button class="iconbtn" data-a="menu">•••</button></div></div>';
+ let h='<div class="top"><div><div class="eyebrow">'+(S.online?'Online · '+esc(S.online.code)+' · ':'')+'Runde '+(done+1)+' von '+CATS.length+'</div><div class="large">'+esc(p.name)+'</div></div><div style="display:flex;gap:8px;margin-top:4px">'+(!dig&&!viewing&&mine?'<button class="iconbtn accent" data-a="opendice">Würfel</button>':'')+'<button class="iconbtn" data-a="board">Tabelle</button><button class="iconbtn" data-a="menu">•••</button><button class="iconbtn undo-r" data-a="undo" aria-label="Rückgängig" '+(typeof undoOk==='function'&&undoOk()?'':'disabled')+'><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div></div>';
  if(S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran – du siehst live zu.</div>';
  else if(!S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran …</div>';
  if(t.bet)h+='<div class="betbar"><b>Wetteinsatz '+t.bet.stake+'</b> auf '+t.bet.cats.map(id=>CAT[id].name).join(', ')+'</div>';
  if(canPeek()){const v=peekViewer();h+='<div class="betbar" style="background:linear-gradient(rgba(255,179,64,.12),rgba(255,179,64,.12)),var(--bg);color:#ffcf80">Spionage aktiv: noch '+(v.peekUntil-(CATS.length-openCats(v).length))+' Runde(n) Gesamtpunkte sichtbar</div>'}
  if(S.players.length>1)h+='<div class="standings">'+S.players.map((q,i)=>'<button class="st nm '+(i===vi?'on':'')+'" data-a="viewp" data-i="'+i+'"><div class="p">'+(S.online?'<span class="dot'+(isOnlineUid(q.uid)?'':' off')+'"></span>':(i===S.cur?'<span class="dot"></span>':''))+esc(q.name)+(S.online&&q.uid===UID?' <span style="font-size:12px;opacity:.6">(du)</span>':'')+'</div><div class="n">'+(i===S.cur?'am Zug':'noch '+openCats(q).length+' offen')+(S.online&&!isOnlineUid(q.uid)?' · offline':'')+(canPeek()?' · <b style="color:#ffb340">'+totals(q).total+' P.</b>':'')+'</div></button>').join('')+'</div>';
- {const L=S.lastReveal;if(L&&L.n===S.logN&&EV[L.ev]){const ev=EV[L.ev],c=CAT[L.cat],r=L.res||{};h+='<div class="revstrip c-'+ev.g+'"><div class="ec-med">'+ev.gl+'</div><div class="grow"><div class="ec-k">'+esc(L.who)+' hat aufgedeckt</div><div class="rs-t">'+ev.title+'</div>'+(r.text?'<div class="rs-x">'+r.text+'</div>':'')+(c&&r.after!=null?'<div class="rs-v">'+c.name+' = <b class="'+(r.after<0?'negv':'')+'">'+fmtN(r.after)+'</b>'+(r.before!=null&&r.before!==r.after?' <span>(vorher '+fmtN(r.before)+')</span>':'')+'</div>':'')+(L.kb?'<div class="kbline" style="margin-top:4px">'+kbLabel(L.kb)+'</div>':'')+'</div></div>'}}
+ {const L=S.lastReveal;if(L&&L.n===S.logN&&EV[L.ev]){const ev=EV[L.ev],c=CAT[L.cat],r=L.res||{};let spin=false,anim='';if(ev.after==='fate'||ev.after==='wheel'){if(ui.revAnimSeq!==L.seq){ui.revAnimSeq=L.seq;ui.revAnimUntil=Date.now()+1500;setTimeout(()=>{if(S)render()},1550)}spin=Date.now()<ui.revAnimUntil;anim=ev.after==='fate'?'<div class="bigdie rsdie'+(spin?' spin':'')+'">'+pips(spin?r6():(r.die||1))+'</div>':'<div class="wheelbox rswheel'+(spin?' spin':'')+'">'+(spin?'?':(r.wheel==='x2'?'×2':'+'+r.wheel))+'</div>'}h+='<div class="revstrip c-'+ev.g+'"><div class="ec-med">'+ev.gl+'</div><div class="grow"><div class="ec-k">'+esc(L.who)+' hat aufgedeckt</div><div class="rs-t">'+ev.title+'</div>'+anim+(spin?'<div class="rs-x">…</div>':'')+(!spin&&r.text?'<div class="rs-x">'+r.text+'</div>':'')+(!spin&&c&&r.after!=null?'<div class="rs-v">'+c.name+' = <b class="'+(r.after<0?'negv':'')+'">'+fmtN(r.after)+'</b>'+(r.before!=null&&r.before!==r.after?' <span>(vorher '+fmtN(r.before)+')</span>':'')+'</div>':'')+(L.kb?'<div class="kbline" style="margin-top:4px">'+kbLabel(L.kb)+'</div>':'')+'</div></div>'}}
  if(S.potOn){const pv=S.pot||0;h+='<div class="potbar'+(ui.lastPot!=null&&ui.lastPot!==pv?' bump':'')+'"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">🔑</span>Im Tresor<b>'+pv+'</b></div>';ui.lastPot=pv}
  if(viewing){const q=S.players[vi];h+='<div class="viewbar"><div class="grow"><div class="evt">Wertung von '+esc(q.name)+'</div><div class="evx">Hier kannst du dir die Wertung ansehen. Tippe eine eingetragene Wertung an, um einen Tippfehler zu korrigieren.</div></div></div><button class="btn tint" data-a="viewp" data-i="'+S.cur+'" style="margin-bottom:20px">Zurück zu '+esc(p.name)+' (am Zug)</button>'+sheetHTML(q,null);return h}
  if(p.half)h+='<div class="banner">Pechsträhne: Deine Wertung zählt diesmal nur die Hälfte.</div>';
@@ -1067,7 +1072,8 @@ function homeHTML(){const list=Object.values(GAMES).map(g=>{try{return{g,s:JSON.
 ui.cerDone={};
 function endHold(){return !!(ui.fxPending||(ui.modal&&ui.modal.type==='reveal')||document.querySelector('.kfx'))}
 function rollShuffle(){document.querySelectorAll('.die.roll').forEach(el=>{const fin=el.innerHTML;let n=0;const iv=setInterval(()=>{if(!el.isConnected||++n>5){clearInterval(iv);if(el.isConnected)el.innerHTML=fin;return}el.innerHTML=pips(1+Math.floor(Math.random()*6))},70)})}
-function render(){const a=document.getElementById('app');a.innerHTML=S?((S.screen==='game'||(S.screen==='end'&&!ui.cerDone[S.id]&&endHold()&&S.turn))?gameHTML():endHTML()):(view==='setup'?setupHTML():view==='lobby'?lobbyHTML():view==='join'?joinHTML():view==='stats'?statsHTML():homeHTML());if(S&&S.screen==='end'&&!ui.cerDone[S.id]&&!endHold()){ui.cerDone[S.id]=true;ui.cerAnim=S.id;a.innerHTML=endHTML();setTimeout(ceremony,60);setTimeout(()=>{ui.cerAnim=null},6000)}if(typeof syncUndo==='function')syncUndo()}
+function spinFaces(){document.querySelectorAll('#app .bigdie.spin').forEach(el=>{if(el.__iv)return;el.__iv=setInterval(()=>{if(!el.isConnected){clearInterval(el.__iv);return}el.innerHTML=pips(1+Math.floor(Math.random()*6))},75)})}
+function render(){const a=document.getElementById('app');a.innerHTML=S?((S.screen==='game'||(S.screen==='end'&&!ui.cerDone[S.id]&&endHold()&&S.turn))?gameHTML():endHTML()):(view==='setup'?setupHTML():view==='lobby'?lobbyHTML():view==='join'?joinHTML():view==='stats'?statsHTML():homeHTML());if(S&&S.screen==='end'&&!ui.cerDone[S.id]&&!endHold()){ui.cerDone[S.id]=true;ui.cerAnim=S.id;a.innerHTML=endHTML();setTimeout(ceremony,60);setTimeout(()=>{ui.cerAnim=null},6000)}if(typeof syncUndo==='function')syncUndo();spinFaces()}
 
 function dieTap(i){const t=S.turn,ev=evOf(t);if(t.rolls===0)return;
  if(S.online&&ev&&ev.fremd&&t.rolls===1&&t.fremdDone&&!t.tool){toast('Diese Würfel hat '+S.players[t.decider].name+' für dich gewählt');return}
@@ -1200,7 +1206,7 @@ function kniffelFX(kind,who){ui.fxPending=false;if(document.querySelector('.kfx'
   cx.globalAlpha=1;requestAnimationFrame(frame)}
  requestAnimationFrame(frame);
  setTimeout(()=>{if(alive)ov.classList.add('hit')},900);setTimeout(()=>{if(alive){ov.classList.add('slam');sfx.boom();try{navigator.vibrate&&navigator.vibrate([60,30,40])}catch(e){}}},900+KIMPACT);
- const end=()=>{if(!alive)return;alive=false;ov.classList.add('out');document.body.classList.remove('kfxon');setTimeout(()=>{ov.remove();if(S&&S.screen==='end'&&!ui.cerDone[S.id])render();if(ui.undo){ui.undo.exp=Date.now()+10000;setTimeout(syncUndo,10100);syncUndo()}},600)};
+ const end=()=>{if(!alive)return;alive=false;ov.classList.add('out');document.body.classList.remove('kfxon');setTimeout(()=>{ov.remove();if(S&&S.screen==='end'&&!ui.cerDone[S.id])render();if(ui.undo)render()},600)};
  setTimeout(end,4200);ov.addEventListener('click',end)}
 function confetti(ms){const cv=document.createElement('canvas');cv.className='confetti';document.body.appendChild(cv);const dpr=Math.min(2,window.devicePixelRatio||1),W=cv.width=innerWidth*dpr,H=cv.height=innerHeight*dpr,cx=cv.getContext('2d');
  const cols=['#ffd76a','#ff9f0a','#ff453a','#30d158','#0a84ff','#bf5af2','#fff'];const P=Array.from({length:170},()=>({x:Math.random()*W,y:-Math.random()*H*0.6,vx:(Math.random()-.5)*3*dpr,vy:(2+Math.random()*4)*dpr,r:Math.random()*6.3,vr:(Math.random()-.5)*0.3,s:(5+Math.random()*7)*dpr,c:cols[Math.floor(Math.random()*cols.length)]}));const t0=performance.now();
@@ -1284,11 +1290,11 @@ setInterval(botTick,250);
 let undoEl=null;
 function filledCount(){return S.players.reduce((n,q)=>n+Object.keys(q.sc).length,0)}
 function undoOk(){const u=ui.undo;if(!u||!S||S.id!==u.id||S.screen!=='game'||Date.now()>u.exp)return false;const t=S.turn;
- if(u.mode==='bot'){const e=S.players[u.pi]&&S.players[u.pi].sc[u.cat];return !S.redo&&!!e&&JSON.stringify(e)===u.ent&&S.cur!==u.pi}
+ if(u.mode==='bot'){const e=S.players[u.pi]&&S.players[u.pi].sc[u.cat];return !S.redo&&!!e&&JSON.stringify(e)===u.ent&&S.cur===u.bi&&filledCount()===u.filled}
  if(S.cur!==u.ni||filledCount()!==u.filled||(t.rolls||0)>0||t.startPick&&t.fixed>=0)return false;
  const ev=t.ev&&EV[t.ev];if(ev&&ev.pick&&(!t.pending||t.pending==='sac2'))return false
  return true}
-function syncUndo(){if(undoOk()&&!ui.fxPending&&!document.querySelector('.kfx')){if(!undoEl)showUndo(ui.undo.text)}else{hideUndo();if(ui.undo&&(!S||Date.now()>ui.undo.exp||S.id!==ui.undo.id||(ui.undo.mode!=='bot'&&(S.cur!==ui.undo.ni||filledCount()!==ui.undo.filled))||(ui.undo.mode==='bot'&&!undoOk())))ui.undo=null}}
+function syncUndo(){hideUndo();if(ui.undo&&!undoOk())ui.undo=null}
 function showUndo(text){hideUndo();undoEl=document.createElement('div');undoEl.className='undobar';undoEl.innerHTML='<span>'+esc(text)+'</span><button data-a="undo">Rückgängig</button>';document.body.appendChild(undoEl);requestAnimationFrame(()=>requestAnimationFrame(()=>undoEl&&undoEl.classList.add('in')))}
 function hideUndo(){if(undoEl){const e=undoEl;undoEl=null;e.classList.remove('in');setTimeout(()=>e.remove(),300)}}
 function diffPatch(post,cur){const out=[];cur.players.forEach((q,i)=>{const o=post.players[i]||{};Object.keys(q).forEach(k=>{if(k==='sc'){Object.keys(q.sc).forEach(c=>{if(JSON.stringify(q.sc[c])!==JSON.stringify(o.sc&&o.sc[c]))out.push({i,k:'sc',c,v:q.sc[c]})});return}
@@ -1300,7 +1306,7 @@ function undoBot(u){const pre=JSON.parse(u.json),post=JSON.parse(u.post),q=S.pla
  ['pot','kc','kec'].forEach(k=>{const d=(post[k]||0)-(pre[k]||0);if(d)S[k]=Math.max(0,(S[k]||0)-d)});
  const le=post.log&&post.log[post.log.length-1];if(le&&S.log){const i=S.log.map(x=>JSON.stringify(x)).lastIndexOf(JSON.stringify(le));if(i>=0)S.log.splice(i,1)}
  if(post.lastReveal&&S.lastReveal&&S.lastReveal.seq===post.lastReveal.seq)S.lastReveal=null;
- S.redo={pi:u.pi,turn:pre.turn,active:false};ui.undo=null;save();render();sfx.undo();toast('Zurückgenommen – '+q.name+' ist nach '+S.players[S.cur].name+' nochmal dran')}
+ const bi=S.cur;S.redo={pi:u.pi,active:true,resume:{pi:bi,turn:S.turn}};S.cur=u.pi;S.turn=pre.turn;ui.botHeld=false;botWait(800);ui.undo=null;ui.modal=null;renderModal();save();render();sfx.undo();toast('Zurückgenommen – '+S.players[bi].name+' wartet, bis du neu eingetragen hast')}
 function doUndo(){const u=ui.undo;hideUndo();if(!undoOk()){toast('Rückgängig ist nicht mehr möglich');ui.undo=null;return}if(u.mode==='bot'){undoBot(u);return}
  const cur=S,post=JSON.parse(u.post),pre=JSON.parse(u.json);let hold=null;
  if(cur.turn&&cur.turn.drawn&&(cur.turn.ev||cur.turn.none))hold={pi:u.ni,turn:cur.turn,patch:diffPatch(post,cur),potD:(cur.pot||0)-(post.pot||0)};
