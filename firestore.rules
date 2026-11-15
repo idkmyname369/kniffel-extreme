@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Online-Spiele: jeder mit dem 6-stelligen Code darf lesen und mitspielen
+    match /mp/{code} {
+      allow read, write: if code.size() == 6;
+    }
+    // alles andere ist gesperrt
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
