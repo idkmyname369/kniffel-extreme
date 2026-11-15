@@ -65,7 +65,7 @@ input::placeholder{color:var(--ter)}
 .btnrow{display:flex;gap:10px}
 .sticky{position:sticky;bottom:0;padding:14px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(to top,rgba(29,30,33,.94) 60%,rgba(29,30,33,0));margin-top:-10px}
 /* game */
-.top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
 .iconbtn{height:34px;padding:0 13px;border-radius:17px;background:var(--card2);font-size:14px;font-weight:600;color:var(--text)}
 .standings{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 18px;padding:0 16px;scrollbar-width:none}
 .standings::-webkit-scrollbar{display:none}
@@ -348,7 +348,7 @@ button.cback:active{transform:scale(.985)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 4px 2px;font-size:13px;color:var(--sec)}.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .mk{width:26px;height:26px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;margin-right:12px}.mk.g{background:#30d158}.mk.b{background:#ff453a}
 .posv{color:#5be37f}
-.dicebox{position:sticky;top:calc(env(safe-area-inset-top) + 6px);z-index:6;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.dicebox{position:sticky;bottom:calc(env(safe-area-inset-bottom) + 8px);z-index:6;margin-top:14px;margin-bottom:0!important;box-shadow:0 -6px 26px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.05)}
 .st{box-shadow:inset 0 -3px 0 var(--pc,transparent)}
 .swatch{flex:none;width:28px;height:28px;border-radius:50%;margin-left:10px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25),0 2px 6px rgba(0,0,0,.4);display:inline-block}
 .palette{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 10px}
@@ -364,6 +364,8 @@ button.cback:active{transform:scale(.985)}
 .exbox{background:var(--card2);border-radius:14px;padding:12px 14px;margin:0 0 14px;font-size:15px;line-height:1.45}
 .evcard[data-a]{cursor:pointer}
 .large,.pnm,.cer .large{font-family:Lora,Georgia,serif;font-weight:700;letter-spacing:0}
+#app.pswap{animation:pswap .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes pswap{0%{opacity:0;transform:translateX(34px)}100%{opacity:1;transform:none}}
 .confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:90}
 .cer{margin-bottom:22px}
 .podium{display:flex;justify-content:center;align-items:flex-end;gap:10px;height:300px;margin-top:10px}
@@ -919,7 +921,7 @@ function setupHTML(){
 function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='digital';const done=CATS.length-openCats(p).length;
  const vi=(ui.viewP!=null&&ui.viewP!==S.cur&&S.players[ui.viewP])?ui.viewP:S.cur,viewing=vi!==S.cur;
  const act=canAct(),mine=!S.online||act;
- let h='<div class="top"><div><div class="eyebrow">'+(S.online?'Online · '+esc(S.online.code)+' · ':'')+'Runde '+(done+1)+' von '+CATS.length+'</div><div class="large">'+esc(p.name)+'</div></div><div style="display:flex;gap:8px;margin-top:4px">'+(!dig&&!viewing&&mine?'<button class="iconbtn accent" data-a="opendice">Würfel</button>':'')+'<button class="iconbtn" data-a="board">Tabelle</button><button class="iconbtn" data-a="menu">•••</button><button class="iconbtn undo-r" data-a="undo" aria-label="Rückgängig" '+(typeof undoOk==='function'&&undoOk()?'':'disabled')+'><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div></div>';
+ let h='<div class="top"><div><div class="eyebrow">'+(S.online?'Online · '+esc(S.online.code)+' · ':'')+'Runde '+(done+1)+' von '+CATS.length+'</div></div><div style="display:flex;gap:8px;margin-top:4px">'+(!dig&&!viewing&&mine?'<button class="iconbtn accent" data-a="opendice">Würfel</button>':'')+'<button class="iconbtn" data-a="board">Tabelle</button><button class="iconbtn" data-a="menu">•••</button><button class="iconbtn undo-r" data-a="undo" aria-label="Rückgängig" '+(typeof undoOk==='function'&&undoOk()?'':'disabled')+'><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div></div>';
  if(S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran – du siehst live zu.</div>';
  else if(!S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran …</div>';
  if(t.bet)h+='<div class="betbar"><b>Wetteinsatz '+t.bet.stake+'</b> auf '+t.bet.cats.map(id=>CAT[id].name).join(', ')+'</div>';
@@ -944,6 +946,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
  const lock=!t.drawn||t.pending||(!S.online&&!act);
  if(t.drawn&&!t.pending&&t.lock&&!p.sc[t.lock]){const c=CAT[t.lock];let st='';if(dig&&t.rolls>0){const raw=c.calc(dOf(t)),f=baseFinal(p,t,raw,t.rolls,c.id).f;st=raw>0?'<div class="lk-st ok">✓ Geschafft – '+fmtN(f)+' Punkte</div>':'<div class="lk-st no">Noch nicht geschafft</div>'}
   h+='<div class="lockbox"><div class="lk-k">Diese Runde musst du werfen</div><div class="lk-t">'+c.name+'</div><div class="lk-h">'+c.hint+'</div>'+st+'</div>'}
+ let diceH='';const __h0=h.length;
  if(dig){const left=t.max-t.rolls;
   h+='<div class="dicebox '+(lock?'locked':'')+'">';
   if(t.startPick){h+='<div class="hint" style="margin:0 0 12px;color:var(--text)">Startvorteil: Welche Zahl soll dein fester Würfel zeigen?</div><div class="dice" style="margin-bottom:6px">'+[1,2,3,4,5,6].map(v=>'<button class="die" data-a="startv" data-v="'+v+'">'+pips(v)+'</button>').join('')+'</div></div>'}
@@ -964,10 +967,11 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
    else if(S.online&&ev&&ev.fremd&&t.rolls===1&&!t.fremdDone)hint=act?'Du bestimmst: Tippe die Würfel an, die '+esc(p.name)+' halten muss, dann „Fertig“.':esc(actorName())+' wählt gerade, welche Würfel du hältst.';
    else if(ev&&ev.fremd&&t.rolls===1&&!S.online)hint='Gib das Handy an '+(t.decider!=null?esc(S.players[t.decider].name):'einen Mitspieler')+': Jetzt wird bestimmt, welche Würfel du hältst.';
    else if(ev&&ev.nohold&&t.rolls>0&&left>0)hint='Kein Halten – es werden immer alle Würfel neu geworfen.';
-   else if(t.rolls>0)hint=left>0?'Würfel antippen zum Halten · Kategorie unten wählen':'Wähle jetzt eine Kategorie';
-   h+='<div class="hint">'+hint+'</div></div>'}h+=dd}
+   else if(t.rolls>0)hint=left>0?'Würfel antippen zum Halten · Kategorie oben wählen':'Wähle jetzt eine Kategorie';
+   h+='<div class="hint">'+hint+'</div></div>'}diceH=h.slice(__h0);h=h.slice(0,__h0);h+=dd}
  h+=sheetHTML(p,t);
  if(S.log&&S.log.length){h+='<div class="block"><div class="gtitle">Letzte Aktivitäten</div><div class="group">'+S.log.slice(-3).reverse().map(l=>'<div class="cell"><div class="grow"><div class="ct" style="font-size:15px">'+esc(l.who)+' · '+esc(l.cat)+' = <b class="'+(l.val<0?'negv':'')+'">'+fmtN(l.val)+'</b>'+(l.kb?' <span class="tag kbt">+'+l.kb+'</span>':'')+'</div><div class="cs">'+(l.ev?esc(l.ev):'Keine Karte')+(l.bet?' · Einsatz '+l.bet:'')+(l.res?' · '+esc(l.res):'')+'</div></div></div>').join('')+'</div></div>'}
+ h+=diceH;
  return h}
 
 function sheetHTML(p,t){const dig=S.mode==='digital';let h='';
@@ -1156,7 +1160,7 @@ ui.cerDone={};
 function endHold(){return !!(ui.fxPending||(ui.modal&&ui.modal.type==='reveal')||document.querySelector('.kfx'))}
 function rollShuffle(){document.querySelectorAll('.die.roll').forEach(el=>{const fin=el.innerHTML;let n=0;const iv=setInterval(()=>{if(!el.isConnected||++n>5){clearInterval(iv);if(el.isConnected)el.innerHTML=fin;return}el.innerHTML=pips(1+Math.floor(Math.random()*6))},70)})}
 function spinFaces(){document.querySelectorAll('#app .bigdie.spin').forEach(el=>{if(el.__iv)return;el.__iv=setInterval(()=>{if(!el.isConnected){clearInterval(el.__iv);return}el.innerHTML=pips(1+Math.floor(Math.random()*6))},75)})}
-function render(){const a=document.getElementById('app');a.innerHTML=S?((S.screen==='game'||(S.screen==='end'&&!ui.cerDone[S.id]&&endHold()&&S.turn))?gameHTML():endHTML()):(view==='setup'?setupHTML():view==='lobby'?lobbyHTML():view==='join'?joinHTML():view==='stats'?statsHTML():homeHTML());if(S&&S.screen==='end'&&!ui.cerDone[S.id]&&!endHold()){ui.cerDone[S.id]=true;ui.cerAnim=S.id;a.innerHTML=endHTML();setTimeout(ceremony,60);setTimeout(()=>{ui.cerAnim=null},6000)}if(typeof syncUndo==='function')syncUndo();spinFaces()}
+function render(){const a=document.getElementById('app');if(S&&S.screen==='game'){const k=S.id+'|'+S.cur;if(ui.curKey&&ui.curKey!==k){a.classList.remove('pswap');void a.offsetWidth;a.classList.add('pswap');clearTimeout(ui.pswT);ui.pswT=setTimeout(()=>a.classList.remove('pswap'),600)}ui.curKey=k}else ui.curKey=null;a.innerHTML=S?((S.screen==='game'||(S.screen==='end'&&!ui.cerDone[S.id]&&endHold()&&S.turn))?gameHTML():endHTML()):(view==='setup'?setupHTML():view==='lobby'?lobbyHTML():view==='join'?joinHTML():view==='stats'?statsHTML():homeHTML());if(S&&S.screen==='end'&&!ui.cerDone[S.id]&&!endHold()){ui.cerDone[S.id]=true;ui.cerAnim=S.id;a.innerHTML=endHTML();setTimeout(ceremony,60);setTimeout(()=>{ui.cerAnim=null},6000)}if(typeof syncUndo==='function')syncUndo();spinFaces()}
 
 function dieTap(i){const t=S.turn,ev=evOf(t);if(t.rolls===0)return;
  if(S.online&&ev&&ev.fremd&&t.rolls===1&&t.fremdDone&&!t.tool){toast('Diese Würfel hat '+S.players[t.decider].name+' für dich gewählt');return}
