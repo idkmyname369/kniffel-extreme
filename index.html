@@ -1035,12 +1035,12 @@ function modalHTML(){const m=ui.modal;
   (canRetry&&!m.raw?'<button class="btn tint" data-a="retry" style="margin-bottom:10px">Rettungsring: Zug wiederholen</button>':'')+
   '<div class="btnrow"><button class="btn gray" data-a="'+(m.fromDice?'opendice':'close')+'">'+(m.fromDice?'Zurück':'Abbrechen')+'</button><button class="btn '+(m.raw?'':'red')+'" data-a="ok">'+(m.raw?'Eintragen':'Streichen')+'</button></div>'}
  if(m.type==='input'){let q=[];if(c.face)q=[0,1,2,3,4,5,6].map(k=>k*c.face);else if(c.fixed)q=[0,c.fixed];
-  const noK=['ks','gs','hw','fh'].includes(m.id);const kbBox=kniffelEligible(p,m.id)&&!c.face&&m.id!=='ke'&&m.id!=='dpa'&&m.id!=='zd'&&m.id!=='gfh'&&!noK,keBox=keEligible(p,m.id)&&!c.face&&!noK;
+  const noK=['ks','gs','hw','fh'].includes(m.id);const kbBox=!c.face&&m.id!=='kn'&&m.id!=='ke'&&m.id!=='dpa'&&m.id!=='zd'&&m.id!=='gfh'&&!noK,keBox=!c.face&&m.id!=='ke'&&!noK;
   return'<div class="grab"></div><h2>'+c.name+'</h2><p class="muted">'+c.hint+'</p>'+(q.length?'<div class="quick">'+q.map(v=>'<button data-a="qv" data-v="'+v+'" class="'+(String(v)===m.val?'on':'')+'">'+(v===0?'Streichen':v)+'</button>').join('')+'</div>':'')+
   '<div class="field"><input type="number" inputmode="numeric" id="numin" placeholder="Gewürfelte Punkte" value="'+m.val+'"></div>'+
   (ev&&ev.cost?'<div class="gtitle" style="padding:6px 2px">Wie oft hast du gewürfelt?</div><div class="seg" style="margin:0 0 10px">'+Array.from({length:t.max},(_,i)=>i+1).map(n=>'<button class="'+(m.rolls===n?'on':'')+'" data-a="mrolls" data-v="'+n+'">'+n+'×</button>').join('')+'</div>':'')+
-  (kbBox?'<button class="cell chk" data-a="mkb"><div class="grow">Das war ein weiterer Kniffel (+50)</div>'+sw(m.kb)+'</button>':'')+
-  (keBox?'<button class="cell chk" data-a="mke"><div class="grow">Das war ein weiterer Kniffel Extreme (+75)</div>'+sw(m.ke)+'</button>':'')+
+  (kbBox?'<button class="cell chk" data-a="mkb"><div class="grow">'+(kniffelEligible(p,m.id)?'Das war ein weiterer Kniffel (+50)':'Das war ein Kniffel (5 gleiche)')+'</div>'+sw(m.kb)+'</button>':'')+
+  (keBox?'<button class="cell chk" data-a="mke"><div class="grow">'+(keEligible(p,m.id)?'Das war ein weiterer Kniffel Extreme (+75)':'Das war ein Kniffel Extreme (6 gleiche)')+'</div>'+sw(m.ke)+'</button>':'')+
   '<div class="err" id="err"></div><div class="calc" id="prev"></div>'+
   (canRetry?'<button class="btn tint" data-a="retry" style="margin-bottom:10px">Statt Streichen: Zug wiederholen</button>':'')+
   '<div class="btnrow"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn" data-a="okin">Eintragen</button></div>'}
@@ -1157,8 +1157,8 @@ document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.bg){
   case'needmix':{const er=validate(CAT[m.ctx.mixId],m.val);if(er){document.getElementById('err').textContent=er;return}m.ctx.mixVal=+m.val;commit(m.id,m.raw,m.ctx);break}
   case'qv':{m.val=b.dataset.v;document.getElementById('numin').value=b.dataset.v;document.querySelectorAll('.quick button').forEach(x=>x.classList.toggle('on',x===b));document.getElementById('err').textContent='';updatePreview();break}
   case'mrolls':m.rolls=+b.dataset.v;renderModal();break;
-  case'mkb':m.kb=!m.kb;renderModal();break;
-  case'mke':m.ke=!m.ke;renderModal();break;
+  case'mkb':m.kb=!m.kb;if(m.kb)m.ke=false;renderModal();break;
+  case'mke':m.ke=!m.ke;if(m.ke)m.kb=false;renderModal();break;
   case'okin':{const er=validate(CAT[m.id],m.val);if(er){document.getElementById('err').textContent=er;return}commit(m.id,+m.val,{rolls:m.rolls,kb:m.kb,ke:m.ke});break}
   case'board':ui.modal={type:'board'};renderModal();break;
   case'menu':ui.modal={type:'menu'};renderModal();break;
