@@ -8,8 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kniffel Royale">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" href="favicon.png?v=2">
 <title>Kniffel Royale</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bungee&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ button.cback:active{transform:scale(.985)}
 .ec-k{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--c);margin-bottom:4px}
 .evcard .evt{font-size:20px;font-weight:700;letter-spacing:-.01em;padding-right:26px}
 .evcard .evx{font-size:14.5px;margin-top:4px}
-.c-wuerfe{--c:#4da3ff;--cr:77,163,255}.c-wertung{--c:#ffb340;--cr:255,159,10}.c-bonus{--c:#d18cf7;--cr:191,90,242}.c-spezial{--c:#ff6b88;--cr:255,55,95}.c-verdeckt{--c:#6bd8eb;--cr:64,200,224}.c-pflicht{--c:#5be37f;--cr:48,209,88}.c-topf{--c:#ffd257;--cr:255,204,64}.c-topf .ec-med{font-size:26px}
+.c-wuerfe{--c:#4da3ff;--cr:77,163,255}.c-wertung{--c:#ffb340;--cr:255,159,10}.c-bonus{--c:#d18cf7;--cr:191,90,242}.c-spezial{--c:#ff6b88;--cr:255,55,95}.c-verdeckt{--c:#6bd8eb;--cr:64,200,224}.c-pflicht{--c:#5be37f;--cr:48,209,88}.c-topf{--c:#ffd257;--cr:255,204,64}.c-topf .ec-med{font-size:22px}
 .flipwrap{perspective:1100px;margin-bottom:16px}
 .flipin{position:relative;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;animation:cflipx .85s cubic-bezier(.35,.1,.25,1) both}
 .flipin>.evcard{margin-bottom:0;-webkit-backface-visibility:hidden;backface-visibility:hidden}
@@ -379,7 +379,7 @@ const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
 const BONUS_T=73,BONUS_P=45;
 
 /* ---------- Ereigniskarten ---------- */
-const GROUPS=[['wuerfe','Würfe & Würfel'],['wertung','Wertung'],['bonus','Bonus & Konto oben'],['spezial','Gegner & Spezial'],['pflicht','Pflichtwurf'],['verdeckt','Verdeckt – Aufdecken nach der Wertung'],['topf','Topf']];
+const GROUPS=[['wuerfe','Würfe & Würfel'],['wertung','Wertung'],['bonus','Bonus & Konto oben'],['spezial','Gegner & Spezial'],['pflicht','Pflichtwurf'],['verdeckt','Verdeckt – Aufdecken nach der Wertung'],['topf','Tresor']];
 const EVENTS=[
  {id:'extra',g:'wuerfe',gl:'+1',title:'Extra-Wurf',text:'Du hast diese Runde 4 Würfe.',rolls:4},
  {id:'extra2',g:'wuerfe',gl:'+2',title:'Zwei Extra-Würfe',text:'Du hast diese Runde 5 Würfe.',rolls:5},
@@ -448,7 +448,7 @@ const EVENTS=[
  {id:'mix',g:'verdeckt',gl:'⤨',title:'Verwechslung',text:'Deine Wertung landet in einer zufälligen anderen freien Kategorie – ist sie dort nicht gültig, als 0.',after:'mix'},
  {id:'wheel',g:'verdeckt',gl:'◎',title:'Glücksrad',text:'Das Rad dreht sich: +10, +25, +50, +100 oder ×2 auf deine Wertung – kein Minus möglich.',after:'wheel'},
  {id:'slots',g:'verdeckt',gl:'777',title:'Jackpot-Maschine',text:'Zieh den Hebel: Drei Walzen mit +25, ×2 oder ×3 bleiben nacheinander stehen. Gerechnet wird von links nach rechts – mindestens +75, höchstens ×27.',after:'slots'},
- {id:'topf',g:'topf',gl:'¤',title:'Der Topf',text:'Du bekommst alle Punkte, die gerade im Topf liegen.',now:'topf'},
+ {id:'topf',g:'topf',gl:'🔑',title:'Tresorschlüssel',text:'Du hast den Schlüssel zum Tresor gefunden – alle Punkte, die gerade darin liegen, gehören dir.',now:'topf'},
  {id:'nexthalf',g:'verdeckt',gl:'½→',title:'Pechsträhne',text:'Deine nächste Wertung zählt nur die Hälfte.',after:'nexthalf'},
 ];
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
@@ -456,7 +456,7 @@ const PIP={1:[4],2:[2,6],3:[2,4,6],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const LSOLD='kniffel-extreme-v3',LSSEL='kniffel-extreme-sel-v3',LSG='kniffel-extreme-games-v1';
 
 let S=null;
-let setup={n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
+let setup={bots:0,n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
 let ui={modal:null,flip:false,rolling:false,rollIdx:-1};
 let view='home';
 
@@ -507,7 +507,7 @@ const addTag=(e,t)=>{e.tag=(e.tag?e.tag+' ':'')+t};
 const solo=()=>S.players.length<2;
 const activeIds=()=>S.events.filter(id=>EV[id]&&(!EV[id].multi||!solo()));
 function freshTurn(){return{drawn:!activeIds().length,ev:null,note:'',pending:null,lock:null,blocked:null,dice:[1,1,1,1,1,1],held:[false,false,false,false,false,false],fixed:-1,startPick:false,rolls:0,max:3,jokerN:0,jokerDice:[],jokerUsed:false,tool:null,mirUsed:false,rerollUsed:false,retryUsed:false}}
-function newGame(names,mode,events){S={id:newId(),created:Date.now(),screen:'game',mode,events,players:names.map(n=>({name:n,sc:{},bt:BONUS_T,bf:1,ua:0,kb:0,adj:0,half:false,got:[],pf:0})),cur:0};S.potOn=(events||[]).includes('topf');S.pot=0;S.turn=freshTurn();save();render()}
+function newGame(names,mode,events,botFlags){S={id:newId(),created:Date.now(),screen:'game',mode,events,players:names.map(n=>({name:n,sc:{},bt:BONUS_T,bf:1,ua:0,kb:0,adj:0,half:false,got:[],pf:0})),cur:0};S.potOn=(events||[]).includes('topf');S.pot=0;if(botFlags)S.players.forEach((q,i)=>{if(botFlags[i])q.bot=true});S.turn=freshTurn();save();render()}
 const evOf=t=>t&&t.ev?EV[t.ev]:null;
 const dOf=t=>t.dice;
 const openCats=p=>CATS.filter(c=>!p.sc[c.id]);
@@ -608,7 +608,7 @@ function drawEvent(){const t=S.turn,p=S.players[S.cur];const __ps=S.potOn?potSna
  else if(ev.now==='dblup'){CATS.filter(c=>c.sec==='oben').forEach(c=>{const e=p.sc[c.id];if(e&&e.final){e.final*=2;addTag(e,'×2')}});p.ua=(p.ua||0)*2;t.note='Deine bonusrelevanten Punkte wurden verdoppelt: Bonus-Konto jetzt '+fmtN(totals(p).upAcc)+' / 100. Dein Wurf zählt diesen Zug ×4.'}
  else if(ev.now==='peek'){p.peekUntil=(CATS.length-openCats(p).length)+3;t.note='Du siehst jetzt 3 Runden lang die Gesamtpunkte aller Spieler. Dein Wurf zählt diesen Zug ×3.'}
  else if(ev.now==='krain'){const n=kniffelCount();const g=n.k*50+n.e*75;p.adj=(p.adj||0)+g;t.note=(n.k||n.e)?'Bisher gewürfelt: '+n.k+'× Kniffel und '+n.e+'× Kniffel Extreme – du bekommst +'+g+' Punkte. Jetzt normal würfeln.':'Bisher wurde noch kein Kniffel gewürfelt – leider 0 Punkte. Normal weiterspielen.'}
- else if(ev.now==='topf'){const g=S.pot||0;p.adj=(p.adj||0)+g;S.pot=0;t.note='Du bekommst '+g+' Punkte aus dem Topf. Jetzt normal würfeln.'}
+ else if(ev.now==='topf'){const g=S.pot||0;p.adj=(p.adj||0)+g;S.pot=0;t.note=g+' Punkte aus dem Tresor gehören jetzt dir. Jetzt normal würfeln.'}
  else if(ev.now==='crown'){const best=CATS.map(c=>({c,e:p.sc[c.id]})).filter(x=>x.e&&x.e.final>0).sort((a,b)=>b.e.final-a.e.final)[0];if(!best)t.note='Du hast noch keine Punkte – die Karte verfällt. Normal weiterspielen.';else{const o=best.e.final;best.e.final=o*3;addTag(best.e,'×3');t.note='Krönung: „'+best.c.name+'“ '+o+' → '+best.e.final+'. Jetzt normal würfeln.'}}
  else if(ev.now){const best=CATS.map(c=>p.sc[c.id]).filter(e=>e&&e.final>0).sort((a,b)=>b.final-a.final)[0];const bc=best&&CATS.find(c=>p.sc[c.id]===best);
   if(!best)t.note='Du hast noch keine Punkte – die Karte verfällt. Normal weiterspielen.';
@@ -715,7 +715,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  const reveal=after?{type:'reveal',ev:ev.id,cat:target,res,kb,phase:((after==='fate'&&!ctx.fdie)||after==='wheel')?'spin':'done',who:p.name}:null;
  if(ev){S.cstat=S.cstat||{};S.cstat[ev.id]=(S.cstat[ev.id]||0)+(entry.final-Math.max(0,r))}
  const ni=nextIndex();if(ni<0){S.screen='end'}else{S.cur=ni;S.turn=freshTurn();if(S.hold&&S.hold.pi===ni)applyHold(S.hold)}S.hold=null;save();
- if(!after&&S.screen!=='end'){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),exp:Date.now()+10000,text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'};setTimeout(syncUndo,10100)}else ui.undo=null
+ if(!after&&S.screen!=='end'){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),exp:Date.now()+(S.players[S.cur]&&S.players[S.cur].bot?5000:10000),text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'};setTimeout(syncUndo,ui.undo.exp-Date.now()+100)}else ui.undo=null
  if(S.fx&&S.fx.seq>(ui.seenFx||0)){ui.seenFx=S.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(S.fx.kind,null),120)}
  if(reveal)ui.modal=reveal;render();window.scrollTo({top:0,behavior:'smooth'});
  if(reveal){sfx.reveal();if(S.lastReveal)ui.seenReveal=S.lastReveal.seq;reveal.next=S.screen==='end'?null:S.players[S.cur].name;ui.modal=reveal;renderModal();if(reveal.phase==='spin')setTimeout(()=>{if(ui.modal===reveal){reveal.phase='done';renderModal()}},1300)}
@@ -733,7 +733,7 @@ const POS=[27,50,73];
 const pips=v=>'<span class="pips">'+PIP[v].map(i=>'<i style="left:'+POS[i%3]+'%;top:'+POS[Math.floor(i/3)]+'%"></i>').join('')+'</span>';
 const glyph=ev=>'<div class="glyph g-'+ev.g+'">'+ev.gl+'</div>';
 const HIDDEN={g:'verdeckt',gl:'?'};
-const GLAB={topf:'Topf',wuerfe:'Würfe',wertung:'Wertung',bonus:'Bonus',spezial:'Spezial',pflicht:'Pflichtwurf',verdeckt:'Verdeckt'};
+const GLAB={topf:'Tresor',wuerfe:'Würfe',wertung:'Wertung',bonus:'Bonus',spezial:'Spezial',pflicht:'Pflichtwurf',verdeckt:'Verdeckt'};
 const EMBLEM='<svg class="emb" viewBox="0 0 64 64"><defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1c2"/><stop offset=".45" stop-color="#d9b25e"/><stop offset="1" stop-color="#8a6420"/></linearGradient></defs><g transform="rotate(45 32 32)"><rect x="13" y="13" width="38" height="38" rx="9" fill="none" stroke="url(#gg)" stroke-width="2.6"/><rect x="18" y="18" width="28" height="28" rx="6" fill="none" stroke="url(#gg)" stroke-width=".9" opacity=".6"/><circle cx="24" cy="24" r="2.9" fill="url(#gg)"/><circle cx="40" cy="24" r="2.9" fill="url(#gg)"/><circle cx="32" cy="32" r="3.3" fill="url(#gg)"/><circle cx="24" cy="40" r="2.9" fill="url(#gg)"/><circle cx="40" cy="40" r="2.9" fill="url(#gg)"/></g></svg>';
 function cardBack(tag,attr,sub){return'<'+tag+' class="cback'+(tag==='div'?' wait':'')+'" '+attr+'><span class="cb-frame"></span><span class="cb-c tl"></span><span class="cb-c tr"></span><span class="cb-c bl"></span><span class="cb-c br"></span><span class="cb-in">'+EMBLEM+'<span class="cb-t">Ereigniskarte ziehen</span><span class="cb-s">'+sub+'</span></span></'+tag+'>'}
 function cardFront(ev,title,text,extra){const f='<div class="evcard c-'+ev.g+'"><span class="ec-frame"></span><div class="ec-idx">'+ev.gl+'</div><div class="ec-med">'+ev.gl+'</div><div class="ec-k">'+(GLAB[ev.g]||'')+'</div><div class="evt">'+title+'</div><div class="evx">'+text+'</div>'+extra+'</div>';
@@ -749,7 +749,7 @@ function needCloud(){if(DB&&UID)return true;infoSheet('Online nicht verfügbar',
 const meIdx=()=>S&&S.online?S.players.findIndex(q=>q.uid===UID):-1;
 function peekViewer(){if(!S)return null;return S.online?S.players[meIdx()]:S.players[S.cur]}
 function canPeek(){const v=peekViewer();if(!v||!v.peekUntil)return false;return (CATS.length-openCats(v).length)<v.peekUntil}
-function canAct(){if(!S||!S.online)return true;const t=S.turn;if(!t)return false;const me=i=>i!=null&&S.players[i]&&S.players[i].uid===UID;const ev=evOf(t);
+function canAct(){if(!S)return true;if(!S.online){const t=S.turn;if(!t||!S.players.some(q=>q.bot))return true;const B=i=>!!(S.players[i]&&S.players[i].bot);if(t.pending==='oppforce'&&t.decider!=null)return !B(t.decider);return !B(S.cur)}const t=S.turn;if(!t)return false;const me=i=>i!=null&&S.players[i]&&S.players[i].uid===UID;const ev=evOf(t);
  if(t.pending==='oppforce')return me(t.decider);
  if(ev&&ev.fremd&&t.rolls===1&&!t.fremdDone&&t.decider!=null)return me(t.decider);
  return me(S.cur)}
@@ -812,10 +812,12 @@ function setupHTML(){
  if(on)h+='<div class="block"><div class="gtitle">Dein Name</div><div class="group"><div class="cell"><input type="text" data-mn="1" maxlength="14" placeholder="Dein Name" value="'+esc(setup.myName||'')+'"></div></div></div>';
  else h+='<div class="block"><div class="gtitle">Spieler</div><div class="group"><div class="cell"><div class="grow ct">Anzahl</div><div class="stepper"><button data-a="nminus">−</button><b>'+setup.n+'</b><button data-a="nplus">+</button></div></div>';
  if(!on){for(let i=0;i<setup.n;i++)h+='<div class="cell"><input type="text" maxlength="14" data-ni="'+i+'" value="'+esc(setup.names[i])+'" placeholder="Spieler '+(i+1)+'"></div>';
- h+='</div></div>'}
+ h+='<div class="cell"><div class="grow"><div class="ct">Bots</div><div class="cs">Computer-Mitspieler, bis zu 5</div></div><div class="stepper"><button data-a="bminus">−</button><b>'+(setup.bots||0)+'</b><button data-a="bplus">+</button></div></div>';
+ for(let i=0;i<(setup.bots||0);i++)h+='<div class="cell"><div class="grow ct" style="color:var(--sec)">🤖 '+BOT_NAMES[i]+'</div></div>';
+ h+='</div>'+((setup.bots||0)?'<div class="gfoot">Mit Bots wird immer digital gewürfelt.</div>':'')+'</div>'}
  h+='<div class="block"><div class="gtitle">Würfel</div><div class="group"><div class="seg"><button class="'+(setup.mode==='digital'?'on':'')+'" data-a="mode" data-m="digital">Digital würfeln</button><button class="'+(setup.mode==='manual'?'on':'')+'" data-a="mode" data-m="manual">Eigene Würfel</button></div></div><div class="gfoot">'+(setup.mode==='digital'?'Gewürfelt wird hier in der App. Würfel antippen zum Halten, die Punkte werden automatisch berechnet.':'Ihr würfelt mit echten Würfeln und tragt die Punkte selbst ein. Würfel-Karten wie Joker oder Spiegelwürfel führt ihr mit euren Würfeln aus.')+'</div></div>';
  const isSolo=!on&&setup.n<2;
- {const po=setup.sel.includes('topf');h+='<div class="block"><div class="gtitle">Topf</div><div class="group"><button class="cell" data-a="tog" data-id="topf"><div class="glyph g-topf">¤</div><div class="grow"><div class="ct">Mit Topf spielen</div><div class="cs">Wie „Frei Parken“: Alle Punkte, die verloren gehen, landen im Topf. Wer die Karte „Der Topf“ zieht, bekommt alles.</div></div>'+sw(po)+'</button></div></div>'}
+ {const po=setup.sel.includes('topf');h+='<div class="block"><div class="gtitle">Tresor</div><div class="group"><button class="cell" data-a="tog" data-id="topf"><div class="glyph g-topf">🔑</div><div class="grow"><div class="ct">Mit Tresor spielen</div><div class="cs">Wie „Frei Parken“: Alle Punkte, die verloren gehen, wandern in den Tresor. Wer die Karte „Tresorschlüssel“ zieht, bekommt den Schlüssel – und alles, was drin liegt.</div></div>'+sw(po)+'</button></div></div>'}
  h+='<div class="block"><div class="gtitle"><span>Ereigniskarten · '+setup.sel.length+' aktiv</span><span class="links"><button data-a="selall">Alle</button><button data-a="selnone">Keine</button></span></div><div class="group">';
  const row=e=>{const on=setup.sel.includes(e.id),off=isSolo&&e.multi;return'<button class="cell '+(off?'off':'')+'" data-a="tog" data-id="'+e.id+'">'+glyph(e)+'<div class="grow"><div class="ct">'+e.title+'</div><div class="cs">'+e.text+(off?' (ab 2 Spielern)':'')+'</div></div>'+sw(on)+'</button>'};
  for(const [g,label] of GROUPS){if(g==='topf')continue;h+='<div class="sub-h">'+label+'</div>';const list=EVENTS.filter(e=>e.g===g);
@@ -826,7 +828,7 @@ function setupHTML(){
   else h+=list.map(row).join('')}
  h+='</div><div class="gfoot">Karten werden zufällig gezogen. Jeder Spieler bekommt jede Karte höchstens einmal – Pflichtwurf-Karten insgesamt höchstens 3-mal pro Spieler. Sind so viele Karten ausgeschaltet, dass keine neue mehr übrig ist, dürfen Karten auch erneut kommen.</div></div>';
  h+='<div class="block"><button class="btn gray" data-a="rules">'+(setup.rules?'Regeln ausblenden':'Regeln ansehen')+'</button>';
- if(setup.rules)h+='<div class="group rules" style="margin-top:12px"><p><b style="color:var(--text)">Ablauf:</b> Vor jedem Zug zieht der Spieler eine Ereigniskarte. Dann wird mit 6 Würfeln bis zu dreimal gewürfelt und eine freie Kategorie gewählt. Passt nichts, wird eine Kategorie mit 0 gestrichen.</p><p><b style="color:var(--text)">Bonus:</b> Ab 73 Punkten im oberen Teil gibt es 45 Punkte extra. Die Gesamtpunkte erscheinen erst nach dem letzten Zug – dein Bonus-Konto (alle bonusrelevanten Punkte) siehst du jederzeit. Multiplikatoren, Ereignisse und das Konto oben zählen mit. Bonus-Karten gelten dauerhaft für den Spieler, der sie zieht (die neueste Karte gilt).</p><p><b style="color:var(--text)">Kniffel-Bonus:</b> Hast du „Kniffel“ schon mit 50 gewertet, bringt jeder weitere Kniffel automatisch +50 – egal in welcher Kategorie (z. B. 10 bei den Zweiern).</p><p><b style="color:var(--text)">Topf (falls eingeschaltet):</b> Punkte, die durch Ereignisse verloren gehen – gestrichene Wertungen, Abzüge, halbierte Würfe –, landen im Topf. Wer die Karte „Der Topf“ zieht, bekommt alles. Getauschte, geschenkte oder geteilte Punkte kommen nicht in den Topf, weil sie ja jemand anderes bekommt.</p><p><b style="color:var(--text)">Spielende:</b> wenn alle Kategorien aller Spieler gefüllt sind. Wer durch „Zweite Chance“ eine Kategorie mehr hat, spielt am Ende einen Zug länger.</p></div>';
+ if(setup.rules)h+='<div class="group rules" style="margin-top:12px"><p><b style="color:var(--text)">Ablauf:</b> Vor jedem Zug zieht der Spieler eine Ereigniskarte. Dann wird mit 6 Würfeln bis zu dreimal gewürfelt und eine freie Kategorie gewählt. Passt nichts, wird eine Kategorie mit 0 gestrichen.</p><p><b style="color:var(--text)">Bonus:</b> Ab 73 Punkten im oberen Teil gibt es 45 Punkte extra. Die Gesamtpunkte erscheinen erst nach dem letzten Zug – dein Bonus-Konto (alle bonusrelevanten Punkte) siehst du jederzeit. Multiplikatoren, Ereignisse und das Konto oben zählen mit. Bonus-Karten gelten dauerhaft für den Spieler, der sie zieht (die neueste Karte gilt).</p><p><b style="color:var(--text)">Kniffel-Bonus:</b> Hast du „Kniffel“ schon mit 50 gewertet, bringt jeder weitere Kniffel automatisch +50 – egal in welcher Kategorie (z. B. 10 bei den Zweiern).</p><p><b style="color:var(--text)">Tresor (falls eingeschaltet):</b> Punkte, die durch Ereignisse verloren gehen – gestrichene Wertungen, Abzüge, halbierte Würfe –, wandern in den Tresor. Wer die Karte „Tresorschlüssel“ zieht, bekommt den Schlüssel und damit alles, was drin liegt. Getauschte, geschenkte oder geteilte Punkte kommen nicht in den Tresor, weil sie ja jemand anderes bekommt.</p><p><b style="color:var(--text)">Spielende:</b> wenn alle Kategorien aller Spieler gefüllt sind. Wer durch „Zweite Chance“ eine Kategorie mehr hat, spielt am Ende einen Zug länger.</p></div>';
  h+='</div><div class="sticky"><button class="btn" data-a="'+(on?'mpcreate':'start')+'">'+(on?'Lobby erstellen':'Spiel starten')+'</button></div>';
  return h}
 
@@ -835,10 +837,11 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
  const act=canAct(),mine=!S.online||act;
  let h='<div class="top"><div><div class="eyebrow">'+(S.online?'Online · '+esc(S.online.code)+' · ':'')+'Runde '+(done+1)+' von '+CATS.length+'</div><div class="large">'+esc(p.name)+'</div></div><div style="display:flex;gap:8px;margin-top:4px">'+(!dig&&!viewing&&mine?'<button class="iconbtn accent" data-a="opendice">Würfel</button>':'')+'<button class="iconbtn" data-a="board">Tabelle</button><button class="iconbtn" data-a="menu">•••</button></div></div>';
  if(S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran – du siehst live zu.</div>';
+ else if(!S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran …</div>';
  if(t.bet)h+='<div class="betbar"><b>Wetteinsatz '+t.bet.stake+'</b> auf '+t.bet.cats.map(id=>CAT[id].name).join(', ')+'</div>';
  if(canPeek()){const v=peekViewer();h+='<div class="betbar" style="background:rgba(255,179,64,.12);color:#ffcf80">Spionage aktiv: noch '+(v.peekUntil-(CATS.length-openCats(v).length))+' Runde(n) Gesamtpunkte sichtbar</div>'}
  if(S.players.length>1)h+='<div class="standings">'+S.players.map((q,i)=>'<button class="st nm '+(i===vi?'on':'')+'" data-a="viewp" data-i="'+i+'"><div class="p">'+(S.online?'<span class="dot'+(isOnlineUid(q.uid)?'':' off')+'"></span>':(i===S.cur?'<span class="dot"></span>':''))+esc(q.name)+(S.online&&q.uid===UID?' <span style="font-size:12px;opacity:.6">(du)</span>':'')+'</div><div class="n">'+(i===S.cur?'am Zug':'noch '+openCats(q).length+' offen')+(S.online&&!isOnlineUid(q.uid)?' · offline':'')+(canPeek()?' · <b style="color:#ffb340">'+totals(q).total+' P.</b>':'')+'</div></button>').join('')+'</div>';
- if(S.potOn){const pv=S.pot||0;h+='<div class="potbar'+(ui.lastPot!=null&&ui.lastPot!==pv?' bump':'')+'"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">¤</span>Im Topf<b>'+pv+'</b></div>';ui.lastPot=pv}
+ if(S.potOn){const pv=S.pot||0;h+='<div class="potbar'+(ui.lastPot!=null&&ui.lastPot!==pv?' bump':'')+'"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">🔑</span>Im Tresor<b>'+pv+'</b></div>';ui.lastPot=pv}
  if(viewing){const q=S.players[vi];h+='<div class="viewbar"><div class="grow"><div class="evt">Wertung von '+esc(q.name)+'</div><div class="evx">Hier kannst du dir die Wertung ansehen. Tippe eine eingetragene Wertung an, um einen Tippfehler zu korrigieren.</div></div></div><button class="btn tint" data-a="viewp" data-i="'+S.cur+'" style="margin-bottom:20px">Zurück zu '+esc(p.name)+' (am Zug)</button>'+sheetHTML(q,null);return h}
  if(p.half)h+='<div class="banner">Pechsträhne: Deine Wertung zählt diesmal nur die Hälfte.</div>';
  if(t.drawn&&t.none)h+=cardFront({g:'wertung',gl:'–'},'Keine Karte mehr','Du hast alle aktiven Ereigniskarten schon bekommen. Normal weiterspielen.','');
@@ -851,7 +854,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
    return'<button class="cell'+(t.drawn&&!t.pending&&!ok?' off':'')+'" data-a="cat" data-id="'+c.id+'"><div class="grow"><div class="ct">'+c.name+'</div></div>'+r+'</button>'}).join('')}).join('')+'</div>'}
   dd+='</div>'}
  if(!dig)h+=dd;
- const lock=!t.drawn||t.pending;
+ const lock=!t.drawn||t.pending||(!S.online&&!act);
  if(t.drawn&&!t.pending&&t.lock&&!p.sc[t.lock]){const c=CAT[t.lock];let st='';if(dig&&t.rolls>0){const raw=c.calc(dOf(t)),f=baseFinal(p,t,raw,t.rolls,c.id).f;st=raw>0?'<div class="lk-st ok">✓ Geschafft – '+fmtN(f)+' Punkte</div>':'<div class="lk-st no">Noch nicht geschafft</div>'}
   h+='<div class="lockbox"><div class="lk-k">Diese Runde musst du werfen</div><div class="lk-t">'+c.name+'</div><div class="lk-h">'+c.hint+'</div>'+st+'</div>'}
  if(dig){const left=t.max-t.rolls;
@@ -906,7 +909,7 @@ function endHTML(){const r=S.players.map(p=>({p,t:totals(p)})).sort((a,b)=>b.t.t
  const order=r.length>=3?[1,0,2]:r.length===2?[1,0]:[0];const delays=[1700,1050,600];
  let h='<div class="cer'+(anim?' anim':'')+'"><div class="eyebrow" style="text-align:center">Siegerehrung</div><div class="large" style="text-align:center;margin-bottom:4px">'+(r.length>1?esc(r[0].p.name)+' gewinnt!':'Dein Ergebnis')+'</div>';
  h+='<div class="podium">'+order.map(i=>{const x=r[i];return'<div class="pcol pc'+(i+1)+'">'+(i===0?'<div class="crown">♛</div>':'')+'<div class="pnm">'+esc(x.p.name)+'</div><div class="psc" data-count="'+(anim?x.t.total:'')+'" data-delay="'+delays[i]+'">'+(anim?0:fmtN(x.t.total))+'</div><div class="pblk"><span>'+(i+1)+'</span></div></div>'}).join('')+'</div></div>';
- if(S.potOn&&S.pot)h+='<div class="potbar"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">¤</span>Im Topf übrig geblieben<b>'+S.pot+'</b></div>';
+ if(S.potOn&&S.pot)h+='<div class="potbar"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">🔑</span>Im Tresor übrig geblieben<b>'+S.pot+'</b></div>';
  h+='<div class="block"><div class="group">';
  r.forEach((x,i)=>{h+='<div class="cell place"><div class="rank r'+(i+1)+'">'+(i+1)+'</div><div class="grow"><div class="ct">'+esc(x.p.name)+'</div><div class="cs">Oben '+x.t.upAcc+(x.t.bonus?' + Bonus '+x.t.bonus:'')+' · Unten '+x.t.lo+(x.p.kb?' · Kniffel-Bonus '+x.p.kb:'')+(x.p.adj?' · Ereignisse '+(x.p.adj>0?'+':'')+x.p.adj:'')+'</div></div><div class="pts">'+fmtN(x.t.total)+'</div></div>'});
  h+='</div></div>';
@@ -1068,7 +1071,9 @@ document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.bg){
   case'mpcopy':{const code=MP&&MP.lobby?MP.lobby.code:'';const txt='Spiel mit mir Kniffel Royale! Öffne '+location.href.split('#')[0]+' , tippe auf „Online beitreten“ und gib diesen Code ein: '+code;try{navigator.clipboard.writeText(txt).then(()=>toast('Einladung kopiert'),()=>toast('Code: '+code))}catch(err){toast('Code: '+code)}break}
   case'fremddone':{const t=S.turn;t.fremdDone=true;save();render();break}
   case'nminus':setup.n=Math.max(1,setup.n-1);render();break;
-  case'nplus':setup.n=Math.min(6,setup.n+1);render();break;
+  case'nplus':setup.n=Math.min(6-(setup.bots||0),setup.n+1);render();break;
+  case'bminus':setup.bots=Math.max(0,(setup.bots||0)-1);render();break;
+  case'bplus':setup.bots=Math.min(5,6-setup.n,(setup.bots||0)+1);render();break;
   case'mode':setup.mode=b.dataset.m;render();break;
   case'rules':setup.rules=!setup.rules;render();break;
   case'tog':{const id=b.dataset.id,i=setup.sel.indexOf(id);if(i<0)setup.sel.push(id);else setup.sel.splice(i,1);saveSel();render();break}
@@ -1076,7 +1081,7 @@ document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.bg){
   case'pfopen':setup.pfOpen=!setup.pfOpen;render();break;
   case'selall':setup.sel=EVENTS.map(e=>e.id);saveSel();render();break;
   case'selnone':setup.sel=[];saveSel();render();break;
-  case'start':newGame(setup.names.slice(0,setup.n).map((n,i)=>n.trim()||'Spieler '+(i+1)),setup.mode,setup.sel.slice());window.scrollTo(0,0);break;
+  case'start':{const nb=setup.online?0:(setup.bots||0);const names=setup.names.slice(0,setup.n).map((n,i)=>n.trim()||'Spieler '+(i+1)).concat(BOT_NAMES.slice(0,nb));newGame(names,nb?'digital':setup.mode,setup.sel.slice(),names.map((_,i)=>i>=setup.n));window.scrollTo(0,0);break}
   case'new':setup.online=false;view='setup';render();window.scrollTo(0,0);break;
   case'open':{const g=GAMES[b.dataset.id];if(!g)return;try{S=JSON.parse(g.json)}catch(e){toast('Spiel konnte nicht geladen werden');return}ui.viewP=null;ui.seenReveal=S.lastReveal?S.lastReveal.seq:0;ui.seenFx=S.fx?S.fx.seq:0;ui.cerAnim=null;if(S.online){if(DB&&UID)mpSubscribe(S.online.code);else toast('Offline – du siehst den letzten Stand');}ui.modal=null;renderModal();render();window.scrollTo(0,0);break}
   case'askdel':ui.modal={type:'del',id:b.dataset.id};renderModal();break;
@@ -1124,7 +1129,7 @@ document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.bg){
   case'menu':ui.modal={type:'menu'};renderModal();break;
   case'close':ui.modal=null;renderModal();break;
   case'home':ui.modal=null;renderModal();mpLeave();S=null;setup.online=false;view='home';render();window.scrollTo(0,0);break;
-  case'again':{const names=S.players.map(p=>p.name),mode=S.mode,ev=S.events;newGame(names,mode,ev);window.scrollTo(0,0);break}
+  case'again':{const names=S.players.map(p=>p.name),mode=S.mode,ev=S.events,bf=S.players.map(p=>!!p.bot);newGame(names,mode,ev,bf);window.scrollTo(0,0);break}
  }});
 /* ===== Extras: Sound, Effekte, Rückgängig, Präsenz, Erinnerung, Statistik ===== */
 let AC=null;const SND={on:(()=>{try{return localStorage.getItem('kx-sound')!=='0'}catch(e){return true}})()};
@@ -1173,6 +1178,79 @@ function confetti(ms){const cv=document.createElement('canvas');cv.className='co
  (function f(now){const el=now-t0;cx.clearRect(0,0,W,H);P.forEach(p=>{p.x+=p.vx+Math.sin((el/400)+p.r)*0.6*dpr;p.y+=p.vy;p.r+=p.vr;if(p.y>H+20&&el<ms-1500){p.y=-20;p.x=Math.random()*W}cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.globalAlpha=el>ms-800?Math.max(0,(ms-el)/800):1;cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);cx.restore()});if(el<ms)requestAnimationFrame(f);else cv.remove()})(t0)}
 function ceremony(){sfx.fanfare&&setTimeout(()=>sfx.fanfare(),900);setTimeout(()=>confetti(5200),1500);
  document.querySelectorAll('[data-count]').forEach(el=>{const v=+el.dataset.count,d=+el.dataset.delay||0;setTimeout(()=>{const t0=performance.now();(function f(n){const k=Math.min(1,(n-t0)/1300),e=1-Math.pow(1-k,3);el.textContent=fmtN(Math.round(v*e));if(k<1)requestAnimationFrame(f)})(t0)},d)})}
+/* ---------- Bots ---------- */
+const BOT_NAMES=['Bot Max','Bot Lena','Bot Otto','Bot Mia','Bot Karl'];
+const BOT_BASE={u1:3,u2:6,u3:9,u4:12,u5:15,u6:18,dp:22,vp:20,zp:22,dpa:18,zd:20,fh:15,gfh:12,ks:18,gs:15,hw:10,kn:12,ke:5,le:10,ge:14,ch:24,sc:48};
+const BOT_HARD=['ke','hw','kn','gfh','gs','zd','dpa','fh','vp','le'];
+let botT=0;
+function botWait(ms){botT=Date.now()+ms}
+function botCounts(d){const c=[0,0,0,0,0,0,0];d.forEach(v=>c[v]++);return c}
+function botBest(){const t=S.turn,p=S.players[S.cur];let best=null;
+ for(const c of CATS){if(!allowed(p,t,c))continue;const raw=c.calc(t.dice);const f=baseFinal(p,t,raw,t.rolls,c.id).f;const sc=(f>0?f:Math.min(0,f)*1.5)-(BOT_BASE[c.id]||15);if(!best||sc>best.sc)best={id:c.id,f,sc,raw}}
+ return best}
+function botRun(d,minLen){const u=[...new Set(d)].sort();let bestRun=[],cur=[];for(const v of u){if(cur.length&&v===cur[cur.length-1]+1)cur.push(v);else cur=[v];if(cur.length>bestRun.length)bestRun=cur.slice()}return bestRun.length>=minLen?bestRun:null}
+function botPlanHold(){const t=S.turn,p=S.players[S.cur],d=t.dice,cnt=botCounts(d);const keep=new Array(6).fill(false);
+ const holdVals=vals=>{const need=vals.slice();d.forEach((v,i)=>{const k=need.indexOf(v);if(k>=0){keep[i]=true;need.splice(k,1)}})};
+ const holdFace=f=>d.forEach((v,i)=>{if(v===f)keep[i]=true});
+ const target=t.lock?CAT[t.lock]:null;
+ const open=id=>!p.sc[id]&&allowed(p,t,CAT[id]);
+ if(target){const id=target.id;
+  if(target.face)holdFace(target.face);
+  else if(id==='ks'||id==='gs'||id==='hw'){const r=botRun(d,1);holdVals(r||[])}
+  else if(id==='le')d.forEach((v,i)=>{if(v<=2)keep[i]=true});
+  else if(id==='ge'||id==='ch'||id==='sc')d.forEach((v,i)=>{if(v>=5)keep[i]=true});
+  else{const order=[1,2,3,4,5,6].sort((a,b)=>cnt[b]-cnt[a]||b-a);holdFace(order[0]);if(['fh','zd','zp','dpa','gfh'].includes(id)&&cnt[order[1]]>=2)holdFace(order[1])}}
+ else{const run=botRun(d,4);const strOpen=open('ks')||open('gs')||open('hw');const order=[1,2,3,4,5,6].sort((a,b)=>cnt[b]-cnt[a]||b-a);
+  if(run&&strOpen&&cnt[order[0]]<4)holdVals(run);
+  else if(cnt[order[0]]>=2)holdFace(order[0]);
+  else d.forEach((v,i)=>{if(v>=5)keep[i]=true})}
+ if(t.fixed>=0)keep[t.fixed]=true;
+ const ev=evOf(t);if(ev&&ev.nohold)return keep.map(()=>false);
+ if(ev&&ev.frozen)return keep.map((k,i)=>k||t.held[i]);
+ return keep}
+function botStop(b){if(!b)return false;const big=['ke','kn','hw','gs','gfh','zd','dpa','fh','ks','sc'];return b.f>0&&big.includes(b.id)&&b.raw>0&&(CAT[b.id].fixed||b.id==='sc'&&b.raw>=26)}
+function botJoker(){const t=S.turn,d=t.dice,cnt=botCounts(d);const v=[1,2,3,4,5,6].sort((a,b)=>cnt[b]-cnt[a]||b-a)[0];let n=t.jokerN;for(let i=0;i<6&&n>0;i++){if(d[i]!==v&&i!==t.fixed){d[i]=v;t.jokerDice.push(i);n--}}t.jokerUsed=true;t.tool=null}
+function botTot(i){return totals(S.players[i]).total}
+function botPickKey(kind){const o=pickOptions(kind);if(!o.length)return null;const me=S.players[S.cur];
+ const by=f=>o.slice().sort((a,b)=>f(b)-f(a))[0].key;const qi=k=>+String(k).split('|')[0];const cid=k=>String(k).split('|')[1];
+ if(kind==='strike')return by(x=>(x.val||0)+botTot(qi(x.key))*0.05);
+ if(kind==='swap')return by(x=>x.diff||0);
+ if(kind==='shield')return by(x=>x.val||0);
+ if(kind==='heal'||kind==='replay')return by(x=>BOT_BASE[cid(x.key)]||0);
+ if(kind==='force')return by(x=>{const id=cid(x.key);return({ch:100,sc:95,ge:60,dp:55,u6:50,u5:45,zp:40,u4:35}[id]||0)-(BOT_BASE[id]||0)*0.01});
+ if(kind==='oppforce')return by(x=>{const i=BOT_HARD.indexOf(cid(x.key));return i<0?0:100-i});
+ if(kind==='sac1'||kind==='selfstrike')return by(x=>-(x.val!=null?x.val:(BOT_BASE[cid(x.key)]||15)*0.8));
+ if(kind==='gift50'||kind==='giftua')return by(x=>-botTot(qi(x.key)));
+ if(kind==='sac2'){const per={};o.forEach(x=>{(per[qi(x.key)]=per[qi(x.key)]||[]).push(x)});let bq=null,bs=-1;for(const q in per){const l=per[q].sort((a,b)=>b.val-a.val).slice(0,2);const sm=l.reduce((a,x)=>a+x.val,0);if(sm>bs){bs=sm;bq=l}}return bq.map(x=>x.key)}
+ return o[Math.floor(Math.random()*o.length)].key}
+function botPending(){const t=S.turn,p=S.players[S.cur],k=t.pending;
+ if(k==='rcount'){rcountResolve(r6());return}
+ if(k==='gamble'){gambleResolve(r6());return}
+ if(k==='bet'){const st=[50,60,60,70,80][Math.floor(Math.random()*5)];const cats=shuffle3(betCats(p));t.bet={stake:st,cats:cats.map(c=>c.id)};t.pending=null;t.note=esc(p.name)+' setzt '+st+' auf: '+cats.map(c=>'„'+c.name+'“').join(', ')+'.';save();render();return}
+ if(k==='duel'){const m={type:'duel',vals:{},last:{},cont:S.players.map((_,i)=>i),round:1,phase:'ready'};let g=0;while(m.phase!=='done'&&g++<40){m.cont.forEach(i=>m.vals[i]=r6());duelEval(m)}save();render();return}
+ const key=botPickKey(k);if(key==null){t.pending=null;save();render();return}applyPick(k,key)}
+function botNeed(){const m=ui.modal;if(m.need==='slots'){const R=['+25','×2','×3'];m.ctx.reels=[0,0,0].map(()=>R[Math.floor(Math.random()*3)])}else if(m.need==='thief'){let bi=-1,bt=-1e9;S.players.forEach((q,i)=>{if(i!==S.cur){const v=botTot(i);if(v>bt){bt=v;bi=i}}});m.ctx.target=bi}else if(m.need==='fate')m.ctx.fdie=r6();else m.ctx.n=0;
+ commit(m.id,m.raw,m.ctx)}
+function botTick(){if(!S||S.online||S.screen!=='game'||!S.players.some(q=>q.bot))return;if(Date.now()<botT||ui.fxPending||document.querySelector('.kfx')||ui.rolling)return;
+ const t=S.turn,p=S.players[S.cur];
+ if(!p.bot){if(t.pending==='oppforce'&&t.decider!=null&&S.players[t.decider].bot){if(ui.modal&&ui.modal.type==='pick'){ui.modal=null;renderModal()}const key=botPickKey('oppforce');if(key)applyPick('oppforce',key);botWait(900)}return}
+ if(ui.modal){const m=ui.modal;
+  if(m.type==='reveal'){if(!m.__bt)m.__bt=Date.now();else if(m.phase==='done'&&Date.now()-m.__bt>2600){ui.modal=null;renderModal();render()}return}
+  if(m.type==='need'){botNeed();botWait(900);return}
+  if(['pick','gamble','rcount','duel','bet'].includes(m.type)&&!(t.pending==='oppforce'&&t.decider!=null&&!S.players[t.decider].bot)){ui.modal=null;renderModal();botWait(500);return}
+  return}
+ if(!t.drawn){drawEvent();botWait(1400);return}
+ if(t.pending){if(t.pending==='oppforce'&&t.decider!=null&&!S.players[t.decider].bot){if(!ui.modal)openPending();return}botPending();botWait(1300);return}
+ if(t.startPick){t.dice[0]=6;t.held[0]=true;t.fixed=0;t.startPick=false;save();render();botWait(600);return}
+ if(t.rolls===0){if(undoEl)return;roll();botWait(1000);return}
+ const b=botBest();
+ if(t.rolls<t.max&&!botStop(b)){if(!ui.botHeld){t.held=botPlanHold();ui.botHeld=true;save();render();botWait(700);return}ui.botHeld=false;roll();botWait(1000);return}
+ ui.botHeld=false;
+ if(t.jokerN&&!t.jokerUsed){botJoker();save();render();botWait(800);return}
+ const ev=evOf(t);if((!b||b.f<=0)&&ev&&ev.retry&&!t.retryUsed){retryTurn();botWait(900);return}
+ const fin=botBest();if(!fin){t.pending=null;return}
+ commit(fin.id,fin.raw,{});botWait(1100)}
+setInterval(botTick,250);
 /* Rückgängig */
 let undoEl=null;
 function filledCount(){return S.players.reduce((n,q)=>n+Object.keys(q.sc).length,0)}
