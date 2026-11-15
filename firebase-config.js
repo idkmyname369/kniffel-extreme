@@ -1,3 +1,9 @@
-// Hier kommen die Firebase-Zugangsdaten hinein (Projekt-Einstellungen → Deine Apps → Web-App).
-// Solange hier null steht, läuft die App ohne Online-Modus.
-window.FIREBASE_CONFIG = null;
+// Firebase-Zugangsdaten für den Online-Modus (öffentlich, geschützt durch firestore.rules)
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDwg3DW-tiaodidYrZaAl5R2Ns2OMLw4KI",
+  authDomain: "kn1ffel-extreme.firebaseapp.com",
+  projectId: "kn1ffel-extreme",
+  storageBucket: "kn1ffel-extreme.firebasestorage.app",
+  messagingSenderId: "529517204282",
+  appId: "1:529517204282:web:dd5f52f58e85910cc3f603"
+};
