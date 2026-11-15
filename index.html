@@ -273,7 +273,7 @@ const CATS=[
  {id:'dpa',ab:'3×2',name:'Drei Paare',sec:'unten',hint:'3 Paare · 35 Punkte',fixed:35,calc:d=>nPairs(d)>=3?35:0},
  {id:'zd',ab:'2×3',name:'Zwei Dreier',sec:'unten',hint:'2 × drei gleiche · 45 Punkte',fixed:45,calc:d=>nTrips(d)>=2?45:0},
  {id:'fh',ab:'FH',name:'Full House',sec:'unten',hint:'3 + 2 gleiche · 25 Punkte',fixed:25,calc:d=>hasAB(d,3,2)?25:0},
- {id:'gfh',ab:'GFH',name:'Großes Full House',sec:'unten',hint:'4 + 2 gleiche · 45 Punkte',fixed:45,calc:d=>hasAB(d,4,2)?45:0},
+ {id:'gfh',ab:'GFH',name:'Großes Full House',sec:'unten',hint:'4 + 2 gleiche · 45 Punkte',fixed:45,calc:d=>(hasAB(d,4,2)||maxC(d)>=6)?45:0},
  {id:'ks',ab:'KS',name:'Kleine Straße',sec:'unten',hint:'4 in Folge · 30 Punkte',fixed:30,calc:d=>run(d)>=4?30:0},
  {id:'gs',ab:'GS',name:'Große Straße',sec:'unten',hint:'5 in Folge · 40 Punkte',fixed:40,calc:d=>run(d)>=5?40:0},
  {id:'hw',ab:'HW',name:'Highway',sec:'unten',hint:'6 in Folge · 50 Punkte',fixed:50,calc:d=>run(d)>=6?50:0},
@@ -439,11 +439,11 @@ function baseFinal(p,t,raw,rolls,id){const ev=evOf(t),parts=[],c=id?CAT[id]:null
 function kniffelEligible(p,id){return id!=='kn'&&p.sc.kn&&p.sc.kn.raw===50}
 function keEligible(p,id){return id!=='ke'&&p.sc.ke&&p.sc.ke.raw===75}
 function kniffelBonus(p,id,raw,ctx){const kOk=kniffelEligible(p,id),keOk=keEligible(p,id);if(!kOk&&!keOk)return 0;const c=CAT[id];let five=false,six=false;
- if(S.mode==='digital'||ctx.dice){const mc=maxC(S.turn.dice);five=mc>=5;six=mc>=6}
- else if(c.face){five=raw>0&&raw>=c.face*5;six=raw>0&&raw===c.face*6}
- else if(id==='ke'){five=raw===75}
- else{six=!!ctx.ke;five=six||!!ctx.kb}
- if(keOk&&six)return 75;if(kOk&&five)return 50;return 0}
+ if(S.mode==='digital'||ctx.dice){const mc=maxC(S.turn.dice);five=mc===5;six=mc>=6}
+ else if(c.face){five=raw>0&&raw===c.face*5;six=raw>0&&raw===c.face*6}
+ else if(id==='ke'){six=raw===75}
+ else{six=!!ctx.ke;five=!six&&!!ctx.kb}
+ if(six)return keOk?75:0;if(five)return kOk?50:0;return 0}
 const kbLabel=a=>a===75?'Kniffel-Extreme-Bonus +75':'Kniffel-Bonus +50';
 
 /* ---------- Ziehen: jede Karte je Spieler max. 1×, Pflichtwurf max. 3× ---------- */
@@ -869,7 +869,7 @@ function modalHTML(){const m=ui.modal;
   (canRetry&&!m.raw?'<button class="btn tint" data-a="retry" style="margin-bottom:10px">Rettungsring: Zug wiederholen</button>':'')+
   '<div class="btnrow"><button class="btn gray" data-a="'+(m.fromDice?'opendice':'close')+'">'+(m.fromDice?'Zurück':'Abbrechen')+'</button><button class="btn '+(m.raw?'':'red')+'" data-a="ok">'+(m.raw?'Eintragen':'Streichen')+'</button></div>'}
  if(m.type==='input'){let q=[];if(c.face)q=[0,1,2,3,4,5,6].map(k=>k*c.face);else if(c.fixed)q=[0,c.fixed];
-  const noK=['ks','gs','hw','fh','gfh'].includes(m.id);const kbBox=kniffelEligible(p,m.id)&&!c.face&&m.id!=='ke'&&m.id!=='dpa'&&m.id!=='zd'&&!noK,keBox=keEligible(p,m.id)&&!c.face&&!noK;
+  const noK=['ks','gs','hw','fh'].includes(m.id);const kbBox=kniffelEligible(p,m.id)&&!c.face&&m.id!=='ke'&&m.id!=='dpa'&&m.id!=='zd'&&m.id!=='gfh'&&!noK,keBox=keEligible(p,m.id)&&!c.face&&!noK;
   return'<div class="grab"></div><h2>'+c.name+'</h2><p class="muted">'+c.hint+'</p>'+(q.length?'<div class="quick">'+q.map(v=>'<button data-a="qv" data-v="'+v+'" class="'+(String(v)===m.val?'on':'')+'">'+(v===0?'Streichen':v)+'</button>').join('')+'</div>':'')+
   '<div class="field"><input type="number" inputmode="numeric" id="numin" placeholder="Gewürfelte Punkte" value="'+m.val+'"></div>'+
   (ev&&ev.cost?'<div class="gtitle" style="padding:6px 2px">Wie oft hast du gewürfelt?</div><div class="seg" style="margin:0 0 10px">'+Array.from({length:t.max},(_,i)=>i+1).map(n=>'<button class="'+(m.rolls===n?'on':'')+'" data-a="mrolls" data-v="'+n+'">'+n+'×</button>').join('')+'</div>':'')+
