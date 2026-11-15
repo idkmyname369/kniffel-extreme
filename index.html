@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bungee&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#1d1e21;--card:#28292d;--card2:#323338;--card3:#3b3d43;--sep:rgba(255,255,255,.075);--text:#f5f5f7;--sec:#9a9aa1;--ter:#66676d;--blue:#0a84ff;--green:#30d158;--red:#ff453a;--orange:#ff9f0a;--purple:#bf5af2;--teal:#40c8e0;--pink:#ff375f}
+:root{--bg:#1d1e21;--card:#2c2d32;--card2:#36373d;--card3:#404248;--navy:#1f4c98;--navy2:#173a78;--sep:rgba(255,255,255,.075);--text:#f5f5f7;--sec:#9a9aa1;--ter:#66676d;--blue:#0a84ff;--green:#30d158;--red:#ff453a;--orange:#ff9f0a;--purple:#bf5af2;--teal:#40c8e0;--pink:#ff375f}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg)}body{margin:0;background:transparent}html{margin:0}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--bg) url(bg.jpg?v=1) center/cover no-repeat;pointer-events:none}
@@ -321,6 +321,16 @@ button.cback:active{transform:scale(.985)}
 @keyframes droll{0%{transform:translateY(-34px) rotate(-220deg) scale(.78)}45%{transform:translateY(5px) rotate(18deg) scale(1.03)}65%{transform:translateY(-7px) rotate(-7deg)}82%{transform:translateY(1px) rotate(2deg)}100%{transform:none}}
 .bigdie.spin{animation:bspin .5s linear infinite;filter:blur(.8px)}
 @keyframes bspin{0%{transform:rotate(0) translateY(0)}25%{transform:rotate(90deg) translateY(-8px)}50%{transform:rotate(180deg) translateY(0)}75%{transform:rotate(270deg) translateY(-8px)}100%{transform:rotate(360deg) translateY(0)}}
+.btn{background:linear-gradient(180deg,var(--navy),var(--navy2));box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.25)}
+.btn.gray{background:var(--card2);box-shadow:none}.btn.red{background:var(--red);box-shadow:none}.btn.tint{box-shadow:none}
+.iconbtn.accent,.quick button.on,.undobar button{background:linear-gradient(180deg,var(--navy),var(--navy2))}
+.revstrip{--c:#6bd8eb;--cr:64,200,224;position:relative;display:flex;gap:14px;align-items:flex-start;border-radius:18px;padding:14px 16px;margin:0 0 14px;background:radial-gradient(120% 140% at 0% 0%,rgba(var(--cr),.2),rgba(var(--cr),0) 60%),linear-gradient(160deg,#2f3036,#1c1d21 80%);border:1px solid rgba(var(--cr),.4);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.revstrip .ec-med{position:static;flex:none;width:42px;height:42px;font-size:15px}
+.revstrip .ec-k{margin-bottom:2px}
+.rs-t{font-size:17px;font-weight:700}
+.rs-x{font-size:14px;color:var(--sec);margin-top:2px;line-height:1.35}
+.rs-v{font-size:14.5px;margin-top:5px}.rs-v span{color:var(--sec);font-size:13px}
+.revstrip.c-wuerfe{--c:#4da3ff;--cr:77,163,255}.revstrip.c-wertung{--c:#ffb340;--cr:255,159,10}.revstrip.c-bonus{--c:#d18cf7;--cr:191,90,242}.revstrip.c-spezial{--c:#ff6b88;--cr:255,55,95}
 .confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:90}
 .cer{margin-bottom:22px}
 .podium{display:flex;justify-content:center;align-items:flex-end;gap:10px;height:300px;margin-top:10px}
@@ -469,7 +479,7 @@ const PIP={1:[4],2:[2,6],3:[2,4,6],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const LSOLD='kniffel-extreme-v3',LSSEL='kniffel-extreme-sel-v3',LSG='kniffel-extreme-games-v1';
 
 let S=null;
-let setup={bots:0,n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
+let setup={bots:0,botNames:['Bot 1','Bot 2','Bot 3','Bot 4','Bot 5'],n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
 let ui={modal:null,flip:false,rolling:false,rollIdx:-1};
 let view='home';
 
@@ -588,7 +598,7 @@ function pickOptions(kind){const me=S.players[S.cur],t=S.turn,out=[];
  if(kind==='force'||kind==='oppforce')CATS.forEach(c=>{if(!me.sc[c.id]&&!isBlocked(t,c.id))out.push({key:'x|'+c.id,group:c.sec==='oben'?'Oberer Teil':'Unterer Teil',label:c.name,sub:c.hint})});
  if(kind==='heal')CATS.forEach(c=>{const e=me.sc[c.id];if(e&&e.final===0)out.push({key:'x|'+c.id,group:'Deine gestrichenen Kategorien',label:c.name})});
  if(kind==='sac2')return pickOptions('strike');
- if(kind==='sac1'||kind==='selfstrike'){CATS.forEach(c=>{const e=me.sc[c.id];if(e&&e.final>0)out.push({key:'x|'+c.id,group:'Eingetragen – wird auf 0 gesetzt',label:c.name,val:e.final})});const op=openCats(me);if(op.length>1)op.forEach(c=>out.push({key:'x|'+c.id,group:'Noch offen – wird mit 0 gestrichen',label:c.name}))}
+ if(kind==='sac1'||kind==='selfstrike'){CATS.forEach(c=>{const e=me.sc[c.id];if(e&&e.final>0)out.push({key:'x|'+c.id,group:'Eingetragen – wird auf 0 gesetzt',label:c.name,val:e.final})});const op=openCats(me);if(kind==='sac1'&&op.length>1)op.forEach(c=>out.push({key:'x|'+c.id,group:'Noch offen – wird mit 0 gestrichen',label:c.name}))}
  if(kind==='shield')CATS.forEach(c=>{const e=me.sc[c.id];if(e&&!e.prot)out.push({key:'x|'+c.id,group:'Deine Wertungen',label:c.name,val:e.final})});
  return out}
 const PICK={
@@ -602,7 +612,7 @@ const PICK={
  heal:{h:'Wähle eine deiner gestrichenen Kategorien – sie bekommt 40 Punkte.',b:'40 Punkte eintragen',fz:'Du hast noch nichts gestrichen – die Karte verfällt.'},
  sac1:{h:'Zuerst streichst du bei dir selbst eine Kategorie. Danach darfst du bei einem Gegner 2 Wertungen streichen.',b:'Bei mir streichen',red:true,fz:'Kein Gegner hat ungeschützte Punkte – die Karte verfällt.'},
  sac2:{h:'Wähle bis zu 2 Wertungen eines Gegners, die gestrichen werden.',b:'Streichen',red:true},
- selfstrike:{h:'Ungerade Zahl – streiche eine Kategorie bei dir selbst.',b:'Bei mir streichen',red:true},
+ selfstrike:{h:'Ungerade Zahl – streiche eine deiner eingetragenen Wertungen.',b:'Bei mir streichen',red:true},
  shield:{h:'Diese Wertung kann danach von keinem Gegner mehr gestrichen werden.',b:'Schützen',fz:'Du hast noch keine Wertung zum Schützen – die Karte verfällt.'}};
 
 function kniffelCount(){if(S.kc!=null||S.kec!=null)return{k:S.kc||0,e:S.kec||0};let k=0,e=0;S.players.forEach(q=>{if(q.sc.kn&&q.sc.kn.raw===50)k++;if(q.sc.ke&&q.sc.ke.raw===75)e++});return{k,e}}
@@ -641,7 +651,7 @@ function rcountResolve(d){const t=S.turn;t.max=d;t.pending=null;t.note='Gewürfe
 function gambleResolve(d){if(!S.potOn)return _gambleResolve(d);const ps=potSnap(),p0=S.pot||0;_gambleResolve(d);potCharge(ps,false);if((S.pot||0)!==p0){save();render()}}
 function _gambleResolve(d){const t=S.turn;t.gambleDie=d;
  if(d%2===0){if(pickOptions('strike').length){t.pending='strike';t.note='Gewürfelt: '+d+' (gerade) – streiche eine Wertung bei einem Gegner.'}else{t.pending=null;t.note='Gewürfelt: '+d+' (gerade) – aber kein Gegner hat ungeschützte Punkte. Normal weiterspielen.'}}
- else{t.pending='selfstrike';t.note='Gewürfelt: '+d+' (ungerade) – streiche eine Kategorie bei dir selbst.'}
+ else if(pickOptions('selfstrike').length){t.pending='selfstrike';t.note='Gewürfelt: '+d+' (ungerade) – streiche eine deiner Wertungen.'}else{t.pending=null;t.note='Gewürfelt: '+d+' (ungerade) – du hast aber noch keine Wertung mit Punkten. Normal weiterspielen.'}
  save();render();if(t.pending)openPending();else{ui.modal=null;renderModal()}}
 function applyPick(kind,key){if(!S.potOn)return _applyPick(kind,key);const ps=potSnap(),p0=S.pot||0;_applyPick(kind,key);potCharge(ps,kind==='swap');if((S.pot||0)!==p0){save();render()}}
 function _applyPick(kind,key){const t=S.turn,me=S.players[S.cur];
@@ -724,14 +734,18 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  let res=null;if(after)res=applyAfter(entry,after,target,ctx,p);
  p.sc[target]=entry;
  if(__ps){const betM=(t.bet&&t.bet.cats.includes(target)&&!(r>0))?t.bet.stake:0;const pn=potCharge(__ps,after==='gift'||after==='share',__sc,Math.max(0,r)+(kb||0)-betM);if(pn)entry.pot=pn}
- ui.viewP=null;S.last={who:p.name,cat:CAT[target].name,val:entry.final,ev:ev?ev.title:null};S.log=(S.log||[]).concat([{who:p.name,cat:CAT[target].name,val:entry.final,ev:ev?ev.title:null,kb:kb||0,res:res?res.text:null,bet:t.bet?t.bet.stake:null}]).slice(-10);if(res){S.rseq=(S.rseq||0)+1;S.lastReveal={seq:S.rseq,ev:ev.id,cat:target,res,kb,who:p.name,uid:p.uid||null}}
+ ui.viewP=null;S.last={who:p.name,cat:CAT[target].name,val:entry.final,ev:ev?ev.title:null};S.logN=(S.logN||0)+1;S.log=(S.log||[]).concat([{who:p.name,cat:CAT[target].name,val:entry.final,ev:ev?ev.title:null,kb:kb||0,res:res?res.text:null,bet:t.bet?t.bet.stake:null}]).slice(-10);if(res){S.rseq=(S.rseq||0)+1;S.lastReveal={seq:S.rseq,ev:ev.id,cat:target,res,kb,who:p.name,uid:p.uid||null,n:S.logN}}
  const reveal=after?{type:'reveal',ev:ev.id,cat:target,res,kb,phase:((after==='fate'&&!ctx.fdie)||after==='wheel')?'spin':'done',who:p.name}:null;
  if(ev){S.cstat=S.cstat||{};S.cstat[ev.id]=(S.cstat[ev.id]||0)+(entry.final-Math.max(0,r))}
- const ni=nextIndex();if(ni<0){S.screen='end'}else{S.cur=ni;S.turn=freshTurn();if(S.hold&&S.hold.pi===ni)applyHold(S.hold)}S.hold=null;save();
- if(!after&&S.screen!=='end'){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),exp:Date.now()+(S.players[S.cur]&&S.players[S.cur].bot?5000:10000),text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'};setTimeout(syncUndo,ui.undo.exp-Date.now()+100)}else ui.undo=null
+ let ni,redoNow=false;
+ if(S.redo&&S.redo.active&&__sc===S.redo.pi){const nx=S.redo.next;ni=(nx!=null&&nx>=0&&nx!==__sc&&S.players[nx]&&openCats(S.players[nx]).length)?nx:nextIndex();S.redo=null}
+ else if(S.redo&&!S.redo.active&&__sc!==S.redo.pi){S.redo.next=nextIndex();S.redo.active=true;ni=S.redo.pi;redoNow=true}
+ else ni=nextIndex();
+ if(ni<0){S.screen='end'}else{S.cur=ni;if(redoNow){S.turn=S.redo.turn}else{S.turn=freshTurn();if(S.hold&&S.hold.pi===ni)applyHold(S.hold)}}S.hold=null;save();
+ const __bm=!S.online&&S.players[S.cur]&&S.players[S.cur].bot&&!redoNow;if(!after&&S.screen!=='end'&&!S.players[__sc].bot){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),mode:__bm?'bot':'std',pi:__sc,cat:target,ent:JSON.stringify(entry),exp:Date.now()+10000,text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'};setTimeout(syncUndo,ui.undo.exp-Date.now()+100)}else ui.undo=null
  if(S.fx&&S.fx.seq>(ui.seenFx||0)){ui.seenFx=S.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(S.fx.kind,null),120)}
- if(reveal)ui.modal=reveal;render();window.scrollTo({top:0,behavior:'smooth'});
- if(reveal){sfx.reveal();if(S.lastReveal)ui.seenReveal=S.lastReveal.seq;reveal.next=S.screen==='end'?null:S.players[S.cur].name;ui.modal=reveal;renderModal();if(reveal.phase==='spin')setTimeout(()=>{if(ui.modal===reveal){reveal.phase='done';renderModal()}},1300)}
+ render();window.scrollTo({top:0,behavior:'smooth'});
+ if(reveal){sfx.reveal();if(S.lastReveal)ui.seenReveal=S.lastReveal.seq;ui.modal=null;renderModal();if(kb)toast(kbLabel(kb)+' für '+p.name)}
  else{ui.modal=null;renderModal();if(kb)toast(kbLabel(kb)+' für '+p.name)}}
 
 function retryTurn(){const t=S.turn;t.rolls=0;t.mdice=[];t.held=t.held.map((_,i)=>i===t.fixed);t.retryUsed=true;t.jokerUsed=false;t.jokerDice=[];t.mirUsed=false;t.mirDice=[];t.rerollUsed=false;t.tool=null;ui.modal=null;renderModal();save();render();toast(S.mode==='digital'?'Rettungsring: Zug neu beginnen':'Rettungsring: würfle den Zug neu')}
@@ -783,7 +797,7 @@ function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,
    if(ui.seenFx==null||!prev||prev.id!==r.id)ui.seenFx=(!prev||prev.id!==r.id)?(r.fx?r.fx.seq:0):(ui.seenFx||0);
    const showFx=r.fx&&r.fx.seq>(ui.seenFx||0)&&r.fx.uid!==UID;if(showFx){ui.seenFx=r.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(r.fx.kind,r.fx.who),60)}view='game';const old=GAMES[S.id];GAMES[S.id]={id:S.id,updated:Date.now(),finished:S.screen==='end',synced:!!(old&&old.synced),json:d.json};persistLocal();queuePush(S.id);
    if(ui.modal&&!['reveal','board','info','menu','del'].includes(ui.modal.type)&&!canAct()){ui.modal=null;renderModal()}
-   if(showRev){ui.seenReveal=r.lastReveal.seq;const L=r.lastReveal;ui.modal={type:'reveal',ev:L.ev,cat:L.cat,res:L.res,kb:L.kb,phase:'done',who:L.who,next:null,watch:true}}render();if(showRev)renderModal()
+   if(showRev){ui.seenReveal=r.lastReveal.seq;sfx.reveal()}render()
    const t=S.turn;if(S.screen==='game'&&t&&t.pending&&canAct()&&!ui.modal)openPending()}
  },e=>toast('Verbindung zum Online-Spiel unterbrochen'));setTimeout(presTick,400)}
 function mpQueue(){if(!MP||!S||!S.online)return;clearTimeout(MP.tm);MP.tm=setTimeout(mpPush,20)}
@@ -826,7 +840,7 @@ function setupHTML(){
  else h+='<div class="block"><div class="gtitle">Spieler</div><div class="group"><div class="cell"><div class="grow ct">Anzahl</div><div class="stepper"><button data-a="nminus">−</button><b>'+setup.n+'</b><button data-a="nplus">+</button></div></div>';
  if(!on){for(let i=0;i<setup.n;i++)h+='<div class="cell"><input type="text" maxlength="14" data-ni="'+i+'" value="'+esc(setup.names[i])+'" placeholder="Spieler '+(i+1)+'"></div>';
  h+='<div class="cell"><div class="grow"><div class="ct">Bots</div><div class="cs">Computer-Mitspieler, bis zu 5</div></div><div class="stepper"><button data-a="bminus">−</button><b>'+(setup.bots||0)+'</b><button data-a="bplus">+</button></div></div>';
- for(let i=0;i<(setup.bots||0);i++)h+='<div class="cell"><div class="grow ct" style="color:var(--sec)">🤖 '+BOT_NAMES[i]+'</div></div>';
+ for(let i=0;i<(setup.bots||0);i++)h+='<div class="cell"><span style="margin-right:8px">🤖</span><input type="text" maxlength="14" data-bn="'+i+'" value="'+esc((setup.botNames||BOT_NAMES)[i])+'" placeholder="Bot '+(i+1)+'"></div>';
  h+='</div>'+((setup.bots||0)?'<div class="gfoot">Mit Bots wird immer digital gewürfelt.</div>':'')+'</div>'}
  h+='<div class="block"><div class="gtitle">Würfel</div><div class="group"><div class="seg"><button class="'+(setup.mode==='digital'?'on':'')+'" data-a="mode" data-m="digital">Digital würfeln</button><button class="'+(setup.mode==='manual'?'on':'')+'" data-a="mode" data-m="manual">Eigene Würfel</button></div></div><div class="gfoot">'+(setup.mode==='digital'?'Gewürfelt wird hier in der App. Würfel antippen zum Halten, die Punkte werden automatisch berechnet.':'Ihr würfelt mit echten Würfeln und tragt die Punkte selbst ein. Würfel-Karten wie Joker oder Spiegelwürfel führt ihr mit euren Würfeln aus.')+'</div></div>';
  const isSolo=!on&&setup.n<2;
@@ -854,6 +868,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
  if(t.bet)h+='<div class="betbar"><b>Wetteinsatz '+t.bet.stake+'</b> auf '+t.bet.cats.map(id=>CAT[id].name).join(', ')+'</div>';
  if(canPeek()){const v=peekViewer();h+='<div class="betbar" style="background:linear-gradient(rgba(255,179,64,.12),rgba(255,179,64,.12)),var(--bg);color:#ffcf80">Spionage aktiv: noch '+(v.peekUntil-(CATS.length-openCats(v).length))+' Runde(n) Gesamtpunkte sichtbar</div>'}
  if(S.players.length>1)h+='<div class="standings">'+S.players.map((q,i)=>'<button class="st nm '+(i===vi?'on':'')+'" data-a="viewp" data-i="'+i+'"><div class="p">'+(S.online?'<span class="dot'+(isOnlineUid(q.uid)?'':' off')+'"></span>':(i===S.cur?'<span class="dot"></span>':''))+esc(q.name)+(S.online&&q.uid===UID?' <span style="font-size:12px;opacity:.6">(du)</span>':'')+'</div><div class="n">'+(i===S.cur?'am Zug':'noch '+openCats(q).length+' offen')+(S.online&&!isOnlineUid(q.uid)?' · offline':'')+(canPeek()?' · <b style="color:#ffb340">'+totals(q).total+' P.</b>':'')+'</div></button>').join('')+'</div>';
+ {const L=S.lastReveal;if(L&&L.n===S.logN&&EV[L.ev]){const ev=EV[L.ev],c=CAT[L.cat],r=L.res||{};h+='<div class="revstrip c-'+ev.g+'"><div class="ec-med">'+ev.gl+'</div><div class="grow"><div class="ec-k">'+esc(L.who)+' hat aufgedeckt</div><div class="rs-t">'+ev.title+'</div>'+(r.text?'<div class="rs-x">'+r.text+'</div>':'')+(c&&r.after!=null?'<div class="rs-v">'+c.name+' = <b class="'+(r.after<0?'negv':'')+'">'+fmtN(r.after)+'</b>'+(r.before!=null&&r.before!==r.after?' <span>(vorher '+fmtN(r.before)+')</span>':'')+'</div>':'')+(L.kb?'<div class="kbline" style="margin-top:4px">'+kbLabel(L.kb)+'</div>':'')+'</div></div>'}}
  if(S.potOn){const pv=S.pot||0;h+='<div class="potbar'+(ui.lastPot!=null&&ui.lastPot!==pv?' bump':'')+'"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">🔑</span>Im Tresor<b>'+pv+'</b></div>';ui.lastPot=pv}
  if(viewing){const q=S.players[vi];h+='<div class="viewbar"><div class="grow"><div class="evt">Wertung von '+esc(q.name)+'</div><div class="evx">Hier kannst du dir die Wertung ansehen. Tippe eine eingetragene Wertung an, um einen Tippfehler zu korrigieren.</div></div></div><button class="btn tint" data-a="viewp" data-i="'+S.cur+'" style="margin-bottom:20px">Zurück zu '+esc(p.name)+' (am Zug)</button>'+sheetHTML(q,null);return h}
  if(p.half)h+='<div class="banner">Pechsträhne: Deine Wertung zählt diesmal nur die Hälfte.</div>';
@@ -1066,7 +1081,7 @@ function dieTap(i){const t=S.turn,ev=evOf(t);if(t.rolls===0)return;
   t.held[i]=!t.held[i]}
  save();render()}
 
-document.addEventListener('input',e=>{const d=e.target.dataset;if(d.ni!==undefined)setup.names[+d.ni]=e.target.value;if(d.mn)setup.myName=e.target.value;if(d.jc)setup.joinCode=e.target.value});
+document.addEventListener('input',e=>{const d=e.target.dataset;if(d.ni!==undefined)setup.names[+d.ni]=e.target.value;if(d.bn!==undefined){setup.botNames=setup.botNames||BOT_NAMES.slice();setup.botNames[+d.bn]=e.target.value}if(d.mn)setup.myName=e.target.value;if(d.jc)setup.joinCode=e.target.value});
 document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.bg){ui.modal=null;renderModal();return}
  const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a,m=ui.modal;
  if(S&&S.online&&S.screen==='game'&&!FREE_ACT.has(a)&&!canAct()&&!(S.online.host===UID&&['edit','editok','editdel','qv'].includes(a))){toast(actorName()+' ist gerade dran');return}
@@ -1095,7 +1110,7 @@ document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.bg){
   case'pfopen':setup.pfOpen=!setup.pfOpen;render();break;
   case'selall':setup.sel=EVENTS.map(e=>e.id);saveSel();render();break;
   case'selnone':setup.sel=[];saveSel();render();break;
-  case'start':{const nb=setup.online?0:(setup.bots||0);const names=setup.names.slice(0,setup.n).map((n,i)=>n.trim()||'Spieler '+(i+1)).concat(BOT_NAMES.slice(0,nb));newGame(names,nb?'digital':setup.mode,setup.sel.slice(),names.map((_,i)=>i>=setup.n));window.scrollTo(0,0);break}
+  case'start':{const nb=setup.online?0:(setup.bots||0);const names=setup.names.slice(0,setup.n).map((n,i)=>n.trim()||'Spieler '+(i+1)).concat((setup.botNames||BOT_NAMES).slice(0,nb).map((n,i)=>(n||'').trim()||'Bot '+(i+1)));newGame(names,nb?'digital':setup.mode,setup.sel.slice(),names.map((_,i)=>i>=setup.n));window.scrollTo(0,0);break}
   case'new':setup.online=false;view='setup';render();window.scrollTo(0,0);break;
   case'open':{const g=GAMES[b.dataset.id];if(!g)return;try{S=JSON.parse(g.json)}catch(e){toast('Spiel konnte nicht geladen werden');return}ui.viewP=null;ui.seenReveal=S.lastReveal?S.lastReveal.seq:0;ui.seenFx=S.fx?S.fx.seq:0;ui.cerAnim=null;if(S.online){if(DB&&UID)mpSubscribe(S.online.code);else toast('Offline – du siehst den letzten Stand');}ui.modal=null;renderModal();render();window.scrollTo(0,0);break}
   case'askdel':ui.modal={type:'del',id:b.dataset.id};renderModal();break;
@@ -1193,7 +1208,7 @@ function confetti(ms){const cv=document.createElement('canvas');cv.className='co
 function ceremony(){sfx.fanfare&&setTimeout(()=>sfx.fanfare(),900);setTimeout(()=>confetti(5200),1500);
  document.querySelectorAll('[data-count]').forEach(el=>{const v=+el.dataset.count,d=+el.dataset.delay||0;setTimeout(()=>{const t0=performance.now();(function f(n){const k=Math.min(1,(n-t0)/1300),e=1-Math.pow(1-k,3);el.textContent=fmtN(Math.round(v*e));if(k<1)requestAnimationFrame(f)})(t0)},d)})}
 /* ---------- Bots ---------- */
-const BOT_NAMES=['Bot Max','Bot Lena','Bot Otto','Bot Mia','Bot Karl'];
+const BOT_NAMES=['Bot 1','Bot 2','Bot 3','Bot 4','Bot 5'];
 const BOT_BASE={u1:3,u2:6,u3:9,u4:12,u5:15,u6:18,dp:22,vp:20,zp:22,dpa:18,zd:20,fh:15,gfh:12,ks:18,gs:15,hw:10,kn:12,ke:5,le:10,ge:14,ch:24,sc:48};
 const BOT_HARD=['ke','hw','kn','gfh','gs','zd','dpa','fh','vp','le'];
 let botT=0;
@@ -1250,35 +1265,43 @@ function botTick(){if(!S||S.online||S.screen!=='game'||!S.players.some(q=>q.bot)
  if(!p.bot){if(t.pending==='oppforce'&&t.decider!=null&&S.players[t.decider].bot){if(ui.modal&&ui.modal.type==='pick'){ui.modal=null;renderModal()}const key=botPickKey('oppforce');if(key)applyPick('oppforce',key);botWait(900)}return}
  if(ui.modal){const m=ui.modal;
   if(m.type==='reveal'){if(!m.__bt)m.__bt=Date.now();else if(m.phase==='done'&&Date.now()-m.__bt>2600){ui.modal=null;renderModal();render()}return}
-  if(m.type==='need'){botNeed();botWait(900);return}
+  if(m.type==='need'){botNeed();botWait(1500);return}
   if(['pick','gamble','rcount','duel','bet'].includes(m.type)&&!(t.pending==='oppforce'&&t.decider!=null&&!S.players[t.decider].bot)){ui.modal=null;renderModal();botWait(500);return}
   return}
- if(!t.drawn){drawEvent();botWait(1400);return}
- if(t.pending){if(t.pending==='oppforce'&&t.decider!=null&&!S.players[t.decider].bot){if(!ui.modal)openPending();return}botPending();botWait(1300);return}
+ if(!t.drawn){drawEvent();botWait(2400);return}
+ if(t.pending){if(t.pending==='oppforce'&&t.decider!=null&&!S.players[t.decider].bot){if(!ui.modal)openPending();return}botPending();botWait(2000);return}
  if(t.startPick){t.dice[0]=6;t.held[0]=true;t.fixed=0;t.startPick=false;save();render();botWait(600);return}
- if(t.rolls===0){if(undoEl)return;roll();botWait(1000);return}
+ if(t.rolls===0){roll();botWait(1700);return}
  const b=botBest();
- if(t.rolls<t.max&&!botStop(b)){if(!ui.botHeld){t.held=botPlanHold();ui.botHeld=true;save();render();botWait(700);return}ui.botHeld=false;roll();botWait(1000);return}
+ if(t.rolls<t.max&&!botStop(b)){if(!ui.botHeld){t.held=botPlanHold();ui.botHeld=true;save();render();botWait(1200);return}ui.botHeld=false;roll();botWait(1700);return}
  ui.botHeld=false;
- if(t.jokerN&&!t.jokerUsed){botJoker();save();render();botWait(800);return}
+ if(t.jokerN&&!t.jokerUsed){botJoker();save();render();botWait(1200);return}
  const ev=evOf(t);if((!b||b.f<=0)&&ev&&ev.retry&&!t.retryUsed){retryTurn();botWait(900);return}
  const fin=botBest();if(!fin){t.pending=null;return}
- commit(fin.id,fin.raw,{});botWait(1100)}
+ commit(fin.id,fin.raw,{});botWait(1800)}
 setInterval(botTick,250);
 /* Rückgängig */
 let undoEl=null;
 function filledCount(){return S.players.reduce((n,q)=>n+Object.keys(q.sc).length,0)}
 function undoOk(){const u=ui.undo;if(!u||!S||S.id!==u.id||S.screen!=='game'||Date.now()>u.exp)return false;const t=S.turn;
+ if(u.mode==='bot'){const e=S.players[u.pi]&&S.players[u.pi].sc[u.cat];return !S.redo&&!!e&&JSON.stringify(e)===u.ent&&S.cur!==u.pi}
  if(S.cur!==u.ni||filledCount()!==u.filled||(t.rolls||0)>0||t.startPick&&t.fixed>=0)return false;
  const ev=t.ev&&EV[t.ev];if(ev&&ev.pick&&(!t.pending||t.pending==='sac2'))return false
  return true}
-function syncUndo(){if(undoOk()&&!ui.fxPending&&!document.querySelector('.kfx')){if(!undoEl)showUndo(ui.undo.text)}else{hideUndo();if(ui.undo&&(!S||Date.now()>ui.undo.exp||S.id!==ui.undo.id||S.cur!==ui.undo.ni||filledCount()!==ui.undo.filled))ui.undo=null}}
+function syncUndo(){if(undoOk()&&!ui.fxPending&&!document.querySelector('.kfx')){if(!undoEl)showUndo(ui.undo.text)}else{hideUndo();if(ui.undo&&(!S||Date.now()>ui.undo.exp||S.id!==ui.undo.id||(ui.undo.mode!=='bot'&&(S.cur!==ui.undo.ni||filledCount()!==ui.undo.filled))||(ui.undo.mode==='bot'&&!undoOk())))ui.undo=null}}
 function showUndo(text){hideUndo();undoEl=document.createElement('div');undoEl.className='undobar';undoEl.innerHTML='<span>'+esc(text)+'</span><button data-a="undo">Rückgängig</button>';document.body.appendChild(undoEl);requestAnimationFrame(()=>requestAnimationFrame(()=>undoEl&&undoEl.classList.add('in')))}
 function hideUndo(){if(undoEl){const e=undoEl;undoEl=null;e.classList.remove('in');setTimeout(()=>e.remove(),300)}}
 function diffPatch(post,cur){const out=[];cur.players.forEach((q,i)=>{const o=post.players[i]||{};Object.keys(q).forEach(k=>{if(k==='sc'){Object.keys(q.sc).forEach(c=>{if(JSON.stringify(q.sc[c])!==JSON.stringify(o.sc&&o.sc[c]))out.push({i,k:'sc',c,v:q.sc[c]})});return}
   const a=o[k],b=q[k];if(JSON.stringify(a)===JSON.stringify(b))return;if(typeof b==='number'&&(typeof a==='number'||a==null))out.push({i,k,d:b-(a||0)});else out.push({i,k,v:b})})});return out}
 function applyHold(h){S.turn=h.turn;if(h.potD)S.pot=Math.max(0,(S.pot||0)+h.potD);(h.patch||[]).forEach(x=>{const q=S.players[x.i];if(!q)return;if(x.k==='sc'){q.sc[x.c]=x.v}else if(x.d!=null){q[x.k]=(q[x.k]||0)+x.d}else q[x.k]=x.v})}
-function doUndo(){const u=ui.undo;hideUndo();if(!undoOk()){toast('Rückgängig ist nicht mehr möglich');ui.undo=null;return}
+function undoBot(u){const pre=JSON.parse(u.json),post=JSON.parse(u.post),q=S.players[u.pi],pp=pre.players[u.pi],po=post.players[u.pi];
+ new Set([...Object.keys(pp),...Object.keys(po)]).forEach(k=>{if(k==='sc')return;const a=pp[k],b=po[k];if(JSON.stringify(a)===JSON.stringify(b))return;if((typeof a==='number'||a==null)&&typeof b==='number')q[k]=(q[k]||0)-(b-(a||0));else q[k]=a===undefined?undefined:JSON.parse(JSON.stringify(a))});
+ new Set([...Object.keys(pp.sc),...Object.keys(po.sc)]).forEach(c=>{if(JSON.stringify(pp.sc[c])===JSON.stringify(po.sc[c]))return;if(pp.sc[c]===undefined)delete q.sc[c];else q.sc[c]=JSON.parse(JSON.stringify(pp.sc[c]))});
+ ['pot','kc','kec'].forEach(k=>{const d=(post[k]||0)-(pre[k]||0);if(d)S[k]=Math.max(0,(S[k]||0)-d)});
+ const le=post.log&&post.log[post.log.length-1];if(le&&S.log){const i=S.log.map(x=>JSON.stringify(x)).lastIndexOf(JSON.stringify(le));if(i>=0)S.log.splice(i,1)}
+ if(post.lastReveal&&S.lastReveal&&S.lastReveal.seq===post.lastReveal.seq)S.lastReveal=null;
+ S.redo={pi:u.pi,turn:pre.turn,active:false};ui.undo=null;save();render();sfx.undo();toast('Zurückgenommen – '+q.name+' ist nach '+S.players[S.cur].name+' nochmal dran')}
+function doUndo(){const u=ui.undo;hideUndo();if(!undoOk()){toast('Rückgängig ist nicht mehr möglich');ui.undo=null;return}if(u.mode==='bot'){undoBot(u);return}
  const cur=S,post=JSON.parse(u.post),pre=JSON.parse(u.json);let hold=null;
  if(cur.turn&&cur.turn.drawn&&(cur.turn.ev||cur.turn.none))hold={pi:u.ni,turn:cur.turn,patch:diffPatch(post,cur),potD:(cur.pot||0)-(post.pot||0)};
  S=pre;S.rev=cur.rev;S.hold=hold;S.fxseq=cur.fxseq;S.fx=cur.fx;S.rseq=cur.rseq;S.lastReveal=cur.lastReveal;ui.undo=null;ui.modal=null;ui.viewP=null;renderModal();save();render();sfx.undo();toast('Letzter Eintrag zurückgenommen')}
