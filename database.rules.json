@@ -4,8 +4,8 @@
     ".write": false,
     "mp": {
       "$code": {
-        ".read": "$code.length === 6",
-        ".write": "$code.length === 6"
+        ".read": "auth != null && $code.length === 6",
+        ".write": "auth != null && $code.length === 6 && (!data.exists() || data.child('seats').child(auth.uid).exists() || (data.child('status').val() === 'lobby' && newData.child('seats').child(auth.uid).exists()))"
       }
     }
   }

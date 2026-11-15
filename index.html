@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <title>Kniffel Extreme</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bungee&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#1d1e21;--card:#28292d;--card2:#323338;--card3:#3b3d43;--sep:rgba(255,255,255,.075);--text:#f5f5f7;--sec:#9a9aa1;--ter:#66676d;--blue:#0a84ff;--green:#30d158;--red:#ff453a;--orange:#ff9f0a;--purple:#bf5af2;--teal:#40c8e0;--pink:#ff375f}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -243,6 +243,58 @@ td small{color:#ffb340;font-size:10px;margin-left:3px}
 .tag.kbt{background:rgba(48,209,88,.17);color:#5be37f}
 td small.kbs{color:#5be37f}
 .betbar{background:rgba(10,132,255,.12);color:#8cc4ff;border-radius:12px;padding:10px 13px;font-size:14px;margin:-6px 0 14px}
+
+.dot.off{background:#6c6c72}
+.evcard.flip{animation:cflip3 .8s cubic-bezier(.3,.7,.3,1);position:relative}
+.evcard.flip::after{content:"?";position:absolute;inset:-1px;border-radius:18px;background:linear-gradient(150deg,#0a84ff,#5e5ce6);display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:700;color:#fff;animation:cback .8s steps(1,end) forwards;border:1px solid rgba(255,255,255,.15)}
+@keyframes cflip3{0%{transform:perspective(900px) rotateY(180deg) scale(.9)}100%{transform:perspective(900px) rotateY(0) scale(1)}}
+@keyframes cback{0%{opacity:1}50%{opacity:0}100%{opacity:0}}
+.kfx{position:fixed;inset:0;z-index:100;overflow:hidden;cursor:pointer}
+.kfx canvas{position:absolute;inset:0;width:100%;height:100%}
+.kword{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.05);font-family:Bungee,Impact,sans-serif;font-size:min(16vw,92px);line-height:.95;text-align:center;background:linear-gradient(180deg,#fff7cc 0%,#ffd24a 38%,#ff7a12 72%,#c41f00 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 16px rgba(255,120,20,.95)) drop-shadow(0 5px 0 #4a0d00);opacity:0;white-space:nowrap}
+.kword span{font-size:.6em;letter-spacing:.06em}
+.kfx.hit .kword{animation:kgrow .55s cubic-bezier(.2,.9,.3,1) forwards}
+@keyframes kgrow{0%{transform:translate(-50%,-50%) scale(.05);opacity:0}55%{transform:translate(-50%,-50%) scale(1.3);opacity:1}75%{transform:translate(-50%,-50%) scale(.93)}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.kshock{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:6px solid rgba(255,225,150,.95);opacity:0;box-shadow:0 0 40px rgba(255,140,30,.85),inset 0 0 30px rgba(255,140,30,.6)}
+.kfx.hit .kshock{animation:shock .75s ease-out .28s forwards}
+@keyframes shock{0%{transform:scale(.3);opacity:1}100%{transform:scale(20);opacity:0}}
+.kfx.hit{animation:kshake .45s .28s}
+@keyframes kshake{0%,100%{transform:none}20%{transform:translate(-11px,7px)}40%{transform:translate(10px,-9px)}60%{transform:translate(-8px,-4px)}80%{transform:translate(6px,8px)}}
+.kfx::after{content:"";position:absolute;inset:0;background:#fff1c4;opacity:0;pointer-events:none}
+.kfx.hit::after{animation:kflash .45s .28s}
+@keyframes kflash{0%{opacity:.75}100%{opacity:0}}
+.kwho{position:absolute;left:0;right:0;top:calc(50% + min(15vw,86px));text-align:center;color:#ffd9a0;font-weight:700;font-size:18px;opacity:0;text-shadow:0 2px 8px #000}
+.kfx.hit .kwho{animation:kfade .5s .55s forwards}
+@keyframes kfade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.kfx.out{transition:opacity .5s;opacity:0}
+.kfx::before{content:"";position:absolute;left:50%;top:50%;width:130vw;height:46vh;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(0,0,0,.7),rgba(0,0,0,0) 62%);opacity:0;pointer-events:none}
+.kfx.hit::before{animation:kfade .3s .2s both}
+.kword{-webkit-text-stroke:1.5px rgba(70,12,0,.85)}
+.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:90}
+.cer{margin-bottom:22px}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:10px;height:300px;margin-top:10px}
+.pcol{flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;position:relative}
+.pnm{font-weight:700;font-size:15px;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.psc{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin:2px 0 8px}
+.pblk{width:100%;border-radius:14px 14px 4px 4px;display:flex;justify-content:center;padding-top:12px;font-family:Bungee,Impact,sans-serif;font-size:30px;color:rgba(0,0,0,.45);transform-origin:bottom;box-shadow:inset 0 2px 0 rgba(255,255,255,.4),0 10px 30px rgba(0,0,0,.4)}
+.pc1 .pblk{height:150px;background:linear-gradient(180deg,#ffe28a,#d9a21b)}
+.pc2 .pblk{height:105px;background:linear-gradient(180deg,#f0f0f4,#a9a9b0)}
+.pc3 .pblk{height:75px;background:linear-gradient(180deg,#eab38a,#a8663a)}
+.pc1 .psc{color:#ffd76a;font-size:26px}
+.crown{font-size:44px;color:#ffd24a;line-height:1;text-shadow:0 0 18px rgba(255,200,60,.8),0 3px 0 #8a5a00;margin-bottom:2px}
+.cer.anim .pblk{animation:prise .8s cubic-bezier(.2,.9,.3,1.25) both}
+.cer.anim .pc3 .pblk{animation-delay:.2s}.cer.anim .pc2 .pblk{animation-delay:.6s}.cer.anim .pc1 .pblk{animation-delay:1.05s}
+@keyframes prise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.cer.anim .pnm,.cer.anim .psc{animation:kfade .5s both}
+.cer.anim .pc3 .pnm,.cer.anim .pc3 .psc{animation-delay:.6s}.cer.anim .pc2 .pnm,.cer.anim .pc2 .psc{animation-delay:1s}.cer.anim .pc1 .pnm,.cer.anim .pc1 .psc{animation-delay:1.5s}
+.cer.anim .crown{animation:crowndrop .8s cubic-bezier(.3,1.5,.5,1) 2.2s both}
+@keyframes crowndrop{0%{transform:translateY(-160px) rotate(-35deg);opacity:0}70%{opacity:1}100%{transform:none;opacity:1}}
+.cer.anim .large{animation:kfade .6s 2.6s both}
+.undobar{white-space:nowrap;position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,120px);background:rgba(50,51,56,.97);backdrop-filter:blur(12px);border-radius:16px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:12px;z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .3s cubic-bezier(.2,.8,.2,1);max-width:92%;font-size:14.5px}
+.undobar.in{transform:translate(-50%,0)}
+.undobar button{background:var(--blue);color:#fff;font-weight:600;font-size:14.5px;padding:8px 14px;border-radius:10px;flex:none}
+body.remind::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:80;box-shadow:inset 0 0 0 4px #30d158,inset 0 0 60px rgba(48,209,88,.45);animation:rpulse .8s ease-in-out 2}
+@keyframes rpulse{50%{opacity:.2}}
 </style>
 </head>
 <body>
@@ -252,6 +304,7 @@ td small.kbs{color:#5be37f}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="firebase-config.js?v=3"></script>
 <script>
 /* ---------- Würfel-Logik (6 Würfel) ---------- */
@@ -388,6 +441,7 @@ function deviceId(){try{let id=localStorage.getItem('kx-device');if(!id){id='d'+
 async function initCloud(){try{
  if(!window.FIREBASE_CONFIG||typeof firebase==='undefined')return;
  firebase.initializeApp(window.FIREBASE_CONFIG);UID=deviceId();
+ try{if(firebase.auth){const cr=await Promise.race([firebase.auth().signInAnonymously(),new Promise((_,r)=>setTimeout(()=>r('t'),8000))]);if(cr&&cr.user)UID=cr.user.uid}}catch(e){console.warn('auth',e)}
  if(window.FIREBASE_CONFIG.databaseURL&&firebase.database){
   // Realtime Database: schnelle Synchronisation über WebSocket
   const rdb=firebase.database();
@@ -452,7 +506,7 @@ function shuffle3(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floo
 const betCats=p=>openCats(p).filter(c=>c.sec==='unten'&&c.id!=='ch'&&c.id!=='sc');
 function applicable(e,p){const oc=openCats(p).length,done=CATS.length-oc;if(e.lateOnly&&oc>e.lateOnly)return false;if(e.fromRound&&done+1<e.fromRound)return false;if(e.block&&oc<4)return false;if(e.pick==='bet'&&betCats(p).length<3)return false;if(e.multi&&solo())return false;if(e.lock&&p.sc[e.lock])return false;
  if((e.block||e.pick==='force'||e.pick==='oppforce'||e.after==='mix')&&openCats(p).length<2)return false;return true}
-const CARD_W={bet:3,retry:4.5,shield:2,b100x2:2,swap:2,sacrifice:2,block:1.15};
+const CARD_W={aon:0.6,krain:0.6,crown:0.6,bet:3,retry:4.5,shield:2,b100x2:2,swap:2,sacrifice:2,block:1.15};
 function wpick(c){const tw=c.reduce((a,id)=>a+(CARD_W[id]||1),0);let r=Math.random()*tw;for(const id of c){r-=CARD_W[id]||1;if(r<=0)return id}return c[c.length-1]}
 function drawCard(p){p.got=p.got||[];p.pf=p.pf||0;
  const avail=activeIds().filter(id=>!p.got.includes(id)&&applicable(EV[id],p));
@@ -516,7 +570,7 @@ function drawEvent(){const t=S.turn,p=S.players[S.cur];const id=drawCard(p);
   else if(ev.now==='backlash'){const o=best.final;best.final=Math.max(0,o-30);addTag(best,'−30');t.note='„'+bc.name+'“: '+o+' → '+best.final+'. Jetzt normal würfeln.'}
   else{const o=best.final;best.final=Math.floor(o/2);addTag(best,'½');t.note='„'+bc.name+'“: '+o+' → '+best.final+'. Jetzt normal würfeln.'}}
  if(ev.pick){if(ev.pick==='gamble'||ev.pick==='duel'||ev.pick==='bet'||ev.pick==='rcount')t.pending=ev.pick;else if(ev.pick==='sac1'){if(pickOptions('sac2').length&&pickOptions('sac1').length)t.pending='sac1';else t.note=PICK.sac1.fz+' Normal weiterspielen.'}else if(pickOptions(ev.pick).length)t.pending=ev.pick;else t.note=PICK[ev.pick].fz+' Normal weiterspielen.'}
- ui.flip=true;setTimeout(()=>ui.flip=false,600);save();render();
+ ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip();save();render();
  if(t.pending)setTimeout(()=>{if(S&&S.turn===t&&t.pending&&!ui.modal&&canAct()){openPending()}},550)}
 
 function openPending(){const t=S.turn;if(!t.pending)return;ui.modal=t.pending==='rcount'?{type:'rcount',phase:'ready'}:t.pending==='bet'?{type:'bet'}:t.pending==='duel'?{type:'duel',vals:{},last:{},cont:S.players.map((_,i)=>i),round:1,phase:'ready'}:t.pending==='gamble'?{type:'gamble',phase:'ready'}:{type:'pick',kind:t.pending,sel:t.pending==='sac2'?[]:null};renderModal()}
@@ -545,7 +599,7 @@ function applyPick(kind,key){const t=S.turn,me=S.players[S.cur];
 
 /* ---------- Verdeckte Effekte ---------- */
 const SLOT_SYM=['+25','×2','×3'];
-const FREE_ACT=new Set(['viewp','board','menu','close','home','ddtoggle','askdel','del','new','open','mpnew','mpjoinview','mpcreate','mpjoin','mpstart','mpleave','mpcopy']);
+const FREE_ACT=new Set(['viewp','board','menu','close','home','ddtoggle','askdel','del','new','open','mpnew','mpjoinview','mpcreate','mpjoin','mpstart','mpleave','mpcopy','cards','sound','undo','mprematch']);
 function spinSlots(m){if(m.spinning)return;m.spinning=true;const btn=document.getElementById('spinbtn');if(btn){btn.disabled=true;btn.textContent='Die Walzen drehen sich …'}
  const reels=[0,1,2].map(()=>rnd(SLOT_SYM));let v=m.amount;const steps=['Start: '+v];
  reels.forEach((res,i)=>{const strip=document.getElementById('strip'+i),win=document.getElementById('reel'+i);if(!strip||!win)return;const H=win.clientHeight;const n=26+i*10;let html='<div>'+strip.textContent+'</div>';for(let k=1;k<n;k++)html+='<div>'+SLOT_SYM[(k+i)%3]+'</div>';html+='<div>'+res+'</div>';strip.style.transition='none';strip.style.transform='translateY(0)';strip.innerHTML=html;void strip.offsetHeight;
@@ -577,7 +631,7 @@ function applyAfter(entry,kind,cid,ctx,p){const c=CAT[cid],dig=S.mode==='digital
 
 /* ---------- Züge ---------- */
 function roll(){const t=S.turn;if(t.rolls>=t.max)return;if(S.online&&evOf(t)&&evOf(t).fremd&&t.rolls===1&&!t.fremdDone){toast('Warte, bis '+actorName()+' die Würfel gewählt hat');return}if(t.rolls===0)t.held=t.held.map((_,i)=>i===t.fixed);
- for(let i=0;i<6;i++)if(!t.held[i])t.dice[i]=r6();t.rolls++;ui.rolling=true;ui.rollIdx=-1;setTimeout(()=>ui.rolling=false,520);save();render()}
+ for(let i=0;i<6;i++)if(!t.held[i])t.dice[i]=r6();t.rolls++;ui.rolling=true;ui.rollIdx=-1;setTimeout(()=>ui.rolling=false,520);sfx.dice();save();render()}
 
 function catTap(id){const t=S.turn,p=S.players[S.cur],c=CAT[id];if(p.sc[id])return;
  if(!t.drawn){toast('Zieh zuerst deine Ereigniskarte');return}
@@ -601,16 +655,20 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  if(!need&&after==='thief'&&ctx.target==null&&b.f>0)need='thief';
  if(need){ui.modal={type:'need',need,id,raw,ctx,val:'',amount:b.f};renderModal();return}
  const entry={raw:r,final:b.f,tag:b.parts.join(' ')};
+ const __undo=JSON.stringify(S);
  p.half=false;
- {const c0=CAT[id];let six,five;if(dig||ctx.dice){const mc=maxC(t.dice);six=mc>=6;five=mc>=5}else{six=(id==='ke'&&raw===75)||(c0.face&&raw===c0.face*6)||!!ctx.ke;five=six||(id==='kn'&&raw===50)||(c0.face&&raw>=c0.face*5)||!!ctx.kb}if(five){const n=kniffelCount();S.kc=n.k+(six?0:1);S.kec=n.e+(six?1:0)}}
+ {const c0=CAT[id];let six,five;if(dig||ctx.dice){const mc=maxC(t.dice);six=mc>=6;five=mc>=5}else{six=(id==='ke'&&raw===75)||(c0.face&&raw===c0.face*6)||!!ctx.ke;five=six||(id==='kn'&&raw===50)||(c0.face&&raw>=c0.face*5)||!!ctx.kb}if(five){const n=kniffelCount();S.kc=n.k+(six?0:1);S.kec=n.e+(six?1:0);S.fxseq=(S.fxseq||0)+1;S.fx={seq:S.fxseq,kind:six?'ke':'kn',who:p.name,uid:p.uid||null}}}
  const kb=kniffelBonus(p,id,raw,ctx);if(kb){p.kb=(p.kb||0)+kb;entry.kbon=kb}
  let res=null;if(after)res=applyAfter(entry,after,target,ctx,p);
  p.sc[target]=entry;
  ui.viewP=null;S.last={who:p.name,cat:CAT[target].name,val:entry.final,ev:ev?ev.title:null};S.log=(S.log||[]).concat([{who:p.name,cat:CAT[target].name,val:entry.final,ev:ev?ev.title:null,kb:kb||0,res:res?res.text:null,bet:t.bet?t.bet.stake:null}]).slice(-10);if(res){S.rseq=(S.rseq||0)+1;S.lastReveal={seq:S.rseq,ev:ev.id,cat:target,res,kb,who:p.name,uid:p.uid||null}}
  const reveal=after?{type:'reveal',ev:ev.id,cat:target,res,kb,phase:((after==='fate'&&!ctx.fdie)||after==='wheel')?'spin':'done',who:p.name}:null;
+ if(ev){S.cstat=S.cstat||{};S.cstat[ev.id]=(S.cstat[ev.id]||0)+(entry.final-Math.max(0,r))}
  const ni=nextIndex();if(ni<0){S.screen='end'}else{S.cur=ni;S.turn=freshTurn()}save();
+ if(!after&&S.screen!=='end'){ui.undo={json:__undo,rev:S.rev,id:S.id,exp:Date.now()+8000};showUndo(CAT[target].name+' = '+fmtN(entry.final)+' eingetragen')}
+ if(S.fx&&S.fx.seq>(ui.seenFx||0)){ui.seenFx=S.fx.seq;setTimeout(()=>kniffelFX(S.fx.kind,null),120)}
  render();window.scrollTo({top:0,behavior:'smooth'});
- if(reveal){if(S.lastReveal)ui.seenReveal=S.lastReveal.seq;reveal.next=S.screen==='end'?null:S.players[S.cur].name;ui.modal=reveal;renderModal();if(reveal.phase==='spin')setTimeout(()=>{if(ui.modal===reveal){reveal.phase='done';renderModal()}},1300)}
+ if(reveal){sfx.reveal();if(S.lastReveal)ui.seenReveal=S.lastReveal.seq;reveal.next=S.screen==='end'?null:S.players[S.cur].name;ui.modal=reveal;renderModal();if(reveal.phase==='spin')setTimeout(()=>{if(ui.modal===reveal){reveal.phase='done';renderModal()}},1300)}
  else{ui.modal=null;renderModal();if(kb)toast(kbLabel(kb)+' für '+p.name)}}
 
 function retryTurn(){const t=S.turn;t.rolls=0;t.mdice=[];t.held=t.held.map((_,i)=>i===t.fixed);t.retryUsed=true;t.jokerUsed=false;t.jokerDice=[];t.mirUsed=false;t.mirDice=[];t.rerollUsed=false;t.tool=null;ui.modal=null;renderModal();save();render();toast(S.mode==='digital'?'Rettungsring: Zug neu beginnen':'Rettungsring: würfle den Zug neu')}
@@ -646,15 +704,20 @@ function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,
  m.unsub=ref.onSnapshot(snap=>{if(MP!==m)return;
   if(!snap.exists){m.lobby=null;if(!S&&view==='lobby'&&!snap.metadata.fromCache){toast('Dieses Spiel gibt es nicht mehr');view='home';mpLeave();render()}return}
   const d=snap.data();m.lobby=d;
+  presUpdate(d);
+  if(d.next&&d.next!==m.code){const nc=d.next;toast('Revanche gestartet!');ui.seenReveal=0;ui.seenFx=0;S=null;mpSubscribe(nc);return}
   if(d.status==='lobby'){if(!S){view='lobby';render()}return}
   if(typeof d.json!=='string')return;let r;try{r=JSON.parse(d.json)}catch(e){return}
   if(ui.seenReveal==null||!S||S.id!==r.id)ui.seenReveal=(r.lastReveal&&(!S||S.id!==r.id))?r.lastReveal.seq:(ui.seenReveal||0);
   const showRev=r.lastReveal&&r.lastReveal.seq>(ui.seenReveal||0)&&r.lastReveal.uid!==UID;
-  if(!S||S.id!==r.id||(r.rev||0)>(S.rev||0)){S=r;view='game';const old=GAMES[S.id];GAMES[S.id]={id:S.id,updated:Date.now(),finished:S.screen==='end',synced:!!(old&&old.synced),json:d.json};persistLocal();queuePush(S.id);
+  if(!S||S.id!==r.id||(r.rev||0)>(S.rev||0)){const prev=S;S=r;
+   if(prev&&prev.id===r.id&&prev.turn&&r.turn&&prev.cur===r.cur){if((r.turn.rolls||0)>(prev.turn.rolls||0)){ui.rolling=true;setTimeout(()=>ui.rolling=false,520);sfx.dice()}if(r.turn.ev&&r.turn.ev!==prev.turn.ev){ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip()}}
+   if(ui.seenFx==null||!prev||prev.id!==r.id)ui.seenFx=(!prev||prev.id!==r.id)?(r.fx?r.fx.seq:0):(ui.seenFx||0);
+   const showFx=r.fx&&r.fx.seq>(ui.seenFx||0)&&r.fx.uid!==UID;if(showFx){ui.seenFx=r.fx.seq;setTimeout(()=>kniffelFX(r.fx.kind,r.fx.who),60)}view='game';const old=GAMES[S.id];GAMES[S.id]={id:S.id,updated:Date.now(),finished:S.screen==='end',synced:!!(old&&old.synced),json:d.json};persistLocal();queuePush(S.id);
    if(ui.modal&&!['reveal','board','info','menu','del'].includes(ui.modal.type)&&!canAct()){ui.modal=null;renderModal()}
    render();if(showRev){ui.seenReveal=r.lastReveal.seq;const L=r.lastReveal;ui.modal={type:'reveal',ev:L.ev,cat:L.cat,res:L.res,kb:L.kb,phase:'done',who:L.who,next:null,watch:true};renderModal()}
    const t=S.turn;if(S.screen==='game'&&t&&t.pending&&canAct()&&!ui.modal)openPending()}
- },e=>toast('Verbindung zum Online-Spiel unterbrochen'))}
+ },e=>toast('Verbindung zum Online-Spiel unterbrochen'));setTimeout(presTick,400)}
 function mpQueue(){if(!MP||!S||!S.online)return;clearTimeout(MP.tm);MP.tm=setTimeout(mpPush,20)}
 async function mpPush(){const m=MP;if(!m||!S||!S.online)return;if(m.busy){m.dirty=true;return}m.busy=true;
  try{await m.ref.update({json:JSON.stringify(S),rev:S.rev||0,updated:Date.now(),status:S.screen==='end'?'end':'game'})}catch(e){if(!m.warned){m.warned=true;infoSheet('Zug konnte nicht gesendet werden',PERM_TXT)}}
@@ -718,7 +781,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
  if(S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran – du siehst live zu.</div>';
  if(t.bet)h+='<div class="betbar"><b>Wetteinsatz '+t.bet.stake+'</b> auf '+t.bet.cats.map(id=>CAT[id].name).join(', ')+'</div>';
  if(canPeek()){const v=peekViewer();h+='<div class="betbar" style="background:rgba(255,179,64,.12);color:#ffcf80">Spionage aktiv: noch '+(v.peekUntil-(CATS.length-openCats(v).length))+' Runde(n) Gesamtpunkte sichtbar</div>'}
- if(S.players.length>1)h+='<div class="standings">'+S.players.map((q,i)=>'<button class="st nm '+(i===vi?'on':'')+'" data-a="viewp" data-i="'+i+'"><div class="p">'+(i===S.cur?'<span class="dot"></span>':'')+esc(q.name)+(S.online&&q.uid===UID?' <span style="font-size:12px;opacity:.6">(du)</span>':'')+'</div><div class="n">'+(i===S.cur?'am Zug':'noch '+openCats(q).length+' offen')+(canPeek()?' · <b style="color:#ffb340">'+totals(q).total+' P.</b>':'')+'</div></button>').join('')+'</div>';
+ if(S.players.length>1)h+='<div class="standings">'+S.players.map((q,i)=>'<button class="st nm '+(i===vi?'on':'')+'" data-a="viewp" data-i="'+i+'"><div class="p">'+(S.online?'<span class="dot'+(isOnlineUid(q.uid)?'':' off')+'"></span>':(i===S.cur?'<span class="dot"></span>':''))+esc(q.name)+(S.online&&q.uid===UID?' <span style="font-size:12px;opacity:.6">(du)</span>':'')+'</div><div class="n">'+(i===S.cur?'am Zug':'noch '+openCats(q).length+' offen')+(S.online&&!isOnlineUid(q.uid)?' · offline':'')+(canPeek()?' · <b style="color:#ffb340">'+totals(q).total+' P.</b>':'')+'</div></button>').join('')+'</div>';
  if(viewing){const q=S.players[vi];h+='<div class="viewbar"><div class="grow"><div class="evt">Wertung von '+esc(q.name)+'</div><div class="evx">Hier kannst du dir die Wertung ansehen. Tippe eine eingetragene Wertung an, um einen Tippfehler zu korrigieren.</div></div></div><button class="btn tint" data-a="viewp" data-i="'+S.cur+'" style="margin-bottom:20px">Zurück zu '+esc(p.name)+' (am Zug)</button>'+sheetHTML(q,null);return h}
  if(p.half)h+='<div class="banner">Pechsträhne: Deine Wertung zählt diesmal nur die Hälfte.</div>';
  if(t.drawn&&t.none)h+='<div class="evcard"><div class="glyph g-wertung">–</div><div class="grow"><div class="evt">Keine Karte mehr</div><div class="evx">Du hast alle aktiven Ereigniskarten schon bekommen. Normal weiterspielen.</div></div></div>';
@@ -779,10 +842,15 @@ function sheetHTML(p,t){const dig=S.mode==='digital';let h='';
  h+='<div class="gfoot" style="margin-top:-14px;margin-bottom:20px">Vertippt? Tippe eine eingetragene Wertung an, um sie zu ändern.</div>';
  return h}
 
-function endHTML(){const r=S.players.map(p=>({p,t:totals(p)})).sort((a,b)=>b.t.total-a.t.total);
- let h='<div class="eyebrow">Spiel beendet</div><div class="large">'+(r.length>1?esc(r[0].p.name)+' gewinnt':'Dein Ergebnis')+'</div><p class="lead">'+r[0].t.total+' Punkte</p><div class="block"><div class="group">';
- r.forEach((x,i)=>{h+='<div class="cell place"><div class="rank r'+(i+1)+'">'+(i+1)+'</div><div class="grow"><div class="ct">'+esc(x.p.name)+'</div><div class="cs">Oben '+x.t.upAcc+(x.t.bonus?' + Bonus '+x.t.bonus:'')+' · Unten '+x.t.lo+(x.p.kb?' · Kniffel-Bonus '+x.p.kb:'')+(x.p.adj?' · Ereignisse '+(x.p.adj>0?'+':'')+x.p.adj:'')+'</div></div><div class="pts">'+x.t.total+'</div></div>'});
- h+='</div></div><div class="btnrow" style="margin-bottom:10px">'+(S.online?'':'<button class="btn" data-a="again">Revanche</button>')+'<button class="btn gray" data-a="board">Tabelle</button></div><button class="btn gray" data-a="home">Zur Übersicht</button>';
+function endHTML(){const r=S.players.map(p=>({p,t:totals(p)})).sort((a,b)=>b.t.total-a.t.total);const anim=ui.cerAnim===S.id;
+ const order=r.length>=3?[1,0,2]:r.length===2?[1,0]:[0];const delays=[1700,1050,600];
+ let h='<div class="cer'+(anim?' anim':'')+'"><div class="eyebrow" style="text-align:center">Siegerehrung</div><div class="large" style="text-align:center;margin-bottom:4px">'+(r.length>1?esc(r[0].p.name)+' gewinnt!':'Dein Ergebnis')+'</div>';
+ h+='<div class="podium">'+order.map(i=>{const x=r[i];return'<div class="pcol pc'+(i+1)+'">'+(i===0?'<div class="crown">♛</div>':'')+'<div class="pnm">'+esc(x.p.name)+'</div><div class="psc" data-count="'+(anim?x.t.total:'')+'" data-delay="'+delays[i]+'">'+(anim?0:fmtN(x.t.total))+'</div><div class="pblk"><span>'+(i+1)+'</span></div></div>'}).join('')+'</div></div>';
+ h+='<div class="block"><div class="group">';
+ r.forEach((x,i)=>{h+='<div class="cell place"><div class="rank r'+(i+1)+'">'+(i+1)+'</div><div class="grow"><div class="ct">'+esc(x.p.name)+'</div><div class="cs">Oben '+x.t.upAcc+(x.t.bonus?' + Bonus '+x.t.bonus:'')+' · Unten '+x.t.lo+(x.p.kb?' · Kniffel-Bonus '+x.p.kb:'')+(x.p.adj?' · Ereignisse '+(x.p.adj>0?'+':'')+x.p.adj:'')+'</div></div><div class="pts">'+fmtN(x.t.total)+'</div></div>'});
+ h+='</div></div>';
+ if(S.online)h+=(S.online.host===UID?'<div class="block"><button class="btn" data-a="mprematch">Revanche mit allen starten</button></div>':'<div class="gfoot" style="text-align:center;margin-bottom:14px">Der Gastgeber kann eine Revanche starten – ihr landet dann automatisch im neuen Spiel.</div>');
+ h+='<div class="btnrow" style="margin-bottom:10px">'+(S.online?'':'<button class="btn" data-a="again">Revanche</button>')+'<button class="btn gray" data-a="board">Tabelle</button></div><button class="btn gray" data-a="home">Zur Übersicht</button>';
  return h}
 
 function boardHTML(){const ps=S.players,fin=S.screen==='end'||canPeek();const cell=(p,c)=>{const e=p.sc[c.id];return e?(e.tag==='✕'&&e.final===0?'—':(e.final<0?'<span class="negv">'+fmtN(e.final)+'</span>':e.final))+(e.tag&&e.tag!=='✕'?'<small>'+e.tag+'</small>':'')+(e.kbon?'<small class="kbs">+'+e.kbon+'K</small>':''):'<span style="color:var(--ter)">·</span>'};
@@ -810,7 +878,8 @@ function modalHTML(){const m=ui.modal;
  if(m.type==='edit'){const q=S.players[m.pi],c=CAT[m.id],e=q.sc[m.id];let qv=[];if(c.face)qv=[0,1,2,3,4,5,6].map(k=>k*c.face);else if(c.fixed)qv=[0,c.fixed];
   return'<div class="grab"></div><h2>'+c.name+' korrigieren</h2><p class="muted">'+esc(q.name)+' · eingetragen: '+e.final+(e.tag&&e.tag!=='✕'?' ('+e.tag+')':'')+'. Gib die richtigen Punkte ein – Ereignis-Effekte werden dabei nicht neu berechnet.</p>'+(qv.length?'<div class="quick">'+qv.map(v=>'<button data-a="qv" data-v="'+v+'" class="'+(String(v)===m.val?'on':'')+'">'+v+'</button>').join('')+'</div>':'')+
   '<div class="field"><input type="number" inputmode="numeric" id="numin" placeholder="Richtige Punkte" value="'+m.val+'"></div><div class="err" id="err"></div><div class="btnrow" style="margin-bottom:10px"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn" data-a="editok">Speichern</button></div><button class="btn gray" data-a="editdel" style="color:var(--red)">Eintrag entfernen (Kategorie wieder frei)</button>'}
- if(m.type==='menu')return'<div class="grab"></div><h2>Menü</h2><p class="muted">Das Spiel wird automatisch gespeichert und kann jederzeit aus der Übersicht fortgesetzt werden.</p><div class="btnrow" style="flex-direction:column"><button class="btn gray" data-a="close">Weiterspielen</button><button class="btn gray" data-a="home">Zur Übersicht</button><button class="btn red" data-a="askdel" data-id="'+S.id+'">Spiel löschen</button></div>';
+ if(m.type==='cards')return cardsHTML();
+ if(m.type==='menu')return'<div class="grab"></div><h2>Menü</h2><p class="muted">Das Spiel wird automatisch gespeichert und kann jederzeit aus der Übersicht fortgesetzt werden.</p><div class="btnrow" style="flex-direction:column"><button class="btn gray" data-a="close">Weiterspielen</button><button class="btn gray" data-a="cards">Ereigniskarten ansehen</button><button class="btn gray" data-a="sound">'+(SND.on?'Ton & Vibration: an':'Ton & Vibration: aus')+'</button><button class="btn gray" data-a="home">Zur Übersicht</button><button class="btn red" data-a="askdel" data-id="'+S.id+'">Spiel löschen</button></div>';
  if(m.type==='del'){const g=GAMES[m.id];let nm='';try{nm=JSON.parse(g.json).players.map(p=>p.name).join(', ')}catch(e){}return'<div class="grab"></div><h2>Spiel löschen?</h2><p class="muted">'+esc(nm)+' – das Spiel wird endgültig gelöscht.</p><div class="btnrow"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn red" data-a="del" data-id="'+m.id+'">Löschen</button></div>'}
  if(m.type==='bet'){const ev=EV.bet;return'<div class="grab"></div><div class="reveal">'+glyph(ev)+'<h2>Wetteinsatz</h2><p class="muted">Wie viel setzt du? Danach bekommst du 3 zufällige offene Kategorien. Schaffst du eine davon, gibt es dort deine Punkte plus den Einsatz. Schaffst du keine, steht der Einsatz als Minus in einer der drei – du wählst, in welcher.</p></div><div class="quick stakes">'+[50,60,70,80,90,100].map(v=>'<button data-a="betv" data-v="'+v+'">'+v+'</button>').join('')+'</div>'}
  if(m.type==='duel'){const ev=EV.duel,dig=S.mode==='digital';let h='<div class="grab"></div><div class="reveal">'+glyph(ev)+'<h2>'+ev.title+(m.round>1&&m.phase!=='done'?' · Stechen':'')+'</h2><p class="muted">'+ev.text+'</p></div>';
@@ -898,9 +967,10 @@ function homeHTML(){const list=Object.values(GAMES).map(g=>{try{return{g,s:JSON.
  const item=(x,sub)=>'<div class="cell gitem"><button class="grow gopen" data-a="open" data-id="'+x.g.id+'"><div class="ct">'+esc(x.s.players.map(p=>p.name).join(', '))+'</div><div class="cs">'+(x.s.online?'<span class="tag" style="margin-right:6px">Online · '+esc(x.s.online.code)+'</span>':'')+sub+'</div></button><button class="trash" data-a="askdel" data-id="'+x.g.id+'" aria-label="Löschen">Löschen</button></div>';
  h+='<div class="block"><div class="gtitle">Nicht beendete Spiele</div>'+(run.length?'<div class="group">'+run.map(x=>{const p=x.s.players[x.s.cur];const r=CATS.length-openCats(p).length+1;return item(x,'Runde '+Math.min(r,CATS.length)+' · '+esc(p.name)+' ist dran · '+fmtDate(x.g.updated))}).join('')+'</div>':'<div class="group"><div class="cell cs">Keine laufenden Spiele.</div></div>')+'</div>';
  h+='<div class="block"><div class="gtitle">Bereits gespielte Spiele</div>'+(done.length?'<div class="group">'+done.map(x=>{const r=x.s.players.map(p=>({p,t:totals(p).total})).sort((a,b)=>b.t-a.t);return item(x,(r.length>1?'Sieger: '+esc(r[0].p.name)+' · ':'')+r[0].t+' Punkte · '+fmtDate(x.g.updated))}).join('')+'</div>':'<div class="group"><div class="cell cs">Noch keine beendeten Spiele.</div></div>')+'</div>';
- h+='<div class="gfoot" style="text-align:center">Spiele werden auf diesem Gerät gespeichert.</div>';
+ h+='<div class="block"><button class="btn gray" data-a="stats">Statistiken</button></div><div class="gfoot" style="text-align:center">Spiele werden auf diesem Gerät gespeichert. · <a href="#" data-a="sound" style="color:var(--blue)">'+(SND.on?'Ton an':'Ton aus')+'</a></div>';
  return h}
-function render(){const a=document.getElementById('app');a.innerHTML=S?(S.screen==='game'?gameHTML():endHTML()):(view==='setup'?setupHTML():view==='lobby'?lobbyHTML():view==='join'?joinHTML():homeHTML())}
+ui.cerDone={};
+function render(){const a=document.getElementById('app');a.innerHTML=S?(S.screen==='game'?gameHTML():endHTML()):(view==='setup'?setupHTML():view==='lobby'?lobbyHTML():view==='join'?joinHTML():view==='stats'?statsHTML():homeHTML());if(S&&S.screen==='end'&&!ui.cerDone[S.id]){ui.cerDone[S.id]=true;ui.cerAnim=S.id;a.innerHTML=endHTML();setTimeout(ceremony,60);setTimeout(()=>{ui.cerAnim=null},6000)}}
 
 function dieTap(i){const t=S.turn,ev=evOf(t);if(t.rolls===0)return;
  if(S.online&&ev&&ev.fremd&&t.rolls===1&&t.fremdDone&&!t.tool){toast('Diese Würfel hat '+S.players[t.decider].name+' für dich gewählt');return}
@@ -919,6 +989,11 @@ document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.bg){
  const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a,m=ui.modal;
  if(S&&S.online&&S.screen==='game'&&!FREE_ACT.has(a)&&!canAct()&&!(S.online.host===UID&&['edit','editok','editdel','qv'].includes(a))){toast(actorName()+' ist gerade dran');return}
  switch(a){
+  case'undo':doUndo();break;
+  case'cards':ui.modal={type:'cards'};renderModal();break;
+  case'sound':{e.preventDefault();SND.on=!SND.on;try{localStorage.setItem('kx-sound',SND.on?'1':'0')}catch(err){}if(ui.modal&&ui.modal.type==='menu')renderModal();else render();if(SND.on){audio();sfx.ping()}break}
+  case'stats':view='stats';render();window.scrollTo(0,0);break;
+  case'mprematch':mpRematch();break;
   case'mpnew':setup.online=true;view='setup';render();window.scrollTo(0,0);break;
   case'mpjoinview':view='join';render();window.scrollTo(0,0);break;
   case'mpcreate':mpCreate();break;
@@ -938,7 +1013,7 @@ document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.bg){
   case'selnone':setup.sel=[];saveSel();render();break;
   case'start':newGame(setup.names.slice(0,setup.n).map((n,i)=>n.trim()||'Spieler '+(i+1)),setup.mode,setup.sel.slice());window.scrollTo(0,0);break;
   case'new':setup.online=false;view='setup';render();window.scrollTo(0,0);break;
-  case'open':{const g=GAMES[b.dataset.id];if(!g)return;try{S=JSON.parse(g.json)}catch(e){toast('Spiel konnte nicht geladen werden');return}ui.viewP=null;ui.seenReveal=S.lastReveal?S.lastReveal.seq:0;if(S.online){if(DB&&UID)mpSubscribe(S.online.code);else toast('Offline – du siehst den letzten Stand');}ui.modal=null;renderModal();render();window.scrollTo(0,0);break}
+  case'open':{const g=GAMES[b.dataset.id];if(!g)return;try{S=JSON.parse(g.json)}catch(e){toast('Spiel konnte nicht geladen werden');return}ui.viewP=null;ui.seenReveal=S.lastReveal?S.lastReveal.seq:0;ui.seenFx=S.fx?S.fx.seq:0;ui.cerAnim=null;if(S.online){if(DB&&UID)mpSubscribe(S.online.code);else toast('Offline – du siehst den letzten Stand');}ui.modal=null;renderModal();render();window.scrollTo(0,0);break}
   case'askdel':ui.modal={type:'del',id:b.dataset.id};renderModal();break;
   case'del':{const id=b.dataset.id;delete GAMES[id];persistLocal();remoteDelete(id);if(S&&S.id===id)S=null;view='home';ui.modal=null;renderModal();render();break}
   case'draw':drawEvent();break;
@@ -986,6 +1061,80 @@ document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.bg){
   case'home':ui.modal=null;renderModal();mpLeave();S=null;setup.online=false;view='home';render();window.scrollTo(0,0);break;
   case'again':{const names=S.players.map(p=>p.name),mode=S.mode,ev=S.events;newGame(names,mode,ev);window.scrollTo(0,0);break}
  }});
+/* ===== Extras: Sound, Effekte, Rückgängig, Präsenz, Erinnerung, Statistik ===== */
+let AC=null;const SND={on:(()=>{try{return localStorage.getItem('kx-sound')!=='0'}catch(e){return true}})()};
+function audio(){if(!SND.on)return null;try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C()}if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+function buzz(p){try{if(SND.on&&navigator.vibrate)navigator.vibrate(p)}catch(e){}}
+function nbuf(a,dur){const b=a.createBuffer(1,Math.max(1,Math.floor(a.sampleRate*dur)),a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
+function tone(a,f,t0,dur,type,vol,f2){const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t0+dur);g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(vol||0.2,t0+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);o.connect(g);g.connect(a.destination);o.start(t0);o.stop(t0+dur+0.05)}
+function nz(a,t0,dur,vol,freq,q){const s=a.createBufferSource();s.buffer=nbuf(a,dur);const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=freq||1500;f.Q.value=q||1;const g=a.createGain();g.gain.setValueAtTime(vol||0.3,t0);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);s.connect(f);f.connect(g);g.connect(a.destination);s.start(t0)}
+const sfx={
+ dice(){const a=audio();if(!a)return;const t=a.currentTime;for(let i=0;i<8;i++){const tt=t+i*0.045+Math.random()*0.03;nz(a,tt,0.05,0.4,1600+Math.random()*2600,3);tone(a,260+Math.random()*500,tt,0.04,'triangle',0.06)}buzz(25)},
+ flip(){const a=audio();if(!a)return;const t=a.currentTime;nz(a,t,0.28,0.25,900,0.7);tone(a,420,t+0.18,0.14,'sine',0.08,880)},
+ reveal(){const a=audio();if(!a)return;const t=a.currentTime;tone(a,220,t,0.4,'sawtooth',0.06,440);tone(a,660,t+0.25,0.35,'sine',0.1)},
+ boom(){const a=audio();if(!a)return;const t=a.currentTime;tone(a,130,t,0.8,'sine',0.6,32);nz(a,t,1.0,0.55,380,0.5);nz(a,t+0.05,1.8,0.2,2400,0.3);buzz([70,40,140])},
+ fire(){const a=audio();if(!a)return;const t=a.currentTime;nz(a,t,1.5,0.25,650,0.4);for(let i=0;i<16;i++)nz(a,t+Math.random()*1.4,0.03,0.25,3200,4)},
+ ping(){const a=audio();if(!a)return;const t=a.currentTime;tone(a,880,t,0.18,'sine',0.16);tone(a,1320,t+0.15,0.28,'sine',0.13);buzz([90,60,90])},
+ fanfare(){const a=audio();if(!a)return;const t=a.currentTime;[[523,0],[659,.16],[784,.32],[1047,.52]].forEach(([f,d])=>{tone(a,f,t+d,0.34,'square',0.05);tone(a,f/2,t+d,0.34,'triangle',0.08)});tone(a,1047,t+0.86,1.0,'square',0.06);tone(a,784,t+0.86,1.0,'triangle',0.06);tone(a,523,t+0.86,1.0,'triangle',0.05)},
+ undo(){const a=audio();if(!a)return;tone(a,620,a.currentTime,0.16,'sine',0.1,300)}
+};
+function kniffelFX(kind,who){const ov=document.createElement('div');ov.className='kfx';ov.innerHTML='<canvas></canvas><div class="kshock"></div><div class="kword">'+(kind==='ke'?'KNIFFEL<br><span>EXTREME</span>':'KNIFFEL!')+'</div>'+(who?'<div class="kwho">'+esc(who)+'</div>':'');document.body.appendChild(ov);
+ const cv=ov.querySelector('canvas'),cx=cv.getContext('2d'),dpr=Math.min(2,window.devicePixelRatio||1);const W=cv.width=innerWidth*dpr,H=cv.height=innerHeight*dpr;const P=[];const t0=performance.now();let alive=true;sfx.fire();
+ function frame(now){if(!alive)return;const el=(now-t0)/1000;cx.globalCompositeOperation='source-over';cx.fillStyle='rgba(12,3,0,'+(el<1.1?0.28:0.38)+')';cx.fillRect(0,0,W,H);cx.globalCompositeOperation='lighter';
+  const rate=el<1.3?26:el<2.8?12:3;for(let i=0;i<rate;i++)P.push({x:Math.random()*W,y:H+30*dpr,vx:(Math.random()-.5)*2.4*dpr,vy:-(5+Math.random()*9)*dpr*(el<1?1+el*.8:1.8),r:(16+Math.random()*30)*dpr,l:1});
+  for(let i=P.length-1;i>=0;i--){const p=P[i];p.x+=p.vx;p.y+=p.vy;p.l-=0.017;p.r*=0.986;if(p.l<=0||p.y<-50){P.splice(i,1);continue}const g=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);g.addColorStop(0,'rgba(255,220,140,'+(0.42*p.l)+')');g.addColorStop(0.4,'rgba(255,110,20,'+(0.32*p.l)+')');g.addColorStop(1,'rgba(160,15,0,0)');cx.fillStyle=g;cx.beginPath();cx.arc(p.x,p.y,p.r,0,7);cx.fill()}
+  requestAnimationFrame(frame)}
+ requestAnimationFrame(frame);
+ setTimeout(()=>{if(alive){ov.classList.add('hit');sfx.boom()}},1050);
+ const end=()=>{if(!alive)return;alive=false;ov.classList.add('out');setTimeout(()=>ov.remove(),500)};
+ setTimeout(end,3800);ov.addEventListener('click',end)}
+function confetti(ms){const cv=document.createElement('canvas');cv.className='confetti';document.body.appendChild(cv);const dpr=Math.min(2,window.devicePixelRatio||1),W=cv.width=innerWidth*dpr,H=cv.height=innerHeight*dpr,cx=cv.getContext('2d');
+ const cols=['#ffd76a','#ff9f0a','#ff453a','#30d158','#0a84ff','#bf5af2','#fff'];const P=Array.from({length:170},()=>({x:Math.random()*W,y:-Math.random()*H*0.6,vx:(Math.random()-.5)*3*dpr,vy:(2+Math.random()*4)*dpr,r:Math.random()*6.3,vr:(Math.random()-.5)*0.3,s:(5+Math.random()*7)*dpr,c:cols[Math.floor(Math.random()*cols.length)]}));const t0=performance.now();
+ (function f(now){const el=now-t0;cx.clearRect(0,0,W,H);P.forEach(p=>{p.x+=p.vx+Math.sin((el/400)+p.r)*0.6*dpr;p.y+=p.vy;p.r+=p.vr;if(p.y>H+20&&el<ms-1500){p.y=-20;p.x=Math.random()*W}cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.globalAlpha=el>ms-800?Math.max(0,(ms-el)/800):1;cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);cx.restore()});if(el<ms)requestAnimationFrame(f);else cv.remove()})(t0)}
+function ceremony(){sfx.fanfare&&setTimeout(()=>sfx.fanfare(),900);setTimeout(()=>confetti(5200),1500);
+ document.querySelectorAll('[data-count]').forEach(el=>{const v=+el.dataset.count,d=+el.dataset.delay||0;setTimeout(()=>{const t0=performance.now();(function f(n){const k=Math.min(1,(n-t0)/1300),e=1-Math.pow(1-k,3);el.textContent=fmtN(Math.round(v*e));if(k<1)requestAnimationFrame(f)})(t0)},d)})}
+/* Rückgängig */
+let undoEl=null;
+function showUndo(text){hideUndo();undoEl=document.createElement('div');undoEl.className='undobar';undoEl.innerHTML='<span>'+esc(text)+'</span><button data-a="undo">Rückgängig</button>';document.body.appendChild(undoEl);requestAnimationFrame(()=>undoEl&&undoEl.classList.add('in'));clearTimeout(showUndo.t);showUndo.t=setTimeout(hideUndo,8000)}
+function hideUndo(){if(undoEl){const e=undoEl;undoEl=null;e.classList.remove('in');setTimeout(()=>e.remove(),300)}}
+function doUndo(){const u=ui.undo;hideUndo();if(!u||!S||Date.now()>u.exp||S.rev!==u.rev||S.id!==u.id){toast('Rückgängig ist nicht mehr möglich');ui.undo=null;return}const nr=S.rev;S=JSON.parse(u.json);S.rev=nr;ui.undo=null;ui.modal=null;renderModal();save();render();sfx.undo();toast('Letzter Eintrag zurückgenommen')}
+/* Präsenz */
+const PRES={seen:{},val:{},sig:''};
+function presTick(){if(!MP||!S||!S.online||!DB)return;try{MP.ref.update({pres:{[UID]:Date.now()}})}catch(e){}}
+function presUpdate(d){const p=(d&&d.pres)||{};const now=Date.now();for(const u in p){if(PRES.val[u]!==p[u]){PRES.val[u]=p[u];PRES.seen[u]=PRES.seen[u]==null?now-15000:now}}}
+const isOnlineUid=u=>u===UID||(PRES.seen[u]!=null&&Date.now()-PRES.seen[u]<30000);
+setInterval(()=>{presTick()},10000);
+setInterval(()=>{if(!S||!S.online||S.screen!=='game')return;const sig=S.players.map(p=>isOnlineUid(p.uid)?1:0).join('');if(sig!==PRES.sig){PRES.sig=sig;if(!ui.rolling&&!document.querySelector('.kfx'))render()}},4000);
+/* Zug-Erinnerung */
+ui.lastAct=Date.now();ui.lastRemind=0;ui.wasMyTurn=false;
+setInterval(()=>{if(!S||!S.online||S.screen!=='game'){ui.wasMyTurn=false;return}const mine=canAct();if(mine&&!ui.wasMyTurn){ui.lastAct=Date.now();ui.lastRemind=0}ui.wasMyTurn=mine;if(!mine)return;const now=Date.now();if(now-ui.lastAct>10000&&now-ui.lastRemind>15000){ui.lastRemind=now;sfx.ping();toast('Du bist dran!');document.body.classList.add('remind');setTimeout(()=>document.body.classList.remove('remind'),1600)}},1000);
+document.addEventListener('pointerdown',()=>{ui.lastAct=Date.now();audio()},true);
+/* Statistik */
+function statsHTML(){const fin=Object.values(GAMES).map(g=>{try{return JSON.parse(g.json)}catch(e){return null}}).filter(s=>s&&s.screen==='end');
+ const P={},cards={};let best=null,bestEntry=null;
+ fin.forEach(s=>{const r=s.players.map(p=>({p,t:totals(p).total})).sort((a,b)=>b.t-a.t);
+  r.forEach((x,i)=>{const k=x.p.name.trim().toLowerCase();const o=P[k]=P[k]||{name:x.p.name.trim(),g:0,w:0,best:0,sum:0,kn:0};o.g++;o.sum+=x.t;if(i===0&&r.length>1)o.w++;if(x.t>o.best)o.best=x.t;
+   CATS.forEach(c=>{const e=x.p.sc[c.id];if(!e)return;if((c.id==='kn'&&e.raw===50)||(c.id==='ke'&&e.raw===75))o.kn++;if(e.kbon)o.kn++;if(!bestEntry||e.final>bestEntry.v)bestEntry={v:e.final,who:x.p.name,cat:c.name}});
+   if(!best||x.t>best.t)best={t:x.t,who:x.p.name}});
+  for(const id in (s.cstat||{}))cards[id]=(cards[id]||0)+s.cstat[id]});
+ const list=Object.values(P).sort((a,b)=>b.w-a.w||b.best-a.best);
+ let h='<button class="backbtn" data-a="home">‹ Übersicht</button><div class="large">Statistiken</div><p class="lead">Aus '+fin.length+' beendeten Spielen auf diesem Gerät.</p>';
+ if(!fin.length)return h+'<div class="group"><div class="cell cs">Noch keine beendeten Spiele.</div></div>';
+ h+='<div class="block"><div class="gtitle">Rekorde</div><div class="group"><div class="cell"><div class="grow ct">Höchste Endsumme</div><div class="val">'+fmtN(best.t)+'</div></div><div class="cell"><div class="grow"><div class="ct">'+esc(best.who)+'</div></div></div>'+(bestEntry?'<div class="cell"><div class="grow"><div class="ct">Höchste Einzelwertung</div><div class="cs">'+esc(bestEntry.who)+' · '+esc(bestEntry.cat)+'</div></div><div class="val">'+fmtN(bestEntry.v)+'</div></div>':'')+'</div></div>';
+ h+='<div class="block"><div class="gtitle">Spieler</div><div class="tblwrap" style="background:var(--card)"><table><thead><tr><th>Name</th><th>Spiele</th><th>Siege</th><th>Rekord</th><th>Ø</th><th>Kniffel</th></tr></thead><tbody>'+list.map(o=>'<tr><td>'+esc(o.name)+'</td><td>'+o.g+'</td><td>'+o.w+'</td><td>'+fmtN(o.best)+'</td><td>'+Math.round(o.sum/o.g)+'</td><td>'+o.kn+'</td></tr>').join('')+'</tbody></table></div></div>';
+ const top=Object.entries(cards).filter(([id])=>EV[id]).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ if(top.length)h+='<div class="block"><div class="gtitle">Ertragreichste Ereigniskarten</div><div class="group">'+top.map(([id,v])=>'<button class="cell">'+glyph(EV[id])+'<div class="grow ct">'+EV[id].title+'</div><div class="val">'+(v>0?'+':'')+fmtN(v)+'</div></button>').join('')+'</div></div>';
+ return h}
+/* Revanche online */
+async function mpRematch(){if(!S||!S.online||S.online.host!==UID||!DB)return;const names=S.players.map(p=>p.name),uids=S.players.map(p=>p.uid),mode=S.mode,events=S.events.slice(),old=MP&&MP.ref;const code=genCode();const seats={};uids.forEach((u,i)=>seats[u]={name:names[i],t:i});
+ newGame(names,mode,events);delete GAMES[S.id];S.id='mp-'+code;S.online={code,host:UID};S.players.forEach((p,i)=>p.uid=uids[i]);S.turn=freshTurn();S.rev=1;
+ try{await DB.doc('mp/'+code).set({kind:'kx-online',code,host:UID,status:'game',created:Date.now(),updated:Date.now(),settings:{mode,events},seats,json:JSON.stringify(S),rev:1})}catch(e){infoSheet('Revanche nicht möglich',PERM_TXT);return}
+ ui.seenReveal=0;ui.seenFx=0;mpSubscribe(code);if(old){try{await old.update({next:code})}catch(e){}}save();render();window.scrollTo(0,0)}
+function cardsHTML(){const ids=activeIds();let h='<div class="grab"></div><h2>Ereigniskarten</h2><p class="muted">'+ids.length+' Karten sind in diesem Spiel aktiv.</p><div class="pick" style="max-height:62vh">';
+ for(const [g,label] of GROUPS){const l=EVENTS.filter(e=>e.g===g&&ids.includes(e.id));if(!l.length)continue;h+='<div class="sub-h">'+label+'</div>'+l.map(e=>'<div class="cell">'+glyph(e)+'<div class="grow"><div class="ct">'+e.title+'</div><div class="cs">'+e.text+'</div></div></div>').join('')}
+ return h+'</div><button class="btn gray" data-a="close">Schließen</button>'}
+if('serviceWorker' in navigator&&location.protocol==='https:'){try{navigator.serviceWorker.register('sw.js')}catch(e){}}
+
 render();
 initCloud();
 </script>
