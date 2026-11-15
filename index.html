@@ -256,15 +256,6 @@ body.kfxon #app{filter:blur(3.5px) brightness(.55) saturate(.85)}
 .kword.ke{width:min(84vw,470px)}
 .kfx.hit .kword{animation:kgrow 1.1s linear forwards}
 @keyframes kgrow{0%{transform:translate(-50%,-50%) scale(.04);opacity:0;animation-timing-function:cubic-bezier(.6,0,.95,.55)}8%{opacity:1}47.3%{transform:translate(-50%,-50%) scale(1.2);opacity:1;animation-timing-function:cubic-bezier(.2,.8,.3,1)}55%{transform:translate(-50%,-50%) scale(1.14,1.08)}70%{transform:translate(-50%,-50%) scale(.97)}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
-.kglass{position:absolute;inset:0;pointer-events:none;opacity:0}
-.kglass svg{width:100%;height:100%;display:block}
-.kglass .ck{fill:none;stroke:rgba(255,255,255,.6);stroke-width:1.1;stroke-linejoin:round;stroke-dasharray:3000;stroke-dashoffset:3000}
-.kglass .ck2{fill:none;stroke:rgba(0,0,0,.45);stroke-width:2.6;stroke-linejoin:round;transform:translate(1px,1.5px);stroke-dasharray:3000;stroke-dashoffset:3000}
-.kglass .ckc{fill:rgba(255,255,255,.12);stroke:rgba(255,255,255,.6);stroke-width:1.4}
-.kfx.slam .kglass{opacity:1;animation:kglass 3s ease-in forwards}
-.kfx.slam .kglass .ck,.kfx.slam .kglass .ck2{animation:ckdraw .28s cubic-bezier(.1,.8,.3,1) forwards}
-@keyframes ckdraw{to{stroke-dashoffset:0}}
-@keyframes kglass{0%,45%{opacity:1}100%{opacity:0}}
 .kfx.slam{animation:kshake .42s}
 @keyframes kshake{0%,100%{transform:none}15%{transform:translate(-12px,8px) scale(1.012)}35%{transform:translate(10px,-9px)}55%{transform:translate(-7px,-5px)}75%{transform:translate(5px,6px)}}
 .kfx::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(255,250,225,.95),rgba(255,200,120,.5) 40%,rgba(255,140,40,0) 75%);opacity:0;pointer-events:none}
@@ -1126,12 +1117,8 @@ const sfx={
 const KWORD={kn:new Image(),ke:new Image()};KWORD.kn.src='kword-kn.webp';KWORD.ke.src='kword-ke.webp';
 const FLAME=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,240,190,1)');g.addColorStop(.25,'rgba(255,190,80,.85)');g.addColorStop(.55,'rgba(255,90,10,.45)');g.addColorStop(1,'rgba(150,10,0,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return c})();
 const KIMPACT=520;
-function crackSVG(){const w=innerWidth,h=innerHeight,cx0=w/2,cy0=h/2;let d='';const N=11,base=Math.random()*6.28;const rays=[];
- for(let i=0;i<N;i++){const a=base+i*6.283/N+(Math.random()-.5)*.35;let x=cx0+Math.cos(a)*18,y=cy0+Math.sin(a)*18,pts=[[x,y]];const L=Math.max(w,h)*(.35+Math.random()*.35);let r=18;while(r<L){r+=14+Math.random()*26;const aa=a+(Math.random()-.5)*.22;x=cx0+Math.cos(aa)*r;y=cy0+Math.sin(aa)*r;pts.push([x,y])}rays.push(pts);d+='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L')}
- [46,95,160].forEach((R,k)=>{for(let i=0;i<N;i++){if(Math.random()<.25+k*.15)continue;const A=rays[i],B=rays[(i+1)%N];const pa=A.reduce((b,p)=>Math.abs(Math.hypot(p[0]-cx0,p[1]-cy0)-R)<Math.abs(Math.hypot(b[0]-cx0,b[1]-cy0)-R)?p:b),pb=B.reduce((b,p)=>Math.abs(Math.hypot(p[0]-cx0,p[1]-cy0)-R)<Math.abs(Math.hypot(b[0]-cx0,b[1]-cy0)-R)?p:b);const mx=(pa[0]+pb[0])/2+(Math.random()-.5)*10,my=(pa[1]+pb[1])/2+(Math.random()-.5)*10;d+='M'+pa[0].toFixed(1)+' '+pa[1].toFixed(1)+'L'+mx.toFixed(1)+' '+my.toFixed(1)+'L'+pb[0].toFixed(1)+' '+pb[1].toFixed(1)}});
- return'<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><path d="'+d+'" class="ck2"/><path d="'+d+'" class="ck"/><circle cx="'+cx0+'" cy="'+cy0+'" r="20" class="ckc"/></svg>'}
 function kniffelFX(kind,who){ui.fxPending=false;if(document.querySelector('.kfx'))return;const app=document.getElementById('app');
- const ov=document.createElement('div');ov.className='kfx';ov.innerHTML='<canvas></canvas><div class="kedge"></div><div class="kglass">'+crackSVG()+'</div><img class="kword '+kind+'" src="kword-'+(kind==='ke'?'ke':'kn')+'.webp" alt="Kniffel">'+(who?'<div class="kwho">'+esc(who)+'</div>':'');document.body.appendChild(ov);
+ const ov=document.createElement('div');ov.className='kfx';ov.innerHTML='<canvas></canvas><div class="kedge"></div><img class="kword '+kind+'" src="kword-'+(kind==='ke'?'ke':'kn')+'.webp" alt="Kniffel">'+(who?'<div class="kwho">'+esc(who)+'</div>':'');document.body.appendChild(ov);
  document.body.classList.add('kfxon');
  const cv=ov.querySelector('canvas'),cx=cv.getContext('2d'),SC=0.8;cv.width=Math.ceil(innerWidth*SC);cv.height=Math.ceil(innerHeight*SC);const KS=SC/0.5,W=cv.width/KS,H=cv.height/KS;cx.scale(KS,KS);const P=[];const t0=performance.now();let last=t0,alive=true;sfx.fire();
  function spawn(n,el){for(let i=0;i<n;i++){const r=Math.random();let x,y,vx,vy;
@@ -1150,7 +1137,7 @@ function kniffelFX(kind,who){ui.fxPending=false;if(document.querySelector('.kfx'
   cx.globalAlpha=1;requestAnimationFrame(frame)}
  requestAnimationFrame(frame);
  setTimeout(()=>{if(alive)ov.classList.add('hit')},900);setTimeout(()=>{if(alive){ov.classList.add('slam');sfx.boom();try{navigator.vibrate&&navigator.vibrate([60,30,40])}catch(e){}}},900+KIMPACT);
- const end=()=>{if(!alive)return;alive=false;ov.classList.add('out');document.body.classList.remove('kfxon');setTimeout(()=>{ov.remove();if(S&&S.screen==='end'&&!ui.cerDone[S.id])render()},600)};
+ const end=()=>{if(!alive)return;alive=false;ov.classList.add('out');document.body.classList.remove('kfxon');setTimeout(()=>{ov.remove();if(S&&S.screen==='end'&&!ui.cerDone[S.id])render();if(ui.undo){ui.undo.exp=Date.now()+10000;setTimeout(syncUndo,10100);syncUndo()}},600)};
  setTimeout(end,4200);ov.addEventListener('click',end)}
 function confetti(ms){const cv=document.createElement('canvas');cv.className='confetti';document.body.appendChild(cv);const dpr=Math.min(2,window.devicePixelRatio||1),W=cv.width=innerWidth*dpr,H=cv.height=innerHeight*dpr,cx=cv.getContext('2d');
  const cols=['#ffd76a','#ff9f0a','#ff453a','#30d158','#0a84ff','#bf5af2','#fff'];const P=Array.from({length:170},()=>({x:Math.random()*W,y:-Math.random()*H*0.6,vx:(Math.random()-.5)*3*dpr,vy:(2+Math.random()*4)*dpr,r:Math.random()*6.3,vr:(Math.random()-.5)*0.3,s:(5+Math.random()*7)*dpr,c:cols[Math.floor(Math.random()*cols.length)]}));const t0=performance.now();
@@ -1164,7 +1151,7 @@ function undoOk(){const u=ui.undo;if(!u||!S||S.id!==u.id||S.screen!=='game'||Dat
  if(S.cur!==u.ni||filledCount()!==u.filled||(t.rolls||0)>0||t.startPick&&t.fixed>=0)return false;
  const ev=t.ev&&EV[t.ev];if(ev&&ev.pick&&(!t.pending||t.pending==='sac2'))return false
  return true}
-function syncUndo(){if(undoOk()){if(!undoEl)showUndo(ui.undo.text)}else{hideUndo();if(ui.undo&&(!S||Date.now()>ui.undo.exp||S.id!==ui.undo.id||S.cur!==ui.undo.ni||filledCount()!==ui.undo.filled))ui.undo=null}}
+function syncUndo(){if(undoOk()&&!ui.fxPending&&!document.querySelector('.kfx')){if(!undoEl)showUndo(ui.undo.text)}else{hideUndo();if(ui.undo&&(!S||Date.now()>ui.undo.exp||S.id!==ui.undo.id||S.cur!==ui.undo.ni||filledCount()!==ui.undo.filled))ui.undo=null}}
 function showUndo(text){hideUndo();undoEl=document.createElement('div');undoEl.className='undobar';undoEl.innerHTML='<span>'+esc(text)+'</span><button data-a="undo">Rückgängig</button>';document.body.appendChild(undoEl);requestAnimationFrame(()=>requestAnimationFrame(()=>undoEl&&undoEl.classList.add('in')))}
 function hideUndo(){if(undoEl){const e=undoEl;undoEl=null;e.classList.remove('in');setTimeout(()=>e.remove(),300)}}
 function diffPatch(post,cur){const out=[];cur.players.forEach((q,i)=>{const o=post.players[i]||{};Object.keys(q).forEach(k=>{if(k==='sc'){Object.keys(q.sc).forEach(c=>{if(JSON.stringify(q.sc[c])!==JSON.stringify(o.sc&&o.sc[c]))out.push({i,k:'sc',c,v:q.sc[c]})});return}
