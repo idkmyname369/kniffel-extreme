@@ -434,7 +434,7 @@ const kbLabel=a=>a===75?'Kniffel-Extreme-Bonus +75':'Kniffel-Bonus +50';
 /* ---------- Ziehen: jede Karte je Spieler max. 1×, Pflichtwurf max. 3× ---------- */
 const PF_MAX=3;
 function shuffle3(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,3)}
-const betCats=p=>openCats(p).filter(c=>c.id!=='ch'&&c.id!=='sc');
+const betCats=p=>openCats(p).filter(c=>c.sec==='unten'&&c.id!=='ch'&&c.id!=='sc');
 function applicable(e,p){const oc=openCats(p).length,done=CATS.length-oc;if(e.lateOnly&&oc>e.lateOnly)return false;if(e.fromRound&&done+1<e.fromRound)return false;if(e.block&&oc<4)return false;if(e.pick==='bet'&&betCats(p).length<3)return false;if(e.multi&&solo())return false;if(e.lock&&p.sc[e.lock])return false;
  if((e.block||e.pick==='force'||e.pick==='oppforce'||e.after==='mix')&&openCats(p).length<2)return false;return true}
 const CARD_W={bet:3,retry:4.5,shield:2,b100x2:2,block:1.15};
