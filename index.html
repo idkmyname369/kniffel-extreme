@@ -317,7 +317,7 @@ const EVENTS=[
  {id:'bx2',g:'bonus',gl:'B×3',title:'Bonus mal 3',text:'Dein Bonus zählt ab sofort dreifach (135 Punkte). Dein Wurf zählt diesen Zug ×4.',bf:3,mult:4},
  {id:'bx3',g:'bonus',gl:'B×5',title:'Bonus mal 5',text:'Dein Bonus zählt ab sofort fünffach (225 Punkte). Dein Wurf zählt diesen Zug ×4.',bf:5,mult:4},
  {id:'b0',g:'bonus',gl:'B0',title:'Bonus verfällt',text:'Dein Bonus gibt ab sofort 0 Punkte. Dein Wurf zählt diesen Zug ×4.',bf:0,mult:4},
- {id:'b100x2',g:'bonus',gl:'2×B',title:'Hohe Hürde',text:'Deinen Bonus gibt es ab sofort erst ab 100 Punkten – dafür werden alle bisherigen bonusrelevanten Punkte verdoppelt. Dein Wurf zählt diesen Zug ×4.',bt:100,now:'dblup',mult:4},
+ {id:'b100x2',g:'bonus',gl:'2×B',title:'Hohe Hürde',text:'Deinen Bonus gibt es ab sofort erst ab 100 Punkten – dafür werden alle bisherigen bonusrelevanten Punkte verdoppelt. Dein Wurf zählt diesen Zug ×4. Kommt erst ab Runde 12.',bt:100,now:'dblup',mult:4,fromRound:12},
  {id:'ua15',g:'bonus',gl:'+30',title:'Bonus-Schub',text:'+30 Punkte auf dein Bonus-Konto im oberen Teil. Dein Wurf zählt diesen Zug ×4.',ua:30,mult:4},
  {id:'uam15',g:'bonus',gl:'−15',title:'Bonus-Loch',text:'−15 Punkte von deinem Konto im oberen Teil – zählt auch für den Bonus. Dein Wurf zählt diesen Zug ×4.',ua:-15,mult:4},
  {id:'strike',g:'spezial',gl:'✕',title:'Gegner streichen',text:'Streiche eine eingetragene Wertung eines Gegners. Danach normal würfeln.',multi:true,pick:'strike'},
@@ -437,7 +437,7 @@ function shuffle3(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floo
 const betCats=p=>openCats(p).filter(c=>c.id!=='ch'&&c.id!=='sc');
 function applicable(e,p){const oc=openCats(p).length,done=CATS.length-oc;if(e.lateOnly&&oc>e.lateOnly)return false;if(e.fromRound&&done+1<e.fromRound)return false;if(e.block&&oc<4)return false;if(e.pick==='bet'&&betCats(p).length<3)return false;if(e.multi&&solo())return false;if(e.lock&&p.sc[e.lock])return false;
  if((e.block||e.pick==='force'||e.pick==='oppforce'||e.after==='mix')&&openCats(p).length<2)return false;return true}
-const CARD_W={bet:3,retry:4.5,shield:1.8,block:1.15};
+const CARD_W={bet:3,retry:4.5,shield:2,b100x2:2,block:1.15};
 function wpick(c){const tw=c.reduce((a,id)=>a+(CARD_W[id]||1),0);let r=Math.random()*tw;for(const id of c){r-=CARD_W[id]||1;if(r<=0)return id}return c[c.length-1]}
 function drawCard(p){p.got=p.got||[];p.pf=p.pf||0;
  const avail=activeIds().filter(id=>!p.got.includes(id)&&applicable(EV[id],p));
