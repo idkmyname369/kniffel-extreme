@@ -5,5 +5,6 @@ window.FIREBASE_CONFIG = {
   projectId: "kn1ffel-extreme",
   storageBucket: "kn1ffel-extreme.firebasestorage.app",
   messagingSenderId: "529517204282",
-  appId: "1:529517204282:web:dd5f52f58e85910cc3f603"
+  appId: "1:529517204282:web:dd5f52f58e85910cc3f603",
+  databaseURL: "https://kn1ffel-extreme-default-rtdb.europe-west1.firebasedatabase.app"
 };
