@@ -248,6 +248,7 @@ td small{color:#ffb340;font-size:10px;margin-left:3px}
 <div class="toast" id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
 /* ---------- Würfel-Logik (6 Würfel) ---------- */
@@ -382,10 +383,19 @@ async function remoteDelete(id){if(!RCOL)return;try{await RCOL.doc(id).delete()}
 function deviceId(){try{let id=localStorage.getItem('kx-device');if(!id){id='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);localStorage.setItem('kx-device',id)}return id}catch(e){return 'd'+Math.random().toString(36).slice(2,12)}}
 async function initCloud(){try{
  if(!window.FIREBASE_CONFIG||typeof firebase==='undefined')return;
- firebase.initializeApp(window.FIREBASE_CONFIG);const fs=firebase.firestore();
+ firebase.initializeApp(window.FIREBASE_CONFIG);UID=deviceId();
+ if(window.FIREBASE_CONFIG.databaseURL&&firebase.database){
+  // Realtime Database: schnelle Synchronisation über WebSocket
+  const rdb=firebase.database();
+  const flat=(o,pre,out)=>{for(const k in o){const v=o[k],key=pre?pre+'/'+k:k;if(v&&typeof v==='object'&&!Array.isArray(v))flat(v,key,out);else out[key]=v===undefined?null:v}return out};
+  DB={doc:p=>{const r=rdb.ref(p);return{
+   get:async()=>{const sn=await r.get();return{exists:sn.exists(),id:p.split('/').pop(),data:()=>sn.val(),metadata:{fromCache:false}}},
+   set:d=>r.set(d),update:d=>r.update(flat(d,'',{})),delete:()=>r.remove(),
+   onSnapshot:(n,e)=>{const cb=sn=>n({exists:sn.exists(),id:p.split('/').pop(),data:()=>sn.val(),metadata:{fromCache:false}});r.on('value',cb,err=>e&&e(err));return()=>r.off('value',cb)}}}};
+  return}
+ const fs=firebase.firestore();
  const wrap=s=>({exists:s.exists,id:s.id,data:()=>s.data(),metadata:s.metadata});
  DB={doc:p=>{const r=fs.doc(p);return{get:async()=>wrap(await r.get()),set:d=>r.set(d),update:d=>r.set(d,{merge:true}),delete:()=>r.delete(),onSnapshot:(n,e)=>r.onSnapshot(s=>n(wrap(s)),e)}}};
- UID=deviceId();
 }catch(e){console.warn(e)}}
 (function migrate(){try{const o=JSON.parse(localStorage.getItem(LSOLD));if(o&&o.screen==='game'){o.id=newId();o.players.forEach(p=>{p.got=p.got||[];p.pf=p.pf||0});GAMES[o.id]={id:o.id,updated:Date.now(),finished:false,synced:false,json:JSON.stringify(o)};persistLocal()}localStorage.removeItem(LSOLD)}catch(e){}})();
 const fmtN=v=>v<0?'−'+Math.abs(v):String(v);
@@ -634,7 +644,7 @@ function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,
    if(ui.modal&&!['reveal','board','info','menu','del'].includes(ui.modal.type)&&!canAct()){ui.modal=null;renderModal()}
    render();const t=S.turn;if(S.screen==='game'&&t&&t.pending&&canAct()&&!ui.modal)openPending()}
  },e=>toast('Verbindung zum Online-Spiel unterbrochen'))}
-function mpQueue(){if(!MP||!S||!S.online)return;clearTimeout(MP.tm);MP.tm=setTimeout(mpPush,150)}
+function mpQueue(){if(!MP||!S||!S.online)return;clearTimeout(MP.tm);MP.tm=setTimeout(mpPush,20)}
 async function mpPush(){const m=MP;if(!m||!S||!S.online)return;if(m.busy){m.dirty=true;return}m.busy=true;
  try{await m.ref.update({json:JSON.stringify(S),rev:S.rev||0,updated:Date.now(),status:S.screen==='end'?'end':'game'})}catch(e){if(!m.warned){m.warned=true;infoSheet('Zug konnte nicht gesendet werden',PERM_TXT)}}
  m.busy=false;if(m.dirty){m.dirty=false;mpPush()}}
