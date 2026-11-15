@@ -185,6 +185,13 @@ td small{color:#ffb340;font-size:10px;margin-left:3px}
 .tag.prot{background:rgba(48,209,88,.16);color:#5be37f}
 .g-pflicht{background:rgba(48,209,88,.15);color:#5be37f}
 .g-topf{background:rgba(255,204,64,.16);color:#ffd257}
+.lockbox{border-radius:16px;padding:14px 16px;margin:0 0 14px;background:linear-gradient(135deg,rgba(255,159,10,.18),rgba(255,159,10,.05));border:1px solid rgba(255,159,10,.45);text-align:center}
+.lk-k{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#ffb340}
+.lk-t{font-size:26px;font-weight:800;letter-spacing:-.01em;margin-top:2px}
+.lk-h{font-size:14px;color:var(--sec);margin-top:2px}
+.lk-st{display:inline-block;margin-top:9px;padding:5px 12px;border-radius:20px;font-size:14px;font-weight:600}
+.lk-st.ok{background:rgba(48,209,88,.18);color:#5be37f}
+.lk-st.no{background:rgba(255,255,255,.08);color:var(--sec)}
 .potbar{display:flex;align-items:center;gap:8px;margin:-6px 0 14px;padding:9px 13px;border-radius:12px;background:linear-gradient(90deg,rgba(255,204,64,.14),rgba(255,204,64,.04));border:1px solid rgba(255,204,64,.22);color:#ffd257;font-size:14px;font-weight:600}
 .potbar b{font-size:17px;font-variant-numeric:tabular-nums;margin-left:auto}
 .potbar.bump{animation:potb .7s}
@@ -563,7 +570,7 @@ function drawCard(p){p.got=p.got||[];p.pf=p.pf||0;
 function pickOptions(kind){const me=S.players[S.cur],t=S.turn,out=[];
  if(kind==='strike')S.players.forEach((q,qi)=>{if(qi===S.cur)return;CATS.forEach(c=>{const e=q.sc[c.id];if(e&&e.final>0&&!e.prot)out.push({key:qi+'|'+c.id,group:q.name,label:c.name,val:e.final})})});
  if(kind==='replay')CATS.forEach(c=>{const e=me.sc[c.id];if(e&&e.final===0)out.push({key:'x|'+c.id,group:'Deine gestrichenen Kategorien',label:c.name})});
- if(kind==='swap')S.players.forEach((q,qi)=>{if(qi===S.cur)return;CATS.forEach(c=>{const a=me.sc[c.id],b=q.sc[c.id];if(a&&b&&a.final!==b.final)out.push({key:qi+'|'+c.id,group:'Tauschen mit '+q.name,label:c.name,sub:'Du '+a.final+'  ⇄  '+q.name+' '+b.final,diff:b.final-a.final})})});
+ if(kind==='swap')S.players.forEach((q,qi)=>{if(qi===S.cur)return;CATS.forEach(c=>{const a=me.sc[c.id],b=q.sc[c.id];if(a&&b&&!b.prot&&a.final!==b.final)out.push({key:qi+'|'+c.id,group:'Tauschen mit '+q.name,label:c.name,sub:'Du '+a.final+'  ⇄  '+q.name+' '+b.final,diff:b.final-a.final})})});
  if(kind==='gift50'||kind==='giftua')S.players.forEach((q,qi)=>{if(qi!==S.cur)out.push({key:qi+'|x',group:'Mitspieler',label:q.name})});
  if(kind==='force'||kind==='oppforce')CATS.forEach(c=>{if(!me.sc[c.id]&&!isBlocked(t,c.id))out.push({key:'x|'+c.id,group:c.sec==='oben'?'Oberer Teil':'Unterer Teil',label:c.name,sub:c.hint})});
  if(kind==='heal')CATS.forEach(c=>{const e=me.sc[c.id];if(e&&e.final===0)out.push({key:'x|'+c.id,group:'Deine gestrichenen Kategorien',label:c.name})});
@@ -597,7 +604,7 @@ function drawEvent(){const t=S.turn,p=S.players[S.cur];const __ps=S.potOn?potSna
  if(ev.pick==='oppforce'||ev.fremd){t.decider=rnd(S.players.map((_,i)=>i).filter(i=>i!==S.cur));const dn=esc(S.players[t.decider].name);t.note=S.online?(ev.fremd?dn+' bestimmt nach dem ersten Wurf, welche Würfel '+esc(p.name)+' hält.':dn+' entscheidet, in welcher Kategorie '+esc(p.name)+' wertet.'):(ev.fremd?dn+' bestimmt nach deinem ersten Wurf, welche Würfel du hältst.':dn+' entscheidet, in welcher Kategorie du wertest.')}
  if(ev.block){const pool=shuffle3(openCats(p));t.blocked=pool.map(c=>c.id);t.note='Gesperrt: '+pool.map(c=>'„'+c.name+'“').join(', ')+'.'}
  if(ev.start&&S.mode==='digital')t.startPick=true;
- if(ev.now==='tax'){S.players.forEach(q=>{if(q===p)return;const l=totals(q).lo;q.adj=(q.adj||0)-Math.floor(Math.max(0,l)*0.1)});t.note='Alle Mitspieler verlieren 10 % ihrer Punkte im unteren Teil. Jetzt normal würfeln.'}
+ if(ev.now==='tax'){const lst=[];S.players.forEach(q=>{if(q===p)return;const l=totals(q).lo,d=Math.floor(Math.max(0,l)*0.1);q.adj=(q.adj||0)-d;lst.push(esc(q.name)+' <b class="negv">−'+d+'</b>')});t.note='Abgezogen: '+lst.join(', ')+'. Jetzt normal würfeln.'}
  else if(ev.now==='dblup'){CATS.filter(c=>c.sec==='oben').forEach(c=>{const e=p.sc[c.id];if(e&&e.final){e.final*=2;addTag(e,'×2')}});p.ua=(p.ua||0)*2;t.note='Deine bonusrelevanten Punkte wurden verdoppelt: Bonus-Konto jetzt '+fmtN(totals(p).upAcc)+' / 100. Dein Wurf zählt diesen Zug ×4.'}
  else if(ev.now==='peek'){p.peekUntil=(CATS.length-openCats(p).length)+3;t.note='Du siehst jetzt 3 Runden lang die Gesamtpunkte aller Spieler. Dein Wurf zählt diesen Zug ×3.'}
  else if(ev.now==='krain'){const n=kniffelCount();const g=n.k*50+n.e*75;p.adj=(p.adj||0)+g;t.note=(n.k||n.e)?'Bisher gewürfelt: '+n.k+'× Kniffel und '+n.e+'× Kniffel Extreme – du bekommst +'+g+' Punkte. Jetzt normal würfeln.':'Bisher wurde noch kein Kniffel gewürfelt – leider 0 Punkte. Normal weiterspielen.'}
@@ -845,6 +852,8 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
   dd+='</div>'}
  if(!dig)h+=dd;
  const lock=!t.drawn||t.pending;
+ if(t.drawn&&!t.pending&&t.lock&&!p.sc[t.lock]){const c=CAT[t.lock];let st='';if(dig&&t.rolls>0){const raw=c.calc(dOf(t)),f=baseFinal(p,t,raw,t.rolls,c.id).f;st=raw>0?'<div class="lk-st ok">✓ Geschafft – '+fmtN(f)+' Punkte</div>':'<div class="lk-st no">Noch nicht geschafft</div>'}
+  h+='<div class="lockbox"><div class="lk-k">Diese Runde musst du werfen</div><div class="lk-t">'+c.name+'</div><div class="lk-h">'+c.hint+'</div>'+st+'</div>'}
  if(dig){const left=t.max-t.rolls;
   h+='<div class="dicebox '+(lock?'locked':'')+'">';
   if(t.startPick){h+='<div class="hint" style="margin:0 0 12px;color:var(--text)">Startvorteil: Welche Zahl soll dein fester Würfel zeigen?</div><div class="dice" style="margin-bottom:6px">'+[1,2,3,4,5,6].map(v=>'<button class="die" data-a="startv" data-v="'+v+'">'+pips(v)+'</button>').join('')+'</div></div>'}
