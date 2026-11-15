@@ -267,7 +267,7 @@ body.kfxon #app{filter:blur(3.5px) brightness(.55) saturate(.85)}
 @keyframes kedge{from{opacity:0}to{opacity:1}}
 @keyframes kflick{from{opacity:.82}to{opacity:1}}
 .kword{position:absolute;left:50%;top:50%;width:min(92vw,560px);height:auto;transform:translate(-50%,-50%) scale(.04);opacity:0;will-change:transform,opacity;pointer-events:none}
-.kword.ke{width:min(84vw,470px)}
+.kword.kn{aspect-ratio:1422/378}.kword.ke{width:min(84vw,470px);aspect-ratio:1175/551}
 .kfx.hit .kword{animation:kgrow 1.1s linear forwards}
 @keyframes kgrow{0%{transform:translate(-50%,-50%) scale(.04);opacity:0;animation-timing-function:cubic-bezier(.6,0,.95,.55)}8%{opacity:1}47.3%{transform:translate(-50%,-50%) scale(1.2);opacity:1;animation-timing-function:cubic-bezier(.2,.8,.3,1)}55%{transform:translate(-50%,-50%) scale(1.14,1.08)}70%{transform:translate(-50%,-50%) scale(.97)}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 .kfx.slam{animation:kshake .42s}
@@ -1219,7 +1219,7 @@ const sfx={
  fanfare(){const a=audio();if(!a)return;const t=a.currentTime;[[523,0],[659,.16],[784,.32],[1047,.52]].forEach(([f,d])=>{tone(a,f,t+d,0.34,'square',0.05);tone(a,f/2,t+d,0.34,'triangle',0.08)});tone(a,1047,t+0.86,1.0,'square',0.06);tone(a,784,t+0.86,1.0,'triangle',0.06);tone(a,523,t+0.86,1.0,'triangle',0.05)},
  undo(){const a=audio();if(!a)return;tone(a,620,a.currentTime,0.16,'sine',0.1,300)}
 };
-const KWORD={kn:new Image(),ke:new Image()};KWORD.kn.src='kword-kn.webp';KWORD.ke.src='kword-ke.webp';
+const KWORD={kn:new Image(),ke:new Image()};KWORD.kn.src='kword-kn.webp';KWORD.ke.src='kword-ke.webp';try{KWORD.kn.decode&&KWORD.kn.decode().catch(()=>{});KWORD.ke.decode&&KWORD.ke.decode().catch(()=>{})}catch(e){}
 const FLAME=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,240,190,1)');g.addColorStop(.25,'rgba(255,190,80,.85)');g.addColorStop(.55,'rgba(255,90,10,.45)');g.addColorStop(1,'rgba(150,10,0,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return c})();
 const KIMPACT=520;
 function kniffelFX(kind,who){ui.fxPending=false;if(document.querySelector('.kfx'))return;const app=document.getElementById('app');
