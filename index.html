@@ -1124,7 +1124,7 @@ function dieTap(i){const t=S.turn,ev=evOf(t);if(t.rolls===0)return;
  save();render()}
 
 document.addEventListener('input',e=>{const d=e.target.dataset;if(d.ni!==undefined)setup.names[+d.ni]=e.target.value;if(d.bn!==undefined){setup.botNames=setup.botNames||BOT_NAMES.slice();setup.botNames[+d.bn]=e.target.value}if(d.mn)setup.myName=e.target.value;if(d.jc)setup.joinCode=e.target.value});
-document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.bg){ui.modal=null;renderModal();return}
+document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&&e.target.dataset.bg){ui.modal=null;renderModal();return}
  const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a,m=ui.modal;
  if(S&&S.online&&S.screen==='game'&&!FREE_ACT.has(a)&&!canAct()&&!(S.online.host===UID&&['edit','editok','editdel','qv'].includes(a))){toast(actorName()+' ist gerade dran');return}
  switch(a){
@@ -1357,7 +1357,13 @@ setInterval(()=>{presTick()},10000);
 setInterval(()=>{if(!S||!S.online||S.screen!=='game')return;const sig=S.players.map(p=>isOnlineUid(p.uid)?1:0).join('');if(sig!==PRES.sig){PRES.sig=sig;if(!ui.rolling&&!document.querySelector('.kfx'))render()}},4000);
 /* Zug-Erinnerung */
 ui.lastAct=Date.now();ui.lastRemind=0;ui.wasMyTurn=false;
-setInterval(()=>{if(!S||!S.online||S.screen!=='game'){ui.wasMyTurn=false;return}const t=S.turn,cp=S.players[S.cur];const mine=canAct()&&cp.uid===UID&&t&&(!t.drawn||(!activeIds().length&&S.mode==='digital'&&!t.rolls));if(mine&&!ui.wasMyTurn){ui.lastAct=Date.now();ui.lastRemind=0}ui.wasMyTurn=mine;if(!mine)return;const now=Date.now();if(now-ui.lastAct>10000&&now-ui.lastRemind>15000){ui.lastRemind=now;sfx.ping();toast('Du bist dran!');document.body.classList.add('remind');setTimeout(()=>document.body.classList.remove('remind'),1600)}},1000);
+setInterval(()=>{if(!S||S.screen!=='game'){ui.wasMyTurn=null;return}const t=S.turn,cp=S.players[S.cur];if(!t||!cp){return}
+ const mineNow=S.online?(cp.uid===UID&&canAct()):!cp.bot;const key=S.id+'|'+S.cur+'|'+(S.logN||0);
+ if(!mineNow){ui.wasMyTurn=null;return}
+ if(ui.wasMyTurn!==key){ui.wasMyTurn=key;ui.lastAct=Date.now();ui.lastRemind=0;return}
+ const need=S.mode==='digital'?true:(!t.drawn);if(!need)return;
+ if(ui.modal||document.querySelector('.kfx'))return;
+ const now=Date.now();if(now-ui.lastAct>10000&&now-(ui.lastRemind||0)>10000){ui.lastRemind=now;sfx.ping();toast(S.online||S.players.filter(q=>!q.bot).length<2?'Du bist dran!':cp.name+' ist dran!');document.body.classList.add('remind');setTimeout(()=>document.body.classList.remove('remind'),1600)}},1000);
 document.addEventListener('pointerdown',()=>{ui.lastAct=Date.now();audio()},true);
 /* Statistik */
 function statsHTML(){const fin=Object.values(GAMES).map(g=>{try{return JSON.parse(g.json)}catch(e){return null}}).filter(s=>s&&s.screen==='end');
