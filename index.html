@@ -249,7 +249,7 @@ td small{color:#ffb340;font-size:10px;margin-left:3px}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="firebase-config.js"></script>
+<script src="firebase-config.js?v=3"></script>
 <script>
 /* ---------- Würfel-Logik (6 Würfel) ---------- */
 const cnt=(d,v)=>d.filter(x=>x===v).length;
@@ -372,7 +372,7 @@ let GAMES=loadGames();
 function persistLocal(){try{localStorage.setItem(LSG,JSON.stringify(GAMES))}catch(e){}}
 const newId=()=>'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function save(){if(!S)return;S.updated=Date.now();S.rev=(S.rev||0)+1;const old=GAMES[S.id];GAMES[S.id]={id:S.id,updated:S.updated,finished:S.screen==='end',synced:!!(old&&old.synced),json:JSON.stringify(S)};persistLocal();queuePush(S.id);if(S.online)mpQueue()}
-let RCOL=null,cloud='local',DB=null,UID=null,MP=null;
+let RCOL=null,cloud='local',DB=null,DB_ALT=null,UID=null,MP=null;
 const PQ={busy:{},dirty:{},tm:{}};
 function queuePush(id){if(!RCOL)return;clearTimeout(PQ.tm[id]);PQ.tm[id]=setTimeout(()=>push(id),700)}
 async function push(id){if(PQ.busy[id]){PQ.dirty[id]=true;return}const g=GAMES[id];if(!g||!RCOL)return;PQ.busy[id]=true;
@@ -392,10 +392,11 @@ async function initCloud(){try{
    get:async()=>{const sn=await r.get();return{exists:sn.exists(),id:p.split('/').pop(),data:()=>sn.val(),metadata:{fromCache:false}}},
    set:d=>r.set(d),update:d=>r.update(flat(d,'',{})),delete:()=>r.remove(),
    onSnapshot:(n,e)=>{const cb=sn=>n({exists:sn.exists(),id:p.split('/').pop(),data:()=>sn.val(),metadata:{fromCache:false}});r.on('value',cb,err=>e&&e(err));return()=>r.off('value',cb)}}}};
-  return}
+ }
  const fs=firebase.firestore();
  const wrap=s=>({exists:s.exists,id:s.id,data:()=>s.data(),metadata:s.metadata});
- DB={doc:p=>{const r=fs.doc(p);return{get:async()=>wrap(await r.get()),set:d=>r.set(d),update:d=>r.set(d,{merge:true}),delete:()=>r.delete(),onSnapshot:(n,e)=>r.onSnapshot(s=>n(wrap(s)),e)}}};
+ const FSDB={doc:p=>{const r=fs.doc(p);return{get:async()=>wrap(await r.get()),set:d=>r.set(d),update:d=>r.set(d,{merge:true}),delete:()=>r.delete(),onSnapshot:(n,e)=>r.onSnapshot(s=>n(wrap(s)),e)}}};
+ if(DB)DB_ALT=FSDB;else DB=FSDB;
 }catch(e){console.warn(e)}}
 (function migrate(){try{const o=JSON.parse(localStorage.getItem(LSOLD));if(o&&o.screen==='game'){o.id=newId();o.players.forEach(p=>{p.got=p.got||[];p.pf=p.pf||0});GAMES[o.id]={id:o.id,updated:Date.now(),finished:false,synced:false,json:JSON.stringify(o)};persistLocal()}localStorage.removeItem(LSOLD)}catch(e){}})();
 const fmtN=v=>v<0?'−'+Math.abs(v):String(v);
@@ -654,7 +655,9 @@ async function mpCreate(){if(!needCloud())return;const name=(setup.myName||'').t
  setup.online=false;mpSubscribe(code);view='lobby';render();window.scrollTo(0,0)}
 async function mpJoin(){const code=(setup.joinCode||'').toUpperCase().replace(/[^A-Z0-9]/g,''),name=(setup.myName||'').trim();
  if(code.length!==6){toast('Der Code hat 6 Zeichen');return}if(!name){toast('Bitte gib deinen Namen ein');return}if(!needCloud())return;
- const ref=DB.doc('mp/'+code);let snap;try{snap=await ref.get()}catch(e){toast('Keine Verbindung – bitte erneut versuchen');return}
+ let ref=DB.doc('mp/'+code);let snap;try{snap=await ref.get()}catch(e){snap={exists:false}}
+ if(!snap.exists&&DB_ALT){try{const r2=DB_ALT.doc('mp/'+code),s2=await r2.get();if(s2.exists){DB=DB_ALT;DB_ALT=null;ref=r2;snap=s2}}catch(e){}}
+ if(!snap.exists&&!snap.data){}
  if(!snap.exists){toast('Kein Spiel mit diesem Code gefunden');return}const d=snap.data(),seats=d.seats||{},mine=seats[UID];
  if(d.status!=='lobby'){if(mine){mpSubscribe(code);return}toast('Dieses Spiel hat schon begonnen');return}
  if(!mine&&Object.values(seats).filter(Boolean).length>=6){toast('Das Spiel ist schon voll (6 Spieler)');return}
