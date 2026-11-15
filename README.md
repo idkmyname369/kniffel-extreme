@@ -1,4 +1,4 @@
-# Kniffel Extreme
+# Kniffel Royale
 
 Würfelspiel mit 6 Würfeln, Ereigniskarten und Online-Mehrspieler.
 
