@@ -747,7 +747,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  else if(S.redo&&!S.redo.active&&__sc!==S.redo.pi){S.redo.next=nextIndex();S.redo.active=true;ni=S.redo.pi;redoNow=true}
  else ni=nextIndex();
  if(ni<0){S.screen='end'}else{S.cur=ni;if(redoNow==='resume'){S.turn=S.redo.resume.turn;S.redo=null}else if(redoNow){S.turn=S.redo.turn}else{S.turn=freshTurn();if(S.hold&&S.hold.pi===ni)applyHold(S.hold)}}S.hold=null;save();
- const __bm=!S.online&&S.players[S.cur]&&S.players[S.cur].bot&&redoNow!==true&&redoNow!=='resume';if(!after&&S.screen!=='end'&&!S.players[__sc].bot){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),mode:__bm?'bot':'std',pi:__sc,cat:target,ent:JSON.stringify(entry),bi:S.cur,exp:Infinity,text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'}}else ui.undo=null
+ const __bm=redoNow!==true;if(!after&&S.screen!=='end'&&!S.players[__sc].bot){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),mode:__bm?'bot':'std',pi:__sc,cat:target,ent:JSON.stringify(entry),bi:S.cur,exp:Infinity,text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'}}else ui.undo=null
  if(S.fx&&S.fx.seq>(ui.seenFx||0)){ui.seenFx=S.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(S.fx.kind,null),120)}
  render();window.scrollTo({top:0,behavior:'smooth'});
  if(reveal){sfx.reveal();if(S.lastReveal)ui.seenReveal=S.lastReveal.seq;ui.modal=null;renderModal();if(kb)toast(kbLabel(kb)+' für '+p.name)}
