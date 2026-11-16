@@ -1161,7 +1161,7 @@ function homeHTML(){const list=Object.values(GAMES).map(g=>{try{return{g,s:JSON.
 ui.cerDone={};
 function endHold(){return !!(ui.revHold||ui.fxPending||(ui.modal&&ui.modal.type==='reveal')||document.querySelector('.kfx'))}
 function rollShuffle(){document.querySelectorAll('.die.roll').forEach(el=>{const fin=el.innerHTML;let n=0;const iv=setInterval(()=>{if(!el.isConnected||++n>5){clearInterval(iv);if(el.isConnected)el.innerHTML=fin;return}el.innerHTML=pips(1+Math.floor(Math.random()*6))},70)})}
-function startRevHold(L){if(!L||!EV[L.ev])return;const a=document.getElementById('app');const ev=EV[L.ev];const spin=ev.after==='fate'||ev.after==='wheel'||(ev.after==='don'&&L.res&&L.res.die);const dur=spin?3600:2800;
+function startRevHold(L){if(!L||!EV[L.ev])return;const a=document.getElementById('app');const ev=EV[L.ev];const spin=ev.after==='fate'||ev.after==='wheel'||(ev.after==='don'&&L.res&&L.res.die);const dur=7000;
  clearTimeout(ui.revT);ui.revHold={html:a.innerHTML,L,spin,mounted:false};ui.revT=setTimeout(()=>{ui.revHold=null;const a2=document.getElementById('app');if(a2.style)a2.style.pointerEvents='';render()},dur)}
 function mountRevHold(a){const H=ui.revHold,L=H.L,ev=EV[L.ev],c=CAT[L.cat],r=L.res||{};a.innerHTML=H.html;if(a.style)a.style.pointerEvents='none';H.mounted=true;
  const wi=S.players.findIndex(q=>q.name===L.who);
