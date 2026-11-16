@@ -40,6 +40,7 @@ button:disabled{cursor:default}
 .cell.off .ct,.cell.off .cs,.cell.off .glyph{opacity:.35}
 input[type=text],input[type=number]{font-family:inherit;font-size:17px;background:transparent;border:0;color:var(--text);outline:none;width:100%;padding:0;letter-spacing:-.01em}
 input::placeholder{color:var(--ter)}
+.lvlbtn{flex:none;margin:0 8px;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:700;min-width:64px;background:var(--card3);color:var(--text)}.lvlbtn.lv0{color:#8fd18f}.lvlbtn.lv2{color:#ffcf6a}
 .stepper{display:flex;align-items:center;background:var(--card3);border-radius:9px;overflow:hidden}
 .stepper button{width:44px;height:32px;font-size:20px;color:var(--text)}
 .stepper b{min-width:26px;text-align:center;font-weight:600;font-size:16px}
@@ -547,7 +548,7 @@ const NEW_IDS=['topf','bomb','revenge','don','x7','teuer10','twos','threes','fiv
 const LSOLD='kniffel-extreme-v3',LSSEL='kniffel-extreme-sel-v3',LSG='kniffel-extreme-games-v1';
 
 let S=null;
-let setup={bots:0,botNames:['Bot 1','Bot 2','Bot 3','Bot 4','Bot 5'],n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
+let setup={bots:0,botLvl:(()=>{try{const v=JSON.parse(localStorage.getItem('kx-botlvl'));if(Array.isArray(v))return v}catch(e){}return[1,1,1,1,1]})(),botNames:['Bot 1','Bot 2','Bot 3','Bot 4','Bot 5'],n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
 let ui={modal:null,flip:false,rolling:false,rollIdx:-1};
 let view='home';
 try{saveSel()}catch(e){}
@@ -601,7 +602,7 @@ const addTag=(e,t)=>{e.tag=(e.tag?e.tag+' ':'')+t};
 const solo=()=>S.players.length<2;
 const activeIds=()=>S.events.filter(id=>EV[id]&&(!EV[id].multi||!solo()));
 function freshTurn(){return{drawn:!activeIds().length,ev:null,note:'',pending:null,lock:null,blocked:null,dice:[1,1,1,1,1,1],held:[false,false,false,false,false,false],fixed:-1,startPick:false,rolls:0,max:3,jokerN:0,jokerDice:[],jokerUsed:false,tool:null,mirUsed:false,rerollUsed:false,retryUsed:false}}
-function newGame(names,mode,events,botFlags,colors){S={id:newId(),created:Date.now(),screen:'game',mode,events,players:names.map(n=>({name:n,sc:{},bt:BONUS_T,bf:1,ua:0,kb:0,adj:0,half:false,got:[],pf:0})),cur:0};S.potOn=(events||[]).includes('topf');S.pot=0;S.hist=[{tot:names.map(()=>0)}];if(botFlags)S.players.forEach((q,i)=>{if(botFlags[i])q.bot=true});{const cl=assignColors(names.map((_,i)=>colors&&colors[i]!=null?colors[i]:null));S.players.forEach((q,i)=>q.color=cl[i])}S.turn=freshTurn();save();render()}
+function newGame(names,mode,events,botFlags,colors,lvls){S={id:newId(),created:Date.now(),screen:'game',mode,events,players:names.map(n=>({name:n,sc:{},bt:BONUS_T,bf:1,ua:0,kb:0,adj:0,half:false,got:[],pf:0})),cur:0};S.potOn=(events||[]).includes('topf');S.pot=0;S.hist=[{tot:names.map(()=>0)}];if(botFlags)S.players.forEach((q,i)=>{if(botFlags[i]){q.bot=true;q.lvl=lvls&&lvls[i]!=null?lvls[i]:1}});{const cl=assignColors(names.map((_,i)=>colors&&colors[i]!=null?colors[i]:null));S.players.forEach((q,i)=>q.color=cl[i])}S.turn=freshTurn();save();render()}
 const evOf=t=>t&&t.ev?EV[t.ev]:null;
 const dOf=t=>t.dice;
 const openCats=p=>CATS.filter(c=>!p.sc[c.id]);
@@ -853,6 +854,7 @@ const HIDDEN={g:'verdeckt',gl:'?'};
 const GLAB={topf:'Tresor',wuerfe:'Würfe',wertung:'Wertung',bonus:'Bonus',spezial:'Spezial',pflicht:'Pflichtwurf',verdeckt:'Verdeckt'};
 const EMBLEM='<svg class="emb" viewBox="0 0 64 64"><defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1c2"/><stop offset=".45" stop-color="#d9b25e"/><stop offset="1" stop-color="#8a6420"/></linearGradient></defs><g transform="rotate(45 32 32)"><rect x="13" y="13" width="38" height="38" rx="9" fill="none" stroke="url(#gg)" stroke-width="2.6"/><rect x="18" y="18" width="28" height="28" rx="6" fill="none" stroke="url(#gg)" stroke-width=".9" opacity=".6"/><circle cx="24" cy="24" r="2.9" fill="url(#gg)"/><circle cx="40" cy="24" r="2.9" fill="url(#gg)"/><circle cx="32" cy="32" r="3.3" fill="url(#gg)"/><circle cx="24" cy="40" r="2.9" fill="url(#gg)"/><circle cx="40" cy="40" r="2.9" fill="url(#gg)"/></g></svg>';
 function setupColorList(){const n=setup.n,nb=setup.online?0:(setup.bots||0);const raw=[...Array(n)].map((_,i)=>(setup.colors||[])[i]).concat([...Array(nb)].map((_,i)=>(setup.botColors||[])[i]));return assignColors(raw.map(x=>x==null?null:x))}
+function lvlBtn(i){const l=(setup.botLvl||[])[i]??1;return'<button class="lvlbtn lv'+l+'" data-a="blvl" data-i="'+i+'">'+BOT_LV[l]+'</button>'}
 function swatchBtn(kind,i){const L=setupColorList(),idx=kind==='h'?i:setup.n+i;const c=PALETTE[L[idx]];return'<button class="swatch" data-a="pickcol" data-k="'+kind+'" data-i="'+i+'" style="background:'+c.c+'" aria-label="Farbe"></button>'}
 function cardBack(tag,attr,sub){return'<'+tag+' class="cback'+(tag==='div'?' wait':'')+'" '+attr+'><span class="cb-frame"></span><span class="cb-c tl"></span><span class="cb-c tr"></span><span class="cb-c bl"></span><span class="cb-c br"></span><span class="cb-in">'+EMBLEM+'<span class="cb-t">Ereigniskarte ziehen</span><span class="cb-s">'+sub+'</span></span></'+tag+'>'}
 const PALETTE=[{n:'Weinrot',c:'#9b2335',l:'#d0566a'},{n:'Waldgrün',c:'#2e6b45',l:'#5fae7f'},{n:'Gold',c:'#c9a24a',l:'#e6c46f'},{n:'Rosé',c:'#d8a1a8',l:'#ecbcc2'},{n:'Dunkelblau',c:'#2a4f95',l:'#6f95dd'},{n:'Petrol',c:'#1f6b73',l:'#4fb0ba'},{n:'Aubergine',c:'#6a2e5e',l:'#b46fa6'},{n:'Kupfer',c:'#b8693a',l:'#dd965f'},{n:'Silber',c:'#a9aeb7',l:'#cdd1d8'},{n:'Champagner',c:'#e3cf9f',l:'#efe2bf'}];
@@ -943,8 +945,8 @@ function setupHTML(){
  if(on)h+='<div class="block"><div class="gtitle">Dein Name</div><div class="group"><div class="cell"><input type="text" data-mn="1" maxlength="14" placeholder="Dein Name" value="'+esc(setup.myName||'')+'"></div></div></div>';
  else h+='<div class="block"><div class="gtitle">Spieler</div><div class="group"><div class="cell"><div class="grow ct">Anzahl</div><div class="stepper"><button data-a="nminus">−</button><b>'+setup.n+'</b><button data-a="nplus">+</button></div></div>';
  if(!on){for(let i=0;i<setup.n;i++)h+='<div class="cell"><input type="text" maxlength="14" data-ni="'+i+'" value="'+esc(setup.names[i])+'" placeholder="Spieler '+(i+1)+'">'+swatchBtn('h',i)+'</div>';
- h+='<div class="cell"><div class="grow"><div class="ct">Bots</div><div class="cs">Computer-Mitspieler, bis zu 5</div></div><div class="stepper"><button data-a="bminus">−</button><b>'+(setup.bots||0)+'</b><button data-a="bplus">+</button></div></div>';
- for(let i=0;i<(setup.bots||0);i++)h+='<div class="cell"><span style="margin-right:8px">🤖</span><input type="text" maxlength="14" data-bn="'+i+'" value="'+esc((setup.botNames||BOT_NAMES)[i])+'" placeholder="Bot '+(i+1)+'">'+swatchBtn('b',i)+'</div>';
+ h+='<div class="cell"><div class="grow"><div class="ct">Bots</div><div class="cs">Computer-Mitspieler, bis zu 5 · Stärke antippen zum Ändern</div></div><div class="stepper"><button data-a="bminus">−</button><b>'+(setup.bots||0)+'</b><button data-a="bplus">+</button></div></div>';
+ for(let i=0;i<(setup.bots||0);i++)h+='<div class="cell"><span style="margin-right:8px">🤖</span><input type="text" maxlength="14" data-bn="'+i+'" value="'+esc((setup.botNames||BOT_NAMES)[i])+'" placeholder="Bot '+(i+1)+'">'+lvlBtn(i)+swatchBtn('b',i)+'</div>';
  h+='</div>'+((setup.bots||0)?'<div class="gfoot">Mit Bots wird immer digital gewürfelt.</div>':'')+'</div>'}
  h+='<div class="block"><div class="gtitle">Würfel</div><div class="group"><div class="seg"><button class="'+(setup.mode==='digital'?'on':'')+'" data-a="mode" data-m="digital">Digital würfeln</button><button class="'+(setup.mode==='manual'?'on':'')+'" data-a="mode" data-m="manual">Eigene Würfel</button></div></div><div class="gfoot">'+(setup.mode==='digital'?'Gewürfelt wird hier in der App. Würfel antippen zum Halten, die Punkte werden automatisch berechnet.':'Ihr würfelt mit echten Würfeln und tragt die Punkte selbst ein. Würfel-Karten wie Joker oder Spiegelwürfel führt ihr mit euren Würfeln aus.')+'</div></div>';
  const isSolo=!on&&setup.n<2;
@@ -1253,6 +1255,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'fremddone':{const t=S.turn;t.fremdDone=true;save();render();break}
   case'nminus':setup.n=Math.max(1,setup.n-1);render();break;
   case'nplus':setup.n=Math.min(6-(setup.bots||0),setup.n+1);render();break;
+  case'blvl':{const i=+b.dataset.i;setup.botLvl=setup.botLvl||[1,1,1,1,1];setup.botLvl[i]=((setup.botLvl[i]??1)+1)%3;try{localStorage.setItem('kx-botlvl',JSON.stringify(setup.botLvl))}catch(e){}render();break}
   case'bminus':setup.bots=Math.max(0,(setup.bots||0)-1);render();break;
   case'bplus':setup.bots=Math.min(5,6-setup.n,(setup.bots||0)+1);render();break;
   case'mode':setup.mode=b.dataset.m;render();break;
@@ -1262,7 +1265,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'pfopen':setup.pfOpen=!setup.pfOpen;render();break;
   case'selall':setup.sel=EVENTS.map(e=>e.id);saveSel();render();break;
   case'selnone':setup.sel=[];saveSel();render();break;
-  case'start':{const nb=setup.online?0:(setup.bots||0);const names=setup.names.slice(0,setup.n).map((n,i)=>n.trim()||'Spieler '+(i+1)).concat((setup.botNames||BOT_NAMES).slice(0,nb).map((n,i)=>(n||'').trim()||'Bot '+(i+1)));newGame(names,nb?'digital':setup.mode,setup.sel.slice(),names.map((_,i)=>i>=setup.n),names.map((_,i)=>i<setup.n?(setup.colors||[])[i]:(setup.botColors||[])[i-setup.n]));window.scrollTo(0,0);break}
+  case'start':{const nb=setup.online?0:(setup.bots||0);const names=setup.names.slice(0,setup.n).map((n,i)=>n.trim()||'Spieler '+(i+1)).concat((setup.botNames||BOT_NAMES).slice(0,nb).map((n,i)=>(n||'').trim()||'Bot '+(i+1)));newGame(names,nb?'digital':setup.mode,setup.sel.slice(),names.map((_,i)=>i>=setup.n),names.map((_,i)=>i<setup.n?(setup.colors||[])[i]:(setup.botColors||[])[i-setup.n]),names.map((_,i)=>i<setup.n?null:((setup.botLvl||[])[i-setup.n]??1)));window.scrollTo(0,0);break}
   case'new':setup.online=false;view='setup';render();window.scrollTo(0,0);break;
   case'open':{const g=GAMES[b.dataset.id];if(!g)return;try{S=JSON.parse(g.json)}catch(e){toast('Spiel konnte nicht geladen werden');return}ui.viewP=null;ui.seenReveal=S.lastReveal?S.lastReveal.seq:0;ui.seenFx=S.fx?S.fx.seq:0;ui.cerAnim=null;if(S.online){if(DB&&UID)mpSubscribe(S.online.code);else toast('Offline – du siehst den letzten Stand');}ui.modal=null;renderModal();render();window.scrollTo(0,0);break}
   case'askdel':ui.modal={type:'del',id:b.dataset.id};renderModal();break;
@@ -1428,9 +1431,19 @@ const BOT_HARD=['ke','hw','kn','gfh','gs','zd','dpa','fh','vp','le'];
 let botT=0;
 function botWait(ms){botT=Date.now()+ms}
 function botCounts(d){const c=[0,0,0,0,0,0,0];d.forEach(v=>c[v]++);return c}
-function botBest(){const t=S.turn,p=S.players[S.cur];let best=null;
- for(const c of CATS){if(!allowed(p,t,c))continue;const raw=c.calc(t.dice);const f=baseFinal(p,t,raw,t.rolls,c.id).f;const sc=(f>0?f:Math.min(0,f)*1.5)-(BOT_BASE[c.id]||15);if(!best||sc>best.sc)best={id:c.id,f,sc,raw}}
+const BOT_LV=['Noob','Average','Profi'];var BOT_CONT=14;
+function botLv(i){const p=S.players[i==null?S.cur:i];return p&&p.lvl!=null?p.lvl:1}
+function botBestD(d,rolls,noise){const t=S.turn,p=S.players[S.cur];let best=null;
+ for(const c of CATS){if(!allowed(p,t,c))continue;const raw=c.calc(d);const f=baseFinal(p,t,raw,rolls,c.id).f;let sc=(f>0?f:Math.min(0,f)*1.5)-(BOT_BASE[c.id]||15)*(noise?.4:1);if(noise)sc+=(Math.random()-.5)*noise;if(!best||sc>best.sc)best={id:c.id,f,sc,raw}}
  return best}
+function botBest(){const t=S.turn;return botBestD(t.dice,t.rolls,botLv()===0?34:0)}
+function botMust(){const t=S.turn,ev=evOf(t);return t.dice.map((_,i)=>i===t.fixed||!!(ev&&ev.frozen&&t.held[i]))}
+function botProHold(){const t=S.turn,d=t.dice,ev=evOf(t),n=d.length;const must=botMust(),seen=new Set(),dd=d.slice();let best=null;
+ for(let m=0;m<(ev&&ev.nohold?1:(1<<n));m++){const keep=d.map((_,i)=>must[i]||!!(m>>i&1));const sig=d.map((v,i)=>keep[i]?v:0).sort().join('')+must.map((x,i)=>x||keep[i]?1:0).join('');if(seen.has(sig))continue;seen.add(sig);
+  const N=keep.every(k=>k)?1:70;let s=0;for(let k=0;k<N;k++){for(let i=0;i<n;i++)dd[i]=keep[i]?d[i]:1+Math.floor(Math.random()*6);const b=botBestD(dd,t.rolls+1,0);s+=b?b.sc:-60}
+  s/=N;if(t.max-t.rolls>=2&&!keep.every(k=>k))s+=BOT_CONT;if(!best||s>best.s)best={keep,s}}
+ return best}
+function botNoobHold(){const t=S.turn,ev=evOf(t),must=botMust();if(ev&&ev.nohold)return t.dice.map(()=>false);return botPlanHold().map((k,i)=>must[i]||(Math.random()<.3?!k:k))}
 function botRun(d,minLen){const u=[...new Set(d)].sort();let bestRun=[],cur=[];for(const v of u){if(cur.length&&v===cur[cur.length-1]+1)cur.push(v);else cur=[v];if(cur.length>bestRun.length)bestRun=cur.slice()}return bestRun.length>=minLen?bestRun:null}
 function botPlanHold(){const t=S.turn,p=S.players[S.cur],d=t.dice,cnt=botCounts(d);const keep=new Array(6).fill(false);
  const holdVals=vals=>{const need=vals.slice();d.forEach((v,i)=>{const k=need.indexOf(v);if(k>=0){keep[i]=true;need.splice(k,1)}})};
@@ -1455,6 +1468,7 @@ function botStop(b){if(!b)return false;const big=['ke','kn','hw','gs','gfh','zd'
 function botJoker(){const t=S.turn,d=t.dice,cnt=botCounts(d);const v=[1,2,3,4,5,6].sort((a,b)=>cnt[b]-cnt[a]||b-a)[0];let n=t.jokerN;for(let i=0;i<6&&n>0;i++){if(d[i]!==v&&i!==t.fixed){d[i]=v;t.jokerDice.push(i);n--}}t.jokerUsed=true;t.tool=null}
 function botTot(i){return totals(S.players[i]).total}
 function botPickKey(kind){const o=pickOptions(kind);if(!o.length)return null;const me=S.players[S.cur];
+ if(kind!=='sac2'&&botLv(kind==='oppforce'&&S.turn.decider!=null?S.turn.decider:S.cur)===0&&Math.random()<.5)return o[Math.floor(Math.random()*o.length)].key;
  const by=f=>o.slice().sort((a,b)=>f(b)-f(a))[0].key;const qi=k=>+String(k).split('|')[0];const cid=k=>String(k).split('|')[1];
  if(kind==='strike'||kind==='revenge')return by(x=>(x.val||0)+botTot(qi(x.key))*0.05);
  if(kind==='swap')return by(x=>x.diff||0);
@@ -1492,8 +1506,12 @@ function botTick(){if(!S||S.online||S.screen!=='game'||!S.players.some(q=>q.bot)
  if(t.rolls===0){roll();botWait(2100);return}
  if(fremdOpen(t))return;
  if(evOf(t)&&evOf(t).fremd&&t.rolls===1&&t.fremdDone&&!ui.botHeld){ui.botHeld=true}
- const b=botBest();
- if(t.rolls<t.max&&!botStop(b)){if(!ui.botHeld){t.held=botPlanHold();ui.botHeld=true;save();render();botWait(950);return}ui.botHeld=false;roll();botWait(2100);return}
+ const b=botBest(),lv=botLv();
+ if(t.rolls<t.max){if(ui.botHeld){ui.botHeld=false;roll();botWait(2100);return}
+  let stop,keep;
+  if(lv===2){const h=botProHold();stop=!h||(b&&b.sc>=h.s);keep=h&&h.keep}
+  else{stop=botStop(b)||(lv===0&&t.rolls>=1&&Math.random()<.2);if(!stop)keep=lv===0?botNoobHold():botPlanHold()}
+  if(!stop){t.held=keep;ui.botHeld=true;save();render();botWait(950);return}}
  ui.botHeld=false;
  if(t.jokerN&&!t.jokerUsed){botJoker();save();render();botWait(1500);return}
  const ev=evOf(t);if((!b||b.f<=0)&&ev&&ev.retry&&!t.retryUsed){retryTurn();botWait(1100);return}
