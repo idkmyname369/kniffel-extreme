@@ -638,7 +638,7 @@ const kbLabel=a=>a===75?'Kniffel-Extreme-Bonus +75':'Kniffel-Bonus +50';
 const PF_MAX=3;
 function shuffle3(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,3)}
 const betCats=p=>openCats(p).filter(c=>c.sec==='unten'&&c.id!=='ch'&&c.id!=='sc');
-function applicable(e,p){const oc=openCats(p).length,done=CATS.length-oc;if(e.now==='bomb'&&S.bomb)return false;if(e.now==='topf'&&(!S.potOn||(S.pot||0)<POT_MIN||done+1<POT_FROM))return false;if(e.lateOnly&&oc>e.lateOnly)return false;if(e.fromRound&&done+1<e.fromRound)return false;if(e.block&&oc<4)return false;if(e.pick==='bet'&&betCats(p).length<3)return false;if(e.multi&&solo())return false;if(e.lock&&p.sc[e.lock])return false;
+function applicable(e,p){const oc=openCats(p).length,done=CATS.length-oc;if(e.now==='bomb'&&S.bomb)return false;if(e.now==='topf'&&(!S.potOn||(S.pot||0)<POT_MIN||done+1<POT_FROM))return false;if(e.lateOnly&&oc>e.lateOnly)return false;if(e.fromRound&&done+1<e.fromRound)return false;if(e.block&&oc<4)return false;if(e.pick==='bet'&&betCats(p).length<3)return false;if(e.multi&&solo())return false;if(e.now==='peek'&&S.players.length<3)return false;if(e.lock&&p.sc[e.lock])return false;
  if((e.block||e.pick==='force'||e.pick==='oppforce'||e.after==='mix')&&openCats(p).length<2)return false;return true}
 let POT_MIN=40,POT_FROM=4,POT_W0=1.5,POT_DIV=25,POT_WMAX=6,POT_REP=true;
 function pV(q){let v=(q.ua||0)+(q.adj||0)+(q.kb||0);for(const k in q.sc)v+=q.sc[k].final||0;return v}
