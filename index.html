@@ -1468,23 +1468,23 @@ function botNeed(){const m=ui.modal;if(m.need==='don'){m.ctx.don=m.amount<=30?r6
  commit(m.id,m.raw,m.ctx)}
 function botTick(){if(!S||S.online||S.screen!=='game'||!S.players.some(q=>q.bot)||ui.revHold)return;if(Date.now()<botT||ui.fxPending||document.querySelector('.kfx,.bfx')||ui.rolling)return;
  const t=S.turn,p=S.players[S.cur];
- if(!p.bot){if(t.pending==='oppforce'&&t.decider!=null&&S.players[t.decider].bot){if(ui.modal&&ui.modal.type==='pick'){ui.modal=null;renderModal()}const key=botPickKey('oppforce');if(key)applyPick('oppforce',key);botWait(900)}return}
+ if(!p.bot){if(t.pending==='oppforce'&&t.decider!=null&&S.players[t.decider].bot){if(ui.modal&&ui.modal.type==='pick'){ui.modal=null;renderModal()}const key=botPickKey('oppforce');if(key)applyPick('oppforce',key);botWait(1100)}return}
  if(ui.modal){const m=ui.modal;
   if(m.type==='reveal'){if(!m.__bt)m.__bt=Date.now();else if(m.phase==='done'&&Date.now()-m.__bt>2600){ui.modal=null;renderModal();render()}return}
-  if(m.type==='need'){botNeed();botWait(1500);return}
-  if(['pick','gamble','rcount','duel','bet'].includes(m.type)&&!(t.pending==='oppforce'&&t.decider!=null&&!S.players[t.decider].bot)){ui.modal=null;renderModal();botWait(500);return}
+  if(m.type==='need'){botNeed();botWait(1900);return}
+  if(['pick','gamble','rcount','duel','bet'].includes(m.type)&&!(t.pending==='oppforce'&&t.decider!=null&&!S.players[t.decider].bot)){ui.modal=null;renderModal();botWait(600);return}
   return}
- if(!t.drawn){drawEvent();botWait(2400);return}
- if(t.pending){if(t.pending==='oppforce'&&t.decider!=null&&!S.players[t.decider].bot){if(!ui.modal)openPending();return}botPending();botWait(2000);return}
- if(t.startPick){t.dice[0]=6;t.held[0]=true;t.fixed=0;t.startPick=false;save();render();botWait(600);return}
- if(t.rolls===0){roll();botWait(1700);return}
+ if(!t.drawn){drawEvent();botWait(3000);return}
+ if(t.pending){if(t.pending==='oppforce'&&t.decider!=null&&!S.players[t.decider].bot){if(!ui.modal)openPending();return}botPending();botWait(2500);return}
+ if(t.startPick){t.dice[0]=6;t.held[0]=true;t.fixed=0;t.startPick=false;save();render();botWait(750);return}
+ if(t.rolls===0){roll();botWait(2100);return}
  const b=botBest();
- if(t.rolls<t.max&&!botStop(b)){if(!ui.botHeld){t.held=botPlanHold();ui.botHeld=true;save();render();botWait(1200);return}ui.botHeld=false;roll();botWait(1700);return}
+ if(t.rolls<t.max&&!botStop(b)){if(!ui.botHeld){t.held=botPlanHold();ui.botHeld=true;save();render();botWait(1500);return}ui.botHeld=false;roll();botWait(2100);return}
  ui.botHeld=false;
- if(t.jokerN&&!t.jokerUsed){botJoker();save();render();botWait(1200);return}
- const ev=evOf(t);if((!b||b.f<=0)&&ev&&ev.retry&&!t.retryUsed){retryTurn();botWait(900);return}
+ if(t.jokerN&&!t.jokerUsed){botJoker();save();render();botWait(1500);return}
+ const ev=evOf(t);if((!b||b.f<=0)&&ev&&ev.retry&&!t.retryUsed){retryTurn();botWait(1100);return}
  const fin=botBest();if(!fin){t.pending=null;return}
- commit(fin.id,fin.raw,{});botWait(1800)}
+ commit(fin.id,fin.raw,{});botWait(2250)}
 setInterval(botTick,250);
 /* Rückgängig */
 let undoEl=null;
