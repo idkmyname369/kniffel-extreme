@@ -369,6 +369,7 @@ button.cback:active{transform:scale(.985)}
 .rv-res{transition:opacity .4s}.rv-res.hide{opacity:0;height:0;overflow:hidden}
 .evcard .rsdie{width:56px;height:56px;margin:10px 0 4px}.evcard .rswheel{width:64px;height:64px;font-size:19px;margin:10px 0 4px}
 .peekbtn{display:flex;justify-content:space-between;align-items:center;width:100%;margin:-6px 0 14px;padding:12px 14px;border-radius:12px;background:linear-gradient(90deg,rgba(255,179,64,.18),rgba(255,179,64,.05)),var(--bg);border:1px solid rgba(255,179,64,.35);color:#ffcf80;font-size:14.5px;font-weight:600;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+.st .pts{font-size:15px;font-weight:700;color:#ffb340;margin-top:2px;white-space:nowrap}
 .peekbtn span{font-size:12.5px;opacity:.75;font-weight:500}
 .confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:90}
 .cer{margin-bottom:22px}
@@ -846,7 +847,8 @@ function needCloud(){if(DB&&UID)return true;infoSheet('Online nicht verfügbar',
 const meIdx=()=>S&&S.online?S.players.findIndex(q=>q.uid===UID):-1;
 function peekViewer(){if(!S)return null;return S.online?S.players[meIdx()]:S.players[S.cur]}
 function peekActive(v){return !!(v&&v.peekUntil&&(CATS.length-openCats(v).length)<v.peekUntil)}
-function canPeek(){const v=peekViewer();if(!peekActive(v))return false;return S.online?true:!!ui.peekHold}
+function localPeeker(){return S.players.find(q=>peekActive(q))||null}
+function canPeek(){if(!S)return false;if(!S.online)return !!ui.peekHold&&!!localPeeker();return peekActive(peekViewer())}
 function canAct(){if(!S)return true;if(!S.online){const t=S.turn;if(!t||!S.players.some(q=>q.bot))return true;const B=i=>!!(S.players[i]&&S.players[i].bot);if(t.pending==='oppforce'&&t.decider!=null)return !B(t.decider);return !B(S.cur)}const t=S.turn;if(!t)return false;const me=i=>i!=null&&S.players[i]&&S.players[i].uid===UID;const ev=evOf(t);
  if(t.pending==='oppforce')return me(t.decider);
  if(ev&&ev.fremd&&t.rolls===1&&!t.fremdDone&&t.decider!=null)return me(t.decider);
@@ -937,9 +939,9 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
  if(S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran – du siehst live zu.</div>';
  else if(!S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran …</div>';
  if(t.bet)h+='<div class="betbar"><b>Wetteinsatz '+t.bet.stake+'</b> auf '+t.bet.cats.map(id=>CAT[id].name).join(', ')+'</div>';
- if(!S.online&&peekActive(S.players[S.cur])&&!viewing){const v=S.players[S.cur];h+='<button class="peekbtn">'+'🔍 '+(ui.peekHold?'Gesamtpunkte sichtbar':'Halten für Gesamtpunkte')+'<span>noch '+(v.peekUntil-(CATS.length-openCats(v).length))+' Rd.</span></button>'}
+ if(!S.online&&localPeeker()&&!viewing){const v=localPeeker();h+='<button class="peekbtn">'+'🔍 Punkte Spionage<span>noch '+(v.peekUntil-(CATS.length-openCats(v).length))+' Rd.</span></button>'}
  if(S.online&&canPeek()){const v=peekViewer();h+='<div class="betbar" style="background:linear-gradient(rgba(255,179,64,.12),rgba(255,179,64,.12)),var(--bg);color:#ffcf80">Spionage aktiv: noch '+(v.peekUntil-(CATS.length-openCats(v).length))+' Runde(n) Gesamtpunkte sichtbar</div>'}
- if(S.players.length>1)h+='<div class="standings">'+S.players.map((q,i)=>'<button class="st nm '+(i===vi?'on':'')+'" style="--pc:'+pcolI(i).c+'" data-a="viewp" data-i="'+i+'"><div class="p">'+(S.online?'<span class="dot'+(isOnlineUid(q.uid)?'':' off')+'"></span>':(i===S.cur?'<span class="dot"></span>':''))+esc(q.name)+(S.bomb&&S.bomb.holder===i?' <span class="bombi">💣</span>':'')+(S.online&&q.uid===UID?' <span style="font-size:12px;opacity:.6">(du)</span>':'')+'</div><div class="n">'+(i===S.cur?'am Zug':'noch '+openCats(q).length+' offen')+(S.online&&!isOnlineUid(q.uid)?' · offline':'')+(canPeek()?' · <b style="color:#ffb340">'+totals(q).total+' P.</b>':'')+'</div></button>').join('')+'</div>';
+ if(S.players.length>1)h+='<div class="standings">'+S.players.map((q,i)=>'<button class="st nm '+(i===vi?'on':'')+'" style="--pc:'+pcolI(i).c+'" data-a="viewp" data-i="'+i+'"><div class="p">'+(S.online?'<span class="dot'+(isOnlineUid(q.uid)?'':' off')+'"></span>':(i===S.cur?'<span class="dot"></span>':''))+esc(q.name)+(S.bomb&&S.bomb.holder===i?' <span class="bombi">💣</span>':'')+(S.online&&q.uid===UID?' <span style="font-size:12px;opacity:.6">(du)</span>':'')+'</div><div class="n">'+(i===S.cur?'am Zug':'noch '+openCats(q).length+' offen')+(S.online&&!isOnlineUid(q.uid)?' · offline':'')+'</div>'+(canPeek()?'<div class="pts">'+fmtN(totals(q).total)+' P.</div>':'')+'</button>').join('')+'</div>';
  if(S.bombBoom&&S.bombBoom.n===S.logN&&S.players[S.bombBoom.who])h+='<div class="boomstrip"><span class="bb">💥</span><div class="grow"><div class="rs-t">Bumm! Die Zeitbombe ist hochgegangen</div><div class="rs-x">'+nmC(S.bombBoom.who)+' verliert 50 Punkte.</div></div></div>';
  else if(S.bomb&&S.players[S.bomb.holder])h+='<div class="bombbar"><span class="bombi">💣</span>Die Zeitbombe tickt bei '+nmC(S.bomb.holder)+'</div>';
  if(S.potOn){const pv=S.pot||0;h+='<div class="potbar'+(ui.lastPot!=null&&ui.lastPot!==pv?' bump':'')+'"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">🔑</span>Im Tresor<b>'+pv+'</b></div>';ui.lastPot=pv}
