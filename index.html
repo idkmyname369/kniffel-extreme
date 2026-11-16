@@ -70,7 +70,7 @@ input::placeholder{color:var(--ter)}
 .btn.tint{background:linear-gradient(rgba(10,132,255,.15),rgba(10,132,255,.15)),var(--bg);color:var(--blue)}
 .btn.red{background:var(--red)}
 .btnrow{display:flex;gap:10px}
-.sticky{position:sticky;bottom:0;z-index:5;padding:14px 0 calc(14px + env(safe-area-inset-bottom));margin-top:-10px}.sticky::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(to top,rgba(29,30,33,.94) 60%,rgba(29,30,33,0));transition:opacity .18s;pointer-events:none}.sticky.atend::before{opacity:0}
+.sticky{position:sticky;bottom:0;z-index:5;padding:14px 0 calc(14px + env(safe-area-inset-bottom));margin-top:-10px}.sticky::before{content:'';position:absolute;left:0;right:0;top:var(--gt,0);bottom:var(--gb,0);z-index:-1;background:linear-gradient(to top,rgba(29,30,33,.94) 60%,rgba(29,30,33,0));pointer-events:none}.sticky.atend::before{opacity:0}
 /* game */
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
 .iconbtn{height:34px;padding:0 13px;border-radius:17px;background:var(--card2);font-size:14px;font-weight:600;color:var(--text)}
@@ -1628,7 +1628,7 @@ function showIntro(k){let el=document.querySelector('.intro');if(!el){el=documen
  let x0=null;el.ontouchstart=e=>{x0=e.touches[0].clientX};el.ontouchend=e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50){const n=k+(dx<0?1:-1);if(n>=0&&n<INTRO.length)showIntro(n)}}}
 (()=>{let seen=false;try{seen=localStorage.getItem('kx-intro')==='1'||Object.keys(GAMES||{}).length>0}catch(e){}if(!seen)setTimeout(()=>{if(view==='home'&&!S)showIntro(0)},600)})();
 
-{const f=()=>{const st=document.querySelector('.sticky');if(!st)return;const pv=st.previousElementSibling;st.classList.toggle('atend',innerHeight+scrollY>=document.documentElement.scrollHeight-4||!!pv&&pv.getBoundingClientRect().bottom<=st.getBoundingClientRect().top+16)};addEventListener('scroll',f,{passive:true});addEventListener('resize',f);if(typeof MutationObserver!=='undefined')new MutationObserver(()=>requestAnimationFrame(f)).observe(document.getElementById('app')||document.body,{childList:true,subtree:false})}
+{const f=window.stickyFade=()=>{const st=document.querySelector('.sticky');if(!st)return;const pv=st.previousElementSibling,bt=st.querySelector('.btn');if(!pv||!bt)return;const r=st.getBoundingClientRect(),bb=bt.getBoundingClientRect().bottom,pb=pv.getBoundingClientRect().bottom;let gt=0,gb=0,hide=false;if(pb<=bb)hide=true;else if(pb<r.bottom){const k=(r.bottom-pb)/Math.max(1,r.bottom-bb);gt=k*(bb-r.top);gb=r.bottom-pb}st.classList.toggle('atend',hide);st.style.setProperty('--gt',gt.toFixed(1)+'px');st.style.setProperty('--gb',gb.toFixed(1)+'px')};addEventListener('scroll',f,{passive:true});addEventListener('resize',f);if(typeof MutationObserver!=='undefined')new MutationObserver(()=>requestAnimationFrame(f)).observe(document.getElementById('app')||document.body,{childList:true,subtree:false})}
 render();
 initCloud();
 </script>
