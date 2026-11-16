@@ -444,7 +444,7 @@ const CATS=[
  {id:'zp',ab:'2P',name:'Zwei Paare',sec:'unten',hint:'2 Paare · alle Augen',range:[6,36],calc:d=>nPairs(d)>=2?sum(d):0},
  {id:'dpa',ab:'3×2',name:'Drei Paare',sec:'unten',hint:'3 Paare · 35 Punkte',fixed:35,calc:d=>nPairs(d)>=3?35:0},
  {id:'zd',ab:'2×3',name:'Zwei Dreier',sec:'unten',hint:'2 × drei gleiche · 45 Punkte',fixed:45,calc:d=>nTrips(d)>=2?45:0},
- {id:'fh',ab:'FH',name:'Full House',sec:'unten',hint:'3 + 2 gleiche · 25 Punkte',fixed:25,calc:d=>hasAB(d,3,2)?25:0},
+ {id:'fh',ab:'FH',name:'Full House',sec:'unten',hint:'3 + 2 gleiche · 25 Punkte',fixed:25,calc:d=>(hasAB(d,3,2)||maxC(d)>=5)?25:0},
  {id:'gfh',ab:'GFH',name:'Großes Full House',sec:'unten',hint:'4 + 2 gleiche · 45 Punkte',fixed:45,calc:d=>(hasAB(d,4,2)||maxC(d)>=6)?45:0},
  {id:'ks',ab:'KS',name:'Kleine Straße',sec:'unten',hint:'4 in Folge · 30 Punkte',fixed:30,calc:d=>run(d)>=4?30:0},
  {id:'gs',ab:'GS',name:'Große Straße',sec:'unten',hint:'5 in Folge · 40 Punkte',fixed:40,calc:d=>run(d)>=5?40:0},
