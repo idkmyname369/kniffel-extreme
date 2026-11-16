@@ -830,7 +830,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  if(ni<0){S.screen='end'}else{S.cur=ni;if(redoNow==='resume'){S.turn=S.redo.resume.turn;S.redo=null}else if(redoNow){S.turn=S.redo.turn}else{S.turn=freshTurn();if(S.hold&&S.hold.pi===ni)applyHold(S.hold)}}S.hold=null;save();
  const __bm=redoNow!==true;if(!after&&S.screen!=='end'&&!S.players[__sc].bot){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),mode:__bm?'bot':'std',pi:__sc,cat:target,ent:JSON.stringify(entry),bi:S.cur,exp:Infinity,text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'}}else ui.undo=null
  if(ui.boomPending){ui.boomPending=false;const BB=S.bombBoom;ui.seenBoom=BB&&BB.n;ui.fxPending=true;setTimeout(()=>bombFX(BB),250)}
- if(S.fx&&S.fx.seq>(ui.seenFx||0)){ui.seenFx=S.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(S.fx.kind,null),120)}
+ if(S.fx&&S.fx.seq>(ui.seenFx||0)){ui.seenFx=S.fx.seq;ui.fxPending=true;const FXk=S.fx.kind;setTimeout(()=>kniffelFX(FXk,null),120)}
  if(reveal&&S.lastReveal&&!(after==='retry'&&t.retryRevealed))startRevHold(S.lastReveal);
  render();if(!ui.revHold)window.scrollTo(0,0);
  if(reveal){sfx.reveal();if(S.lastReveal)ui.seenReveal=S.lastReveal.seq;ui.modal=null;renderModal();if(kb)toast(kbLabel(kb)+' für '+p.name)}
@@ -1297,6 +1297,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'drolls':m.rolls=+b.dataset.v;S.turn.mrolls=m.rolls;renderModal();break;
   case'dcat':{const c=CAT[b.dataset.id];S.turn.dice=m.d.slice();ui.modal={type:'confirm',id:c.id,raw:c.calc(m.d),fromDice:true,rolls:m.rolls};renderModal();break}
   case'retry':retryTurn();break;
+  case'statsbots':{try{localStorage.setItem('kx-stats-nobots',localStorage.getItem('kx-stats-nobots')==='1'?'0':'1')}catch(e){}render();break}
   case'pickcol':{ui.modal={type:'color',k:b.dataset.k,i:+b.dataset.i};renderModal();break}
   case'setcol':{const v=+b.dataset.v;if(m.k==='h'){setup.colors=setup.colors||[];setup.colors[m.i]=v}else if(m.k==='b'){setup.botColors=setup.botColors||[];setup.botColors[m.i]=v}else if(m.k==='o'&&MP&&MP.ref){MP.ref.update({seats:{[UID]:{color:v}}}).catch(()=>{})}ui.modal=null;renderModal();render();break}
   case'cardinfo':{const id=b.dataset.id;if(EV[id]){ui.modal={type:'cardinfo',id};renderModal()}break}
@@ -1541,17 +1542,19 @@ setInterval(()=>{if(!S||S.screen!=='game'){ui.wasMyTurn=null;return}const t=S.tu
 document.addEventListener('pointerdown',()=>{ui.lastAct=Date.now();audio()},true);
 /* Statistik */
 function statsHTML(){const fin=Object.values(GAMES).map(g=>{try{return JSON.parse(g.json)}catch(e){return null}}).filter(s=>s&&s.screen==='end');
- const P={},cards={},cnt={},csum={},pech={},gl={};let best=null,bestEntry=null;
+ const P={},cards={},cnt={},csum={},pech={},gl={};let best=null,bestEntry=null;const nb=(()=>{try{return localStorage.getItem('kx-stats-nobots')==='1'}catch(e){return false}})();
  fin.forEach(s=>{const r=s.players.map(p=>({p,t:totals(p).total})).sort((a,b)=>b.t-a.t);
-  r.forEach((x,i)=>{const k=x.p.name.trim().toLowerCase();const o=P[k]=P[k]||{name:x.p.name.trim(),g:0,w:0,best:0,sum:0,kn:0};o.g++;o.sum+=x.t;if(i===0&&r.length>1)o.w++;if(x.t>o.best)o.best=x.t;
+  r.forEach((x,i)=>{if(nb&&x.p.bot)return;const k=x.p.name.trim().toLowerCase();const o=P[k]=P[k]||{name:x.p.name.trim(),g:0,w:0,best:0,sum:0,kn:0};o.g++;o.sum+=x.t;if(i===0&&r.length>1)o.w++;if(x.t>o.best)o.best=x.t;
    CATS.forEach(c=>{const e=x.p.sc[c.id];if(!e)return;if((c.id==='kn'&&e.raw===50)||(c.id==='ke'&&e.raw===75))o.kn++;if(e.kbon)o.kn++;if(!bestEntry||e.final>bestEntry.v)bestEntry={v:e.final,who:x.p.name,cat:c.name}});
    if(!best||x.t>best.t)best={t:x.t,who:x.p.name}});
   for(const id in (s.cstat||{}))cards[id]=(cards[id]||0)+s.cstat[id];
   for(const id in (s.ccount||{})){cnt[id]=(cnt[id]||0)+s.ccount[id];csum[id]=(csum[id]||0)+((s.cstat||{})[id]||0)}
-  if(s.hist){const M=histMoments(s,99);M.bad.forEach(m=>{const k=s.players[m.pi].name.trim().toLowerCase();(pech[k]=pech[k]||{name:s.players[m.pi].name.trim(),n:0,sum:0}).n++;pech[k].sum+=m.eff});M.good.forEach(m=>{const k=s.players[m.pi].name.trim().toLowerCase();(gl[k]=gl[k]||{name:s.players[m.pi].name.trim(),n:0,sum:0}).n++;gl[k].sum+=m.eff})}});
+  if(s.hist){const M=histMoments(s,99);M.bad.forEach(m=>{if(nb&&s.players[m.pi].bot)return;const k=s.players[m.pi].name.trim().toLowerCase();(pech[k]=pech[k]||{name:s.players[m.pi].name.trim(),n:0,sum:0}).n++;pech[k].sum+=m.eff});M.good.forEach(m=>{if(nb&&s.players[m.pi].bot)return;const k=s.players[m.pi].name.trim().toLowerCase();(gl[k]=gl[k]||{name:s.players[m.pi].name.trim(),n:0,sum:0}).n++;gl[k].sum+=m.eff})}});
  const list=Object.values(P).sort((a,b)=>b.w-a.w||b.best-a.best);
  let h='<button class="backbtn" data-a="home">‹ Übersicht</button><div class="large">Statistiken</div><p class="lead">Aus '+fin.length+' beendeten Spielen auf diesem Gerät.</p>';
+ h+='<div class="block"><div class="group"><button class="cell" data-a="statsbots"><div class="grow"><div class="ct">Bots ausblenden</div><div class="cs">Statistiken nur für menschliche Spieler</div></div>'+sw(nb)+'</button></div></div>';
  if(!fin.length)return h+'<div class="group"><div class="cell cs">Noch keine beendeten Spiele.</div></div>';
+ if(!best)return h+'<div class="group"><div class="cell cs">Keine Spiele mit menschlichen Spielern.</div></div>';
  h+='<div class="block"><div class="gtitle">Rekorde</div><div class="group"><div class="cell"><div class="grow ct">Höchste Endsumme</div><div class="val">'+fmtN(best.t)+'</div></div><div class="cell"><div class="grow"><div class="ct">'+esc(best.who)+'</div></div></div>'+(bestEntry?'<div class="cell"><div class="grow"><div class="ct">Höchste Einzelwertung</div><div class="cs">'+esc(bestEntry.who)+' · '+esc(bestEntry.cat)+'</div></div><div class="val">'+fmtN(bestEntry.v)+'</div></div>':'')+'</div></div>';
  h+='<div class="block"><div class="gtitle">Spieler</div><div class="tblwrap" style="background:var(--card)"><table><thead><tr><th>Name</th><th>Spiele</th><th>Siege</th><th>Rekord</th><th>Ø</th><th>Kniffel</th></tr></thead><tbody>'+list.map(o=>'<tr><td>'+esc(o.name)+'</td><td>'+o.g+'</td><td>'+o.w+'</td><td>'+fmtN(o.best)+'</td><td>'+Math.round(o.sum/o.g)+'</td><td>'+o.kn+'</td></tr>').join('')+'</tbody></table></div></div>';
  const top=Object.entries(cards).filter(([id])=>EV[id]).sort((a,b)=>b[1]-a[1]).slice(0,5);
