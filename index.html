@@ -779,7 +779,7 @@ function applyAfter(entry,kind,cid,ctx,p){const c=CAT[cid],dig=S.mode==='digital
 
 /* ---------- Züge ---------- */
 function roll(){const t=S.turn;if(t.rolls>=t.max)return;if(S.online&&evOf(t)&&evOf(t).fremd&&t.rolls===1&&!t.fremdDone){toast('Warte, bis '+actorName()+' die Würfel gewählt hat');return}if(t.rolls===0)t.held=t.held.map((_,i)=>i===t.fixed);
- for(let i=0;i<6;i++)if(!t.held[i])t.dice[i]=r6();t.rolls++;ui.rolling=true;ui.rollIdx=-1;setTimeout(()=>ui.rolling=false,520);sfx.dice();save();render()}
+ for(let i=0;i<6;i++)if(!t.held[i])t.dice[i]=r6();t.rolls++;ui.rolling=true;ui.rollIdx=-1;setTimeout(()=>ui.rolling=false,520);sfx.dice(t.held.filter(x=>!x).length);save();render()}
 
 function catTap(id){const t=S.turn,p=S.players[S.cur],c=CAT[id];if(p.sc[id])return;
  if(!t.drawn){toast('Zieh zuerst deine Ereigniskarte');return}
@@ -890,7 +890,7 @@ function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,
   if(ui.seenReveal==null||!S||S.id!==r.id)ui.seenReveal=(r.lastReveal&&(!S||S.id!==r.id))?r.lastReveal.seq:(ui.seenReveal||0);
   const showRev=r.lastReveal&&r.lastReveal.seq>(ui.seenReveal||0)&&r.lastReveal.uid!==UID;
   if(!S||S.id!==r.id||(r.rev||0)>(S.rev||0)){const prev=S;S=r;
-   if(prev&&prev.id===r.id&&prev.turn&&r.turn&&prev.cur===r.cur){if((r.turn.rolls||0)>(prev.turn.rolls||0)){ui.rolling=true;setTimeout(()=>ui.rolling=false,520);sfx.dice()}if(r.turn.ev&&r.turn.ev!==prev.turn.ev){ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip()}}
+   if(prev&&prev.id===r.id&&prev.turn&&r.turn&&prev.cur===r.cur){if((r.turn.rolls||0)>(prev.turn.rolls||0)){ui.rolling=true;setTimeout(()=>ui.rolling=false,520);sfx.dice((r.turn.held||[]).filter(x=>!x).length||6)}if(r.turn.ev&&r.turn.ev!==prev.turn.ev){ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip()}}
    if(!prev||prev.id!==r.id)ui.seenBoom=r.bombBoom?r.bombBoom.n:null;else if(r.bombBoom&&r.bombBoom.n!==ui.seenBoom){ui.seenBoom=r.bombBoom.n;ui.fxPending=true;const BB=r.bombBoom;setTimeout(()=>bombFX(BB),300)}
    if(ui.seenFx==null||!prev||prev.id!==r.id)ui.seenFx=(!prev||prev.id!==r.id)?(r.fx?r.fx.seq:0):(ui.seenFx||0);
    const showFx=r.fx&&r.fx.seq>(ui.seenFx||0)&&r.fx.uid!==UID;if(showFx){ui.seenFx=r.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(r.fx.kind,r.fx.who),60)}view='game';const old=GAMES[S.id];GAMES[S.id]={id:S.id,updated:Date.now(),finished:S.screen==='end',synced:!!(old&&old.synced),json:d.json};persistLocal();queuePush(S.id);
@@ -1331,12 +1331,14 @@ function noiseHit(a,t0,o){const s=nsrc(a,(o.att||0.002)+o.dec+0.05,o.pink);let n
 function osc(a,t0,o){const s=a.createOscillator();s.type=o.type||'sine';s.frequency.setValueAtTime(o.f,t0);if(o.f2)s.frequency.exponentialRampToValueAtTime(o.f2,t0+(o.att||0.003)+o.dec);const g=a.createGain();env(a,g,t0,o.att||0.003,o.vol,o.dec);let n=s;if(o.lp){const fl=a.createBiquadFilter();fl.type='lowpass';fl.frequency.value=o.lp;s.connect(fl);n=fl}n.connect(g);route(a,g,o.rev||0,o.pan||0);s.start(t0);s.stop(t0+(o.att||0.003)+o.dec+0.05)}
 function bell(a,t0,f,vol,dec,rev){const c=a.createOscillator(),m=a.createOscillator(),mg=a.createGain(),g=a.createGain();c.frequency.value=f;m.frequency.value=f*3.5;mg.gain.setValueAtTime(f*2.2,t0);mg.gain.exponentialRampToValueAtTime(f*0.05,t0+dec);m.connect(mg);mg.connect(c.frequency);env(a,g,t0,0.002,vol,dec);c.connect(g);route(a,g,rev==null?0.35:rev);c.start(t0);m.start(t0);c.stop(t0+dec+0.1);m.stop(t0+dec+0.1)}
 const sfx={
- dice(){const a=audio();if(!a)return;const t=a.currentTime;
-  noiseHit(a,t,{pink:true,att:0.02,dec:0.42,vol:0.10,filters:[['lowpass',420]],rev:0.05});
-  let tt=t+0.01;const n=13+Math.floor(Math.random()*5);for(let i=0;i<n;i++){const gap=0.012+Math.random()*0.05*(1-i/n)+0.012*(i/n);tt+=gap;const pan=(Math.random()-.5)*.6;
-   noiseHit(a,tt,{dec:0.004,vol:0.5*(1-i/n*0.5),filters:[['highpass',1800]],pan});
-   noiseHit(a,tt,{dec:0.035+Math.random()*0.03,vol:0.28*(1-i/n*0.4),filters:[['bandpass',2400+Math.random()*2600,9]],rev:0.12,pan});
-   if(Math.random()<.45)noiseHit(a,tt,{dec:0.03,vol:0.22,filters:[['lowpass',260]],pan})}
+ dice(nd){const a=audio();if(!a)return;const t=a.currentTime;nd=nd||6;
+  noiseHit(a,t,{pink:true,att:0.05,dec:1.1,vol:0.08,filters:[['lowpass',380]],rev:0.05});
+  for(let k=0;k<nd;k++){const pan=(Math.random()-.5)*.7;let tt=t+0.02+Math.random()*0.22;const hits=4+Math.floor(Math.random()*2);let gap=0.16+Math.random()*0.06;
+   for(let i=0;i<hits;i++){const v=1-i/hits*0.6;
+    noiseHit(a,tt,{dec:0.004,vol:0.42*v,filters:[['highpass',1800]],pan});
+    noiseHit(a,tt,{dec:0.04+Math.random()*0.03,vol:0.24*v,filters:[['bandpass',2300+Math.random()*2400,9]],rev:0.12,pan});
+    if(i<2||Math.random()<.4)noiseHit(a,tt,{dec:0.035,vol:0.2*v,filters:[['lowpass',260]],pan});
+    tt+=gap;gap*=0.68+Math.random()*0.1}}
   buzz(25)},
  flip(){const a=audio();if(!a)return;const t=a.currentTime;
   noiseHit(a,t,{pink:true,att:0.035,dec:0.05,vol:0.22,filters:[['bandpass',2200,0.9,5200]],pan:-.15});
