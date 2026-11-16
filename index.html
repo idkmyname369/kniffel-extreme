@@ -875,7 +875,7 @@ function needCloud(){if(DB&&UID)return true;infoSheet('Online nicht verfügbar',
 const meIdx=()=>S&&S.online?S.players.findIndex(q=>q.uid===UID):-1;
 function peekViewer(){if(!S)return null;return S.online?S.players[meIdx()]:S.players[S.cur]}
 function peekActive(v){return !!(v&&v.peekUntil&&(CATS.length-openCats(v).length)<v.peekUntil)}
-function localPeeker(){return S.players.find(q=>peekActive(q))||null}
+function localPeeker(){return S.players.find(q=>peekActive(q)&&!q.bot)||null}
 function canPeek(){if(!S)return false;if(!S.online)return !!ui.peekHold&&!!localPeeker();return peekActive(peekViewer())}
 function canAct(){if(!S)return true;if(!S.online){const t=S.turn;if(!t||!S.players.some(q=>q.bot))return true;const B=i=>!!(S.players[i]&&S.players[i].bot);if(t.pending==='oppforce'&&t.decider!=null)return !B(t.decider);if(fremdOpen(t))return !B(t.decider);return !B(S.cur)}const t=S.turn;if(!t)return false;const me=i=>i!=null&&S.players[i]&&S.players[i].uid===UID;const ev=evOf(t);
  if(t.pending==='oppforce')return me(t.decider);
