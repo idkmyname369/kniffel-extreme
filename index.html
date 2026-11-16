@@ -536,15 +536,17 @@ const EVENTS=[
 ];
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 const PIP={1:[4],2:[2,6],3:[2,4,6],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const NEW_IDS=['topf','bomb','revenge','don','x7','teuer10'];
 const LSOLD='kniffel-extreme-v3',LSSEL='kniffel-extreme-sel-v3',LSG='kniffel-extreme-games-v1';
 
 let S=null;
 let setup={bots:0,botNames:['Bot 1','Bot 2','Bot 3','Bot 4','Bot 5'],n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
 let ui={modal:null,flip:false,rolling:false,rollIdx:-1};
 let view='home';
+try{saveSel()}catch(e){}
 
-function loadSel(){try{const s=JSON.parse(localStorage.getItem(LSSEL));if(Array.isArray(s))return s.filter(id=>EV[id])}catch(e){}return EVENTS.map(e=>e.id)}
-function saveSel(){try{localStorage.setItem(LSSEL,JSON.stringify(setup.sel))}catch(e){}}
+function loadSel(){try{const s=JSON.parse(localStorage.getItem(LSSEL));if(Array.isArray(s)){const sel=s.filter(id=>EV[id]);NEW_IDS.forEach(id=>{if(!sel.includes(id))sel.push(id)});return sel}if(s&&Array.isArray(s.sel)){const sel=s.sel.filter(id=>EV[id]);EVENTS.forEach(e=>{if(!(s.known||[]).includes(e.id)&&!sel.includes(e.id))sel.push(e.id)});return sel}}catch(e){}return EVENTS.map(e=>e.id)}
+function saveSel(){try{localStorage.setItem(LSSEL,JSON.stringify({sel:setup.sel,known:EVENTS.map(e=>e.id)}))}catch(e){}}
 /* ---------- Spielliste: Gerät + Claude-Konto ---------- */
 function loadGames(){try{const o=JSON.parse(localStorage.getItem(LSG));if(o&&typeof o==='object')return o}catch(e){}return{}}
 let GAMES=loadGames();
@@ -629,7 +631,7 @@ function shuffle3(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floo
 const betCats=p=>openCats(p).filter(c=>c.sec==='unten'&&c.id!=='ch'&&c.id!=='sc');
 function applicable(e,p){const oc=openCats(p).length,done=CATS.length-oc;if(e.now==='bomb'&&S.bomb)return false;if(e.now==='topf'&&(!S.potOn||(S.pot||0)<POT_MIN||done+1<POT_FROM))return false;if(e.lateOnly&&oc>e.lateOnly)return false;if(e.fromRound&&done+1<e.fromRound)return false;if(e.block&&oc<4)return false;if(e.pick==='bet'&&betCats(p).length<3)return false;if(e.multi&&solo())return false;if(e.lock&&p.sc[e.lock])return false;
  if((e.block||e.pick==='force'||e.pick==='oppforce'||e.after==='mix')&&openCats(p).length<2)return false;return true}
-let POT_MIN=40,POT_FROM=4,POT_W0=1,POT_DIV=30,POT_WMAX=6,POT_REP=true;
+let POT_MIN=40,POT_FROM=4,POT_W0=1.5,POT_DIV=25,POT_WMAX=6,POT_REP=true;
 function pV(q){let v=(q.ua||0)+(q.adj||0)+(q.kb||0);for(const k in q.sc)v+=q.sc[k].final||0;return v}
 function potSnap(){return S.players.map(pV)}
 function trackHarm(ps,actor){S.harm=S.harm||{};S.players.forEach((q,i)=>{if(i!==actor&&pV(q)<ps[i])S.harm[i]=actor})}
@@ -656,8 +658,8 @@ function pickOptions(kind){const me=S.players[S.cur],t=S.turn,out=[];
  if(kind==='strike')S.players.forEach((q,qi)=>{if(qi===S.cur)return;CATS.forEach(c=>{const e=q.sc[c.id];if(e&&e.final>0&&!e.prot)out.push({key:qi+'|'+c.id,group:q.name,label:c.name,val:e.final})})});
  if(kind==='replay')CATS.forEach(c=>{const e=me.sc[c.id];if(e&&e.final===0)out.push({key:'x|'+c.id,group:'Deine gestrichenen Kategorien',label:c.name})});
  if(kind==='swap')S.players.forEach((q,qi)=>{if(qi===S.cur)return;CATS.forEach(c=>{const a=me.sc[c.id],b=q.sc[c.id];if(a&&b&&!b.prot&&a.final!==b.final)out.push({key:qi+'|'+c.id,group:'Tauschen mit '+q.name,label:c.name,sub:'Du '+a.final+'  ⇄  '+q.name+' '+b.final,diff:b.final-a.final})})});
- if(kind==='gift50'||kind==='giftua'){S.players.forEach((q,qi)=>{if(qi!==S.cur)out.push({key:qi+'|x',group:'Mitspieler',label:q.name})});out.push({key:'n|x',group:'Oder',label:'Niemandem etwas geben',sub:'Dann zählt dein Wurf ohne Multiplikator'})}
- if(kind==='force'||kind==='oppforce')CATS.forEach(c=>{if(!me.sc[c.id]&&!isBlocked(t,c.id))out.push({key:'x|'+c.id,group:c.sec==='oben'?'Oberer Teil':'Unterer Teil',label:c.name,sub:c.hint})});
+ if(kind==='gift50'||kind==='giftua'){S.players.forEach((q,qi)=>{if(qi!==S.cur)out.push({key:qi+'|x',group:'Mitspieler',label:q.name,sub:(kind==='gift50'?'Bekommt 50 Punkte':'Bekommt 15 aufs Bonus-Konto')+' · dein Wurf zählt ×'+(kind==='gift50'?2:4)})});out.push({key:'n|x',group:'Oder',label:'Niemandem etwas geben',sub:'Dein Wurf zählt ohne Multiplikator (×1)'})}
+ if(kind==='force'||kind==='oppforce')CATS.forEach(c=>{if(!me.sc[c.id]&&!isBlocked(t,c.id))out.push({key:'x|'+c.id,group:c.sec==='oben'?'Oberer Teil':'Unterer Teil',label:c.name,sub:c.hint+' · geschafft ×3'})});
  if(kind==='heal')CATS.forEach(c=>{const e=me.sc[c.id];if(e&&e.final===0)out.push({key:'x|'+c.id,group:'Deine gestrichenen Kategorien',label:c.name})});
  if(kind==='sac2')return pickOptions('strike');
  if(kind==='revenge'){const a=S.harm&&S.harm[S.cur];if(a==null||!S.players[a])return out;const q=S.players[a];CATS.forEach(c=>{const e=q.sc[c.id];if(e&&e.final>0&&!e.prot)out.push({key:a+'|'+c.id,group:q.name,label:c.name,val:e.final})});return out}
@@ -669,10 +671,10 @@ const PICK={
  strike:{h:'Wähle die Wertung eines Gegners, die gestrichen wird.',b:'Streichen',red:true,fz:'Kein Gegner hat ungeschützte Punkte – die Karte verfällt.'},
  replay:{h:'Wähle die gestrichene Kategorie, die du diese Runde neu würfelst.',b:'Erneut würfeln',fz:'Du hast noch nichts gestrichen – die Karte verfällt.'},
  swap:{h:'Wähle, welche Wertung du tauschen möchtest.',b:'Tauschen',fz:'Es gibt noch keine passende Wertung zum Tauschen – die Karte verfällt.'},
- force:{h:'Lege jetzt fest, wo du diese Runde wertest – erst danach darfst du würfeln.',b:'Festlegen'},
+ force:{h:'Lege jetzt fest, wo du diese Runde wertest – erst danach darfst du würfeln. Schaffst du sie, zählt sie ×3.',b:'Festlegen'},
  gift50:{h:'Wer bekommt 50 Punkte geschenkt?',b:'50 Punkte schenken'},
  giftua:{h:'Wer bekommt 15 Punkte aufs Bonus-Konto?',b:'15 Punkte schenken'},
- oppforce:{h:'Gib das Handy einem Mitspieler: Er wählt, wo du diese Runde wertest.',b:'Festlegen'},
+ oppforce:{h:'Gib das Handy einem Mitspieler: Er wählt, wo du diese Runde wertest. Schaffst du sie, zählt sie ×3.',b:'Festlegen'},
  heal:{h:'Wähle eine deiner gestrichenen Kategorien – sie bekommt 40 Punkte.',b:'40 Punkte eintragen',fz:'Du hast noch nichts gestrichen – die Karte verfällt.'},
  sac1:{h:'Zuerst streichst du bei dir selbst eine Kategorie. Danach darfst du bei einem Gegner 2 Wertungen streichen.',b:'Bei mir streichen',red:true,fz:'Kein Gegner hat ungeschützte Punkte – die Karte verfällt.'},
  sac2:{h:'Wähle bis zu 2 Wertungen eines Gegners, die gestrichen werden.',b:'Streichen',red:true},
@@ -801,7 +803,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  const entry={raw:r,final:b.f,tag:b.parts.join(' ')};
  const __undo=JSON.stringify(S);const __ps=S.potOn?potSnap():null,__sc=S.cur,__hs0=potSnap();
  p.half=false;
- {const c0=CAT[id];let six,five;if(dig||ctx.dice){const mc=maxC(t.dice);six=mc>=6;five=mc>=5}else{six=(id==='ke'&&raw===75)||(c0.face&&raw===c0.face*6)||!!ctx.ke;five=six||(id==='kn'&&raw===50)||(c0.face&&raw>=c0.face*5)||!!ctx.kb}if(five){const n=kniffelCount();S.kc=n.k+(six?0:1);S.kec=n.e+(six?1:0);S.fxseq=(S.fxseq||0)+1;S.fx={seq:S.fxseq,kind:six?'ke':'kn',who:p.name,uid:p.uid||null}}}
+ {const c0=CAT[id];let six,five;if(dig||ctx.dice){const mc=maxC(t.dice);six=mc>=6;five=mc>=5}else{six=(id==='ke'&&raw===75)||(c0.face&&raw===c0.face*6)||!!ctx.ke;five=six||(id==='kn'&&raw===50)||(c0.face&&raw>=c0.face*5)||!!ctx.kb}if(five){const n=kniffelCount();S.kc=n.k+(six?0:1);S.kec=n.e+(six?1:0);const struck=six?(id!=='ke'&&p.sc.ke&&p.sc.ke.raw!==75):(id!=='kn'&&p.sc.kn&&p.sc.kn.raw!==50);if(!struck){S.fxseq=(S.fxseq||0)+1;S.fx={seq:S.fxseq,kind:six?'ke':'kn',who:p.name,uid:p.uid||null}}}}
  const kb=kniffelBonus(p,id,raw,ctx);if(kb){p.kb=(p.kb||0)+kb;entry.kbon=kb}
  let res=null;if(after)res=applyAfter(entry,after,target,ctx,p);
  p.sc[target]=entry;
@@ -918,7 +920,7 @@ function lobbyHTML(){const d=MP&&MP.lobby;if(!d)return'<button class="backbtn" d
  let h='<button class="backbtn" data-a="mpleave">‹ '+(host?'Lobby schließen':'Verlassen')+'</button><div class="eyebrow">Online-Spiel</div><div class="large">Lobby</div><p class="lead">Schick deinen Mitspielern diesen Einladungscode. Sie öffnen Kniffel Royale, tippen auf „Online beitreten“ und geben ihn ein.</p>';
  h+='<div class="codebox">'+esc(d.code)+'</div><div class="block"><button class="btn tint" data-a="mpcopy">Einladung kopieren</button></div>';
  h+='<div class="block"><div class="gtitle">Spieler ('+seats.length+'/6)</div><div class="group">'+(()=>{const cl=assignColors(seats.map(x=>x[1].color!=null?x[1].color:null));return seats.map(([uid,s],i)=>'<div class="cell"><div class="rank">'+(i+1)+'</div><div class="grow ct" style="color:'+PALETTE[cl[i]].l+'">'+esc(s.name)+(uid===UID?' <span class="cs">(du)</span>':'')+'</div>'+(uid===d.host?'<span class="tag">Gastgeber</span>':'')+(uid===UID?'<button class="swatch" data-a="pickcol" data-k="o" data-i="0" style="background:'+PALETTE[cl[i]].c+'"></button>':'<span class="swatch" style="background:'+PALETTE[cl[i]].c+';opacity:.85"></span>')+'</div>').join('')})()+'</div>';
- h+='<div class="gfoot">'+(d.settings.mode==='digital'?'Digitale Würfel':'Eigene Würfel')+' · '+d.settings.events.length+' Ereigniskarten aktiv. Jeder spielt auf seinem eigenen Handy, Züge erscheinen bei allen live.</div></div>';
+ h+='<div class="gfoot">'+(d.settings.mode==='digital'?'Digitale Würfel':'Eigene Würfel')+' · '+d.settings.events.length+' Ereigniskarten aktiv · Tresor '+(d.settings.events.includes('topf')?'an':'aus')+'. Jeder spielt auf seinem eigenen Handy, Züge erscheinen bei allen live.</div></div>';
  h+='<div class="block"><div class="group rules"><p><b style="color:var(--text)">So laden sie sich ein:</b> Schick deinen Mitspielern den Link zu dieser App und den Code. Ein Konto brauchen sie nicht.</p></div></div>';
  h+=host?'<div class="sticky"><button class="btn" data-a="mpstart" '+(seats.length<2?'disabled':'')+'>'+(seats.length<2?'Warte auf Mitspieler …':'Spiel starten')+'</button></div>':'<div class="gfoot" style="text-align:center">Warte, bis der Gastgeber das Spiel startet …</div>';
  return h}
