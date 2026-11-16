@@ -778,7 +778,7 @@ function applyAfter(entry,kind,cid,ctx,p){const c=CAT[cid],dig=S.mode==='digital
  res.after=entry.final;return res}
 
 /* ---------- Züge ---------- */
-function roll(){const t=S.turn;if(t.rolls>=t.max)return;if(S.online&&evOf(t)&&evOf(t).fremd&&t.rolls===1&&!t.fremdDone){toast('Warte, bis '+actorName()+' die Würfel gewählt hat');return}if(t.rolls===0)t.held=t.held.map((_,i)=>i===t.fixed);
+function roll(){const t=S.turn;if(t.rolls>=t.max)return;if((S.online||localBotGame())&&fremdOpen(t)){toast('Warte, bis '+actorName()+' die Würfel gewählt hat');return}if(t.rolls===0)t.held=t.held.map((_,i)=>i===t.fixed);
  for(let i=0;i<6;i++)if(!t.held[i])t.dice[i]=r6();t.rolls++;ui.rolling=true;ui.rollIdx=-1;setTimeout(()=>ui.rolling=false,520);sfx.dice(t.held.filter(x=>!x).length);save();render()}
 
 function catTap(id){const t=S.turn,p=S.players[S.cur],c=CAT[id];if(p.sc[id])return;
@@ -873,10 +873,12 @@ function peekViewer(){if(!S)return null;return S.online?S.players[meIdx()]:S.pla
 function peekActive(v){return !!(v&&v.peekUntil&&(CATS.length-openCats(v).length)<v.peekUntil)}
 function localPeeker(){return S.players.find(q=>peekActive(q))||null}
 function canPeek(){if(!S)return false;if(!S.online)return !!ui.peekHold&&!!localPeeker();return peekActive(peekViewer())}
-function canAct(){if(!S)return true;if(!S.online){const t=S.turn;if(!t||!S.players.some(q=>q.bot))return true;const B=i=>!!(S.players[i]&&S.players[i].bot);if(t.pending==='oppforce'&&t.decider!=null)return !B(t.decider);return !B(S.cur)}const t=S.turn;if(!t)return false;const me=i=>i!=null&&S.players[i]&&S.players[i].uid===UID;const ev=evOf(t);
+function canAct(){if(!S)return true;if(!S.online){const t=S.turn;if(!t||!S.players.some(q=>q.bot))return true;const B=i=>!!(S.players[i]&&S.players[i].bot);if(t.pending==='oppforce'&&t.decider!=null)return !B(t.decider);if(fremdOpen(t))return !B(t.decider);return !B(S.cur)}const t=S.turn;if(!t)return false;const me=i=>i!=null&&S.players[i]&&S.players[i].uid===UID;const ev=evOf(t);
  if(t.pending==='oppforce')return me(t.decider);
  if(ev&&ev.fremd&&t.rolls===1&&!t.fremdDone&&t.decider!=null)return me(t.decider);
  return me(S.cur)}
+function fremdOpen(t){const ev=evOf(t);return !!(ev&&ev.fremd&&t.rolls===1&&!t.fremdDone&&t.decider!=null)}
+function localBotGame(){return !S.online&&S.players.some(q=>q.bot)}
 function actorName(){const t=S.turn,ev=evOf(t);let i=S.cur;if(t&&t.pending==='oppforce'&&t.decider!=null)i=t.decider;else if(t&&ev&&ev.fremd&&t.rolls===1&&!t.fremdDone&&t.decider!=null)i=t.decider;return S.players[i].name}
 function mpLeave(){if(MP&&MP.unsub){try{MP.unsub()}catch(e){}}MP=null}
 function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,ref,busy:false,dirty:false,tm:null,lobby:null,warned:false};MP=m;
@@ -997,13 +999,13 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
    if(t.jokerN&&!t.jokerUsed&&t.rolls>0)tools.push('<button class="'+(t.tool==='joker'?'on':'')+'" data-a="tool" data-t="joker">'+(t.tool==='joker'?'Fertig':'Joker'+(t.jokerN>1?' (2 Würfel)':''))+'</button>');
    if(ev&&ev.mirror&&!t.mirUsed&&t.rolls>0)tools.push('<button class="'+(t.tool==='mirror'?'on':'')+'" data-a="tool" data-t="mirror">'+(t.tool==='mirror'?'Fertig':'Spiegeln (2 Würfel)')+'</button>');
    if(ev&&ev.reroll&&!t.rerollUsed&&t.rolls>=t.max)tools.push('<button class="'+(t.tool==='reroll'?'on':'')+'" data-a="tool" data-t="reroll">'+(t.tool==='reroll'?'Abbrechen':'Neuwurf (1 Würfel)')+'</button>');
-   if(S.online&&ev&&ev.fremd&&t.rolls===1&&!t.fremdDone&&act)tools.push('<button class="on" data-a="fremddone">Fertig – zurück an '+esc(p.name)+'</button>');
+   if((S.online||localBotGame())&&ev&&ev.fremd&&t.rolls===1&&!t.fremdDone&&act&&(S.online||!S.players[t.decider].bot))tools.push('<button class="on" data-a="fremddone">Fertig – zurück an '+esc(p.name)+'</button>');
    if(tools.length)h+='<div class="tools">'+tools.join('')+'</div>';
    let hint='';
    if(t.tool==='joker')hint='Tippe '+(t.jokerN>1?'bis zu zwei Würfel':'einen Würfel')+' an, bis die gewünschte Zahl erscheint.';
    else if(t.tool==='mirror')hint='Tippe bis zu zwei Würfel an, die auf die Gegenseite gedreht werden.';
    else if(t.tool==='reroll')hint='Tippe den Würfel an, der neu geworfen wird.';
-   else if(S.online&&ev&&ev.fremd&&t.rolls===1&&!t.fremdDone)hint=act?'Du bestimmst: Tippe die Würfel an, die '+esc(p.name)+' halten muss, dann „Fertig“.':esc(actorName())+' wählt gerade, welche Würfel du hältst.';
+   else if((S.online||localBotGame())&&ev&&ev.fremd&&t.rolls===1&&!t.fremdDone)hint=act?'Du bestimmst: Tippe die Würfel an, die '+esc(p.name)+' halten muss, dann „Fertig“.':esc(actorName())+' wählt gerade, welche Würfel du hältst.';
    else if(ev&&ev.fremd&&t.rolls===1&&!S.online)hint='Gib das Handy an '+(t.decider!=null?esc(S.players[t.decider].name):'einen Mitspieler')+': Jetzt wird bestimmt, welche Würfel du hältst.';
    else if(ev&&ev.nohold&&t.rolls>0&&left>0)hint='Kein Halten – es werden immer alle Würfel neu geworfen.';
    else if(t.rolls>0)hint=left>0?'Würfel antippen zum Halten · Kategorie oben wählen':'Wähle jetzt eine Kategorie';
@@ -1214,7 +1216,7 @@ function spinFaces(){document.querySelectorAll('#app .bigdie.spin').forEach(el=>
 function render(){const a=document.getElementById('app');if(ui.revHold){if(!ui.revHold.mounted)mountRevHold(a);return}if(S&&S.screen==='game'){const k=S.id+'|'+S.cur;if(ui.curKey&&ui.curKey!==k){a.classList.remove('pswap');void a.offsetWidth;a.classList.add('pswap');clearTimeout(ui.pswT);ui.pswT=setTimeout(()=>a.classList.remove('pswap'),600)}ui.curKey=k}else ui.curKey=null;a.innerHTML=S?((S.screen==='game'||(S.screen==='end'&&!ui.cerDone[S.id]&&endHold()&&S.turn))?gameHTML():endHTML()):(view==='setup'?setupHTML():view==='lobby'?lobbyHTML():view==='join'?joinHTML():view==='stats'?statsHTML():homeHTML());if(S&&S.screen==='end'&&!ui.cerDone[S.id]&&!endHold()){ui.cerDone[S.id]=true;ui.cerAnim=S.id;a.innerHTML=endHTML();setTimeout(ceremony,60);setTimeout(()=>{ui.cerAnim=null},6000)}if(typeof syncUndo==='function')syncUndo();spinFaces()}
 
 function dieTap(i){const t=S.turn,ev=evOf(t);if(t.rolls===0)return;
- if(S.online&&ev&&ev.fremd&&t.rolls===1&&t.fremdDone&&!t.tool){toast('Diese Würfel hat '+S.players[t.decider].name+' für dich gewählt');return}
+if((S.online||localBotGame())&&ev&&ev.fremd&&t.rolls===1&&t.fremdDone&&!t.tool&&t.decider!=null){toast('Diese Würfel hat '+S.players[t.decider].name+' für dich gewählt');return}
  if(t.tool==='joker'){if(!t.jokerDice.includes(i)){if(t.jokerDice.length>=t.jokerN){toast('Der Joker gilt nur für '+(t.jokerN>1?'zwei Würfel':'einen Würfel'));return}t.jokerDice.push(i)}t.dice[i]=t.dice[i]%6+1}
  else if(t.tool==='mirror'){t.mirDice=t.mirDice||[];if(t.mirDice.includes(i)){toast('Dieser Würfel wurde schon gespiegelt');return}t.dice[i]=7-t.dice[i];t.mirDice.push(i);if(t.mirDice.length>=2){t.mirUsed=true;t.tool=null}}
  else if(t.tool==='reroll'){t.dice[i]=r6();t.rerollUsed=true;t.tool=null;ui.rollIdx=i;setTimeout(()=>ui.rollIdx=-1,520)}
@@ -1466,8 +1468,12 @@ function botPending(){const t=S.turn,p=S.players[S.cur],k=t.pending;
  const key=botPickKey(k);if(key==null){t.pending=null;save();render();return}applyPick(k,key)}
 function botNeed(){const m=ui.modal;if(m.need==='don'){m.ctx.don=m.amount<=30?r6():0;commit(m.id,m.raw,m.ctx);return}if(m.need==='slots'){const R=['+25','×2','×3'];m.ctx.reels=[0,0,0].map(()=>R[Math.floor(Math.random()*3)])}else if(m.need==='gift'){let bi=-1,bt=1e9;S.players.forEach((q,i)=>{if(i!==S.cur){const v=botTot(i);if(v<bt){bt=v;bi=i}}});m.ctx.target=bi}else if(m.need==='thief'){let bi=-1,bt=-1e9;S.players.forEach((q,i)=>{if(i!==S.cur){const v=botTot(i);if(v>bt){bt=v;bi=i}}});m.ctx.target=bi}else if(m.need==='fate')m.ctx.fdie=r6();else m.ctx.n=0;
  commit(m.id,m.raw,m.ctx)}
+function botFremd(){const t=S.turn,d=t.dice,cnt=botCounts(d);const best=[1,2,3,4,5,6].sort((a,b)=>cnt[b]-cnt[a]||b-a)[0];
+ const idx=[0,1,2,3,4,5].filter(i=>i!==t.fixed).sort((a,b)=>((d[a]===best)-(d[b]===best))||(d[a]-d[b]));const keep=t.held.map((_,i)=>i===t.fixed);idx.slice(0,2).forEach(i=>{if(d[i]!==best)keep[i]=true});
+ t.held=keep;t.fremdDone=true;const dn=S.players[t.decider].name,hv=keep.map((k,i)=>k&&i!==t.fixed?d[i]:null).filter(x=>x!=null);t.note=esc(dn)+' hat bestimmt: '+(hv.length?'Halten: '+hv.join(', '):'nichts halten')+'.';save();render();toast(dn+' hat deine Würfel gewählt')}
 function botTick(){if(!S||S.online||S.screen!=='game'||!S.players.some(q=>q.bot)||ui.revHold)return;if(Date.now()<botT||ui.fxPending||document.querySelector('.kfx,.bfx')||ui.rolling)return;
  const t=S.turn,p=S.players[S.cur];
+ if(fremdOpen(t)&&S.players[t.decider]&&S.players[t.decider].bot&&!ui.modal){botFremd();botWait(1500);return}
  if(!p.bot){if(t.pending==='oppforce'&&t.decider!=null&&S.players[t.decider].bot){if(ui.modal&&ui.modal.type==='pick'){ui.modal=null;renderModal()}const key=botPickKey('oppforce');if(key)applyPick('oppforce',key);botWait(1100)}return}
  if(ui.modal){const m=ui.modal;
   if(m.type==='reveal'){if(!m.__bt)m.__bt=Date.now();else if(m.phase==='done'&&Date.now()-m.__bt>2600){ui.modal=null;renderModal();render()}return}
@@ -1478,6 +1484,8 @@ function botTick(){if(!S||S.online||S.screen!=='game'||!S.players.some(q=>q.bot)
  if(t.pending){if(t.pending==='oppforce'&&t.decider!=null&&!S.players[t.decider].bot){if(!ui.modal)openPending();return}botPending();botWait(2500);return}
  if(t.startPick){t.dice[0]=6;t.held[0]=true;t.fixed=0;t.startPick=false;save();render();botWait(750);return}
  if(t.rolls===0){roll();botWait(2100);return}
+ if(fremdOpen(t))return;
+ if(evOf(t)&&evOf(t).fremd&&t.rolls===1&&t.fremdDone&&!ui.botHeld){ui.botHeld=true}
  const b=botBest();
  if(t.rolls<t.max&&!botStop(b)){if(!ui.botHeld){t.held=botPlanHold();ui.botHeld=true;save();render();botWait(1500);return}ui.botHeld=false;roll();botWait(2100);return}
  ui.botHeld=false;
