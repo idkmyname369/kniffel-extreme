@@ -1487,7 +1487,7 @@ function botTick(){if(!S||S.online||S.screen!=='game'||!S.players.some(q=>q.bot)
  if(fremdOpen(t))return;
  if(evOf(t)&&evOf(t).fremd&&t.rolls===1&&t.fremdDone&&!ui.botHeld){ui.botHeld=true}
  const b=botBest();
- if(t.rolls<t.max&&!botStop(b)){if(!ui.botHeld){t.held=botPlanHold();ui.botHeld=true;save();render();botWait(1500);return}ui.botHeld=false;roll();botWait(2100);return}
+ if(t.rolls<t.max&&!botStop(b)){if(!ui.botHeld){t.held=botPlanHold();ui.botHeld=true;save();render();botWait(950);return}ui.botHeld=false;roll();botWait(2100);return}
  ui.botHeld=false;
  if(t.jokerN&&!t.jokerUsed){botJoker();save();render();botWait(1500);return}
  const ev=evOf(t);if((!b||b.f<=0)&&ev&&ev.retry&&!t.retryUsed){retryTurn();botWait(1100);return}
