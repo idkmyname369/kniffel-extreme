@@ -41,6 +41,12 @@ button:disabled{cursor:default}
 input[type=text],input[type=number]{font-family:inherit;font-size:17px;background:transparent;border:0;color:var(--text);outline:none;width:100%;padding:0;letter-spacing:-.01em}
 input::placeholder{color:var(--ter)}
 .lvlbtn{flex:none;margin:0 8px;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:700;min-width:64px;background:var(--card3);color:var(--text)}.lvlbtn.lv0{color:#8fd18f}.lvlbtn.lv2{color:#ffcf6a}
+.intro{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .25s}.intro.in{opacity:1}
+.introbox{position:relative;width:100%;max-width:400px;background:var(--card);border-radius:20px;padding:30px 22px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.introskip{position:absolute;top:12px;right:14px;color:var(--blue);font-size:15px}
+.introi{font-size:52px;line-height:1;margin:8px 0 14px}.introt{font-family:Lora,Georgia,serif;font-size:23px;font-weight:700;margin-bottom:10px}
+.introx{font-size:15.5px;line-height:1.5;color:var(--sec);min-height:168px;text-align:left}.introx b{color:var(--text)}
+.introdots{display:flex;justify-content:center;gap:7px;margin:16px 0}.introdots span{width:7px;height:7px;border-radius:50%;background:var(--ter);opacity:.5}.introdots span.on{background:var(--text);opacity:1}
 .stepper{display:flex;align-items:center;background:var(--card3);border-radius:9px;overflow:hidden}
 .stepper button{width:44px;height:32px;font-size:20px;color:var(--text)}
 .stepper b{min-width:26px;text-align:center;font-weight:600;font-size:16px}
@@ -1202,7 +1208,8 @@ function homeHTML(){const list=Object.values(GAMES).map(g=>{try{return{g,s:JSON.
  const item=(x,sub)=>'<div class="cell gitem"><button class="grow gopen" data-a="open" data-id="'+x.g.id+'"><div class="ct">'+esc(x.s.players.map(p=>p.name).join(', '))+'</div><div class="cs">'+(x.s.online?'<span class="tag" style="margin-right:6px">Online · '+esc(x.s.online.code)+'</span>':'')+sub+'</div></button><button class="trash" data-a="askdel" data-id="'+x.g.id+'" aria-label="Löschen">Löschen</button></div>';
  h+='<div class="block"><div class="gtitle">Nicht beendete Spiele</div>'+(run.length?'<div class="group">'+run.map(x=>{const p=x.s.players[x.s.cur];const r=CATS.length-openCats(p).length+1;return item(x,'Runde '+Math.min(r,CATS.length)+' · '+esc(p.name)+' ist dran · '+fmtDate(x.g.updated))}).join('')+'</div>':'<div class="group"><div class="cell cs">Keine laufenden Spiele.</div></div>')+'</div>';
  h+='<div class="block"><div class="gtitle">Bereits gespielte Spiele</div>'+(done.length?'<div class="group">'+done.map(x=>{const r=x.s.players.map(p=>({p,t:totals(p).total})).sort((a,b)=>b.t-a.t);return item(x,(r.length>1?'Sieger: '+esc(r[0].p.name)+' · ':'')+r[0].t+' Punkte · '+fmtDate(x.g.updated))}).join('')+'</div>':'<div class="group"><div class="cell cs">Noch keine beendeten Spiele.</div></div>')+'</div>';
- h+='<div class="block"><button class="btn gray" data-a="stats">Statistiken</button></div><div class="gfoot" style="text-align:center">Spiele werden auf diesem Gerät gespeichert. · <a href="#" data-a="sound" style="color:var(--blue)">'+(SND.on?'Ton an':'Ton aus')+'</a></div>';
+ h+='<div class="block"><button class="btn gray" data-a="stats">Statistiken</button></div>';
+ h+='<div class="block"><div class="gtitle">Einstellungen</div><div class="group"><button class="cell" data-a="intro"><div class="grow"><div class="ct">Einführung</div><div class="cs">Regeln und Karten kurz erklärt</div></div><span class="chev">›</span></button><button class="cell" data-a="sound"><div class="grow"><div class="ct">Ton</div><div class="cs">Würfel, Karten und Effekte</div></div>'+sw(SND.on)+'</button></div><div class="gfoot" style="text-align:center">Spiele werden auf diesem Gerät gespeichert.</div></div>';
  return h}
 ui.cerDone={};
 function endHold(){return !!(ui.revHold||ui.fxPending||(ui.modal&&ui.modal.type==='reveal')||document.querySelector('.kfx,.bfx'))}
@@ -1244,6 +1251,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'cards':ui.modal={type:'cards'};renderModal();break;
   case'sound':{e.preventDefault();SND.on=!SND.on;try{localStorage.setItem('kx-sound',SND.on?'1':'0')}catch(err){}if(ui.modal&&ui.modal.type==='menu')renderModal();else render();if(SND.on){audio();sfx.ping()}break}
   case'stats':view='stats';render();window.scrollTo(0,0);break;
+  case'intro':showIntro(0);break;
   case'mprematch':mpRematch();break;
   case'mpnew':setup.online=true;view='setup';render();window.scrollTo(0,0);break;
   case'mpjoinview':view='join';render();window.scrollTo(0,0);break;
@@ -1604,6 +1612,21 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){try{navigator.ser
  const url=()=>location.pathname.replace(/[^/]*$/,'')+'index.html?nc='+Date.now();
  const check=()=>fetch(url(),{cache:'no-store'}).then(r=>r.ok?r.text():null).then(t=>{if(!t)return;const h=hash(t);if(h0===null){h0=h;return}if(h!==h0){if(ui.modal&&['need','pick','gamble','duel','bet','rcount','input','confirm'].includes(ui.modal.type))return;toast('Neue Version – wird geladen …');setTimeout(()=>location.reload(),900)}}).catch(()=>{});
  check();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});setInterval(()=>{if(document.visibilityState==='visible')check()},180000)})();
+
+/* Einführung */
+const INTRO=[
+ {i:'👑',t:'Willkommen bei Kniffel Royale',x:'Kniffel mit <b>6 Würfeln</b> und Ereigniskarten. Pro Zug hast du bis zu <b>3 Würfe</b> und wertest danach eine Kategorie. Jede Kategorie gibt es nur einmal. Wer am Ende die meisten Punkte hat, gewinnt.'},
+ {i:'🎲',t:'Würfeln und Halten',x:'Tippe Würfel an, um sie zu <b>halten</b>, und würfle den Rest neu. Danach tippst du auf eine Kategorie im Block, um zu werten. Die Punkte rechnet die App aus. Passt nichts, streichst du eine Kategorie mit 0.<br><br>Erreichst du oben mindestens <b>'+BONUS_T+' Punkte</b>, gibt es <b>+'+BONUS_P+' Bonus</b>.'},
+ {i:'🃏',t:'Ereigniskarten',x:'Vor jedem Zug wird eine Karte gezogen. Sie kann deinen Wurf <b>vervielfachen</b>, dir Punkte kosten, Gegner angreifen oder ein Duell starten. Manche Karten bleiben verdeckt, bis du gewertet hast.<br><br>Welche Karten mitspielen, legst du beim Erstellen eines Spiels fest.'},
+ {i:'🔑',t:'Der Tresor',x:'Spielt ihr mit Tresor, wandern <b>verlorene Punkte</b> hinein, zum Beispiel durch Strafen oder Angriffe. Wer die Karte <b>Tresorschlüssel</b> zieht, bekommt den ganzen Inhalt.'},
+ {i:'👥',t:'Mitspieler',x:'Spielt <b>an einem Handy</b> und gebt es weiter, spielt gegen <b>Bots</b> (Noob, Average oder Profi) oder <b>online</b> mit einem Einladungscode oder Link.<br><br>Verklickt? Mit dem runden <b>Rückgängig</b>-Knopf oben rechts nimmst du deinen letzten Zug zurück.'}
+];
+function showIntro(k){let el=document.querySelector('.intro');if(!el){el=document.createElement('div');el.className='intro';document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add('in'))}
+ const s=INTRO[k],last=k===INTRO.length-1;
+ el.innerHTML='<div class="introbox"><button class="introskip" data-intro="skip">Überspringen</button><div class="introi">'+s.i+'</div><div class="introt">'+s.t+'</div><div class="introx">'+s.x+'</div><div class="introdots">'+INTRO.map((_,i)=>'<span class="'+(i===k?'on':'')+'"></span>').join('')+'</div><div class="btnrow">'+(k>0?'<button class="btn gray" data-intro="'+(k-1)+'">Zurück</button>':'')+'<button class="btn" data-intro="'+(last?'skip':k+1)+'">'+(last?'Los geht’s':'Weiter')+'</button></div></div>';
+ el.onclick=e=>{const b=e.target.closest('[data-intro]');if(!b)return;const v=b.dataset.intro;if(v==='skip'){try{localStorage.setItem('kx-intro','1')}catch(x){}el.classList.remove('in');setTimeout(()=>el.remove(),250)}else showIntro(+v)};
+ let x0=null;el.ontouchstart=e=>{x0=e.touches[0].clientX};el.ontouchend=e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50){const n=k+(dx<0?1:-1);if(n>=0&&n<INTRO.length)showIntro(n)}}}
+(()=>{let seen=false;try{seen=localStorage.getItem('kx-intro')==='1'||Object.keys(GAMES||{}).length>0}catch(e){}if(!seen)setTimeout(()=>{if(view==='home'&&!S)showIntro(0)},600)})();
 
 render();
 initCloud();
