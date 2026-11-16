@@ -605,7 +605,8 @@ function isBlocked(t,id){return Array.isArray(t.blocked)?t.blocked.includes(id):
 /* Wertung vor verdeckten Effekten */
 function baseFinal(p,t,raw,rolls,id){const ev=evOf(t),parts=[],c=id?CAT[id]:null,onBet=!!(t.bet&&id&&t.bet.cats.includes(id));
  if(!raw||raw<=0){if(onBet)return{f:-t.bet.stake,parts:['Wette −'+t.bet.stake]};return{f:0,parts}}let f=raw;
- if(ev&&ev.mult&&!t.noMult){f=Math.floor(f*ev.mult);parts.push(ev.mult===.5?'½':'×'+ev.mult)}
+ if(t.voidMult){f=Math.floor(f*t.voidMult);parts.push('×'+t.voidMult)}
+ else if(ev&&ev.mult&&!t.noMult){f=Math.floor(f*ev.mult);parts.push(ev.mult===.5?'½':'×'+ev.mult)}
  if(ev&&ev.fixedMult&&c&&c.fixed){f*=ev.fixedMult;parts.push('×'+ev.fixedMult)}
  if(p.half){f=Math.floor(f/2);parts.push('½')}
  if(ev&&ev.cost&&rolls>1){const k=ev.cost*(rolls-1);f=Math.max(0,f-k);parts.push('−'+k)}
@@ -693,15 +694,15 @@ function drawEvent(){const t=S.turn,p=S.players[S.cur];const __ps=S.potOn?potSna
  if(ev.now==='tax'){const lst=[];S.players.forEach(q=>{if(q===p)return;const l=totals(q).lo,d=Math.floor(Math.max(0,l)*0.1);q.adj=(q.adj||0)-d;lst.push(esc(q.name)+' <b class="negv">−'+d+'</b>')});t.note='Abgezogen: '+lst.join(', ')+'. Jetzt normal würfeln.'}
  else if(ev.now==='dblup'){CATS.filter(c=>c.sec==='oben').forEach(c=>{const e=p.sc[c.id];if(e&&e.final){e.final*=2;addTag(e,'×2')}});p.ua=(p.ua||0)*2;t.note='Deine bonusrelevanten Punkte wurden verdoppelt: Bonus-Konto jetzt '+fmtN(totals(p).upAcc)+' / 100. Dein Wurf zählt diesen Zug ×4.'}
  else if(ev.now==='peek'){p.peekUntil=(CATS.length-openCats(p).length)+3;t.note=S.online?'Nur du siehst jetzt 3 Runden lang die Gesamtpunkte aller Spieler. Dein Wurf zählt diesen Zug ×3.':'Halte in deinen nächsten Zügen oben die Schaltfläche gedrückt, um die Gesamtpunkte zu sehen. Dein Wurf zählt diesen Zug ×3.'}
- else if(ev.now==='krain'){const n=kniffelCount();const g=n.k*50+n.e*75;p.adj=(p.adj||0)+g;t.note=(n.k||n.e)?'Bisher gewürfelt: '+n.k+'× Kniffel und '+n.e+'× Kniffel Extreme – du bekommst +'+g+' Punkte. Jetzt normal würfeln.':'Bisher wurde noch kein Kniffel gewürfelt – leider 0 Punkte. Normal weiterspielen.'}
+ else if(ev.now==='krain'){const n=kniffelCount();const g=n.k*50+n.e*75;p.adj=(p.adj||0)+g;t.note=(n.k||n.e)?'Bisher gewürfelt: '+n.k+'× Kniffel und '+n.e+'× Kniffel Extreme – du bekommst +'+g+' Punkte. Jetzt normal würfeln.':'Bisher wurde noch kein Kniffel gewürfelt – die Karte verfällt. Dafür zählt dein Wurf diesen Zug ×4.';if(!(n.k||n.e))t.voidMult=4}
  else if(ev.now==='bomb'){const n=S.players.length;S.bomb={holder:S.cur,left:n+1+Math.floor(Math.random()*(2*n))};t.note='Die Bombe liegt jetzt bei dir und wandert nach deinem Zug weiter. Jetzt normal würfeln.'}
  else if(ev.now==='topf'){const g=S.pot||0;p.adj=(p.adj||0)+g;S.pot=0;t.note=g+' Punkte aus dem Tresor gehören jetzt dir. Jetzt normal würfeln.'}
- else if(ev.now==='crown'){const best=CATS.map(c=>({c,e:p.sc[c.id]})).filter(x=>x.e&&x.e.final>0).sort((a,b)=>b.e.final-a.e.final)[0];if(!best)t.note='Du hast noch keine Punkte – die Karte verfällt. Normal weiterspielen.';else{const o=best.e.final;best.e.final=o*3;addTag(best.e,'×3');t.note='Krönung: „'+best.c.name+'“ '+o+' → '+best.e.final+'. Jetzt normal würfeln.'}}
+ else if(ev.now==='crown'){const best=CATS.map(c=>({c,e:p.sc[c.id]})).filter(x=>x.e&&x.e.final>0).sort((a,b)=>b.e.final-a.e.final)[0];if(!best){t.voidMult=4;t.note='Du hast noch keine Punkte – die Karte verfällt. Dafür zählt dein Wurf diesen Zug ×4.'}else{const o=best.e.final;best.e.final=o*3;addTag(best.e,'×3');t.note='Krönung: „'+best.c.name+'“ '+o+' → '+best.e.final+'. Jetzt normal würfeln.'}}
  else if(ev.now){const best=CATS.map(c=>p.sc[c.id]).filter(e=>e&&e.final>0).sort((a,b)=>b.final-a.final)[0];const bc=best&&CATS.find(c=>p.sc[c.id]===best);
-  if(!best)t.note='Du hast noch keine Punkte – die Karte verfällt. Normal weiterspielen.';
+  if(!best){t.voidMult=4;t.note='Du hast noch keine Punkte – die Karte verfällt. Dafür zählt dein Wurf diesen Zug ×4.'}
   else if(ev.now==='backlash'){const o=best.final;best.final=Math.max(0,o-30);addTag(best,'−30');t.note='„'+bc.name+'“: '+o+' → '+best.final+'. Jetzt normal würfeln.'}
   else{const o=best.final;best.final=Math.floor(o/2);addTag(best,'½');t.note='„'+bc.name+'“: '+o+' → '+best.final+'. Jetzt normal würfeln.'}}
- if(ev.pick){if(ev.pick==='gamble'||ev.pick==='duel'||ev.pick==='bet'||ev.pick==='rcount')t.pending=ev.pick;else if(ev.pick==='sac1'){if(pickOptions('sac2').length&&pickOptions('sac1').length)t.pending='sac1';else t.note=PICK.sac1.fz+' Normal weiterspielen.'}else if(pickOptions(ev.pick).length)t.pending=ev.pick;else t.note=PICK[ev.pick].fz+' Normal weiterspielen.'}
+ if(ev.pick){if(ev.pick==='gamble'||ev.pick==='duel'||ev.pick==='bet'||ev.pick==='rcount')t.pending=ev.pick;else if(ev.pick==='sac1'){if(pickOptions('sac2').length&&pickOptions('sac1').length)t.pending='sac1';else{t.voidMult=4;t.note=PICK.sac1.fz+' Dafür zählt dein Wurf diesen Zug ×4.'}}else if(pickOptions(ev.pick).length)t.pending=ev.pick;else{t.voidMult=4;t.note=PICK[ev.pick].fz+' Dafür zählt dein Wurf diesen Zug ×4.'}}
  if(__ps&&ev.now!=='topf'&&ev.now!=='bomb')potCharge(__ps,false);
  if(__hs)trackHarm(__hs,S.cur);
  ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip();save();render();
@@ -715,8 +716,8 @@ function _duelEval(m){const t=S.turn,mx=Math.max(...m.cont.map(i=>m.vals[i]));co
 function rcountResolve(d){const t=S.turn;t.max=d;t.pending=null;t.note='Gewürfelt: '+d+' – du darfst in diesem Zug '+(d===1?'nur 1-mal':d+'-mal')+' würfeln.';ui.modal=null;renderModal();save();render()}
 function gambleResolve(d){const ps=potSnap(),p0=S.pot||0,actor=S.cur;_gambleResolve(d);if(S.potOn)potCharge(ps,false);trackHarm(ps,actor);if((S.pot||0)!==p0){save();render()}}
 function _gambleResolve(d){const t=S.turn;t.gambleDie=d;
- if(d%2===0){if(pickOptions('strike').length){t.pending='strike';t.note='Gewürfelt: '+d+' (gerade) – streiche eine Wertung bei einem Gegner.'}else{t.pending=null;t.note='Gewürfelt: '+d+' (gerade) – aber kein Gegner hat ungeschützte Punkte. Normal weiterspielen.'}}
- else if(pickOptions('selfstrike').length){t.pending='selfstrike';t.note='Gewürfelt: '+d+' (ungerade) – streiche eine deiner Wertungen.'}else{t.pending=null;t.note='Gewürfelt: '+d+' (ungerade) – du hast aber noch keine Wertung mit Punkten. Normal weiterspielen.'}
+ if(d%2===0){if(pickOptions('strike').length){t.pending='strike';t.note='Gewürfelt: '+d+' (gerade) – streiche eine Wertung bei einem Gegner.'}else{t.pending=null;t.voidMult=4;t.note='Gewürfelt: '+d+' (gerade) – aber kein Gegner hat ungeschützte Punkte. Dafür zählt dein Wurf diesen Zug ×4.'}}
+ else if(pickOptions('selfstrike').length){t.pending='selfstrike';t.note='Gewürfelt: '+d+' (ungerade) – streiche eine deiner Wertungen.'}else{t.pending=null;t.voidMult=4;t.note='Gewürfelt: '+d+' (ungerade) – du hast aber noch keine Wertung mit Punkten. Dafür zählt dein Wurf diesen Zug ×4.'}
  save();render();if(t.pending)openPending();else{ui.modal=null;renderModal()}}
 function applyPick(kind,key){const ps=potSnap(),p0=S.pot||0,actor=S.cur,h0=JSON.stringify(S.harm||{});_applyPick(kind,key);if(S.potOn)potCharge(ps,kind==='swap');trackHarm(ps,actor);if((S.pot||0)!==p0||JSON.stringify(S.harm)!==h0){save();render()}}
 function _applyPick(kind,key){const t=S.turn,me=S.players[S.cur];if(kind==='revenge')kind='strike';
