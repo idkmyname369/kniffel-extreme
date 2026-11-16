@@ -366,6 +366,8 @@ button.cback:active{transform:scale(.985)}
 .large,.pnm,.cer .large{font-family:Lora,Georgia,serif;font-weight:700;letter-spacing:0}
 #app.pswap{animation:pswap .5s cubic-bezier(.2,.8,.2,1)}
 @keyframes pswap{0%{opacity:0;transform:translateX(34px)}100%{opacity:1;transform:none}}
+.rv-res{transition:opacity .4s}.rv-res.hide{opacity:0;height:0;overflow:hidden}
+.evcard .rsdie{width:56px;height:56px;margin:10px 0 4px}.evcard .rswheel{width:64px;height:64px;font-size:19px;margin:10px 0 4px}
 .confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:90}
 .cer{margin-bottom:22px}
 .podium{display:flex;justify-content:center;align-items:flex-end;gap:10px;height:300px;margin-top:10px}
@@ -795,7 +797,8 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  const __bm=redoNow!==true;if(!after&&S.screen!=='end'&&!S.players[__sc].bot){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),mode:__bm?'bot':'std',pi:__sc,cat:target,ent:JSON.stringify(entry),bi:S.cur,exp:Infinity,text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'}}else ui.undo=null
  if(ui.boomPending){ui.boomPending=false;try{sfx.boom();navigator.vibrate&&navigator.vibrate([90,40,90])}catch(e){}}
  if(S.fx&&S.fx.seq>(ui.seenFx||0)){ui.seenFx=S.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(S.fx.kind,null),120)}
- render();window.scrollTo({top:0,behavior:'smooth'});
+ if(reveal&&S.lastReveal)startRevHold(S.lastReveal);
+ render();if(!ui.revHold)window.scrollTo({top:0,behavior:'smooth'});
  if(reveal){sfx.reveal();if(S.lastReveal)ui.seenReveal=S.lastReveal.seq;ui.modal=null;renderModal();if(kb)toast(kbLabel(kb)+' für '+p.name)}
  else{ui.modal=null;renderModal();if(kb)toast(kbLabel(kb)+' für '+p.name)}}
 
@@ -856,7 +859,7 @@ function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,
    if(ui.seenFx==null||!prev||prev.id!==r.id)ui.seenFx=(!prev||prev.id!==r.id)?(r.fx?r.fx.seq:0):(ui.seenFx||0);
    const showFx=r.fx&&r.fx.seq>(ui.seenFx||0)&&r.fx.uid!==UID;if(showFx){ui.seenFx=r.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(r.fx.kind,r.fx.who),60)}view='game';const old=GAMES[S.id];GAMES[S.id]={id:S.id,updated:Date.now(),finished:S.screen==='end',synced:!!(old&&old.synced),json:d.json};persistLocal();queuePush(S.id);
    if(ui.modal&&!['reveal','board','info','menu','del'].includes(ui.modal.type)&&!canAct()){ui.modal=null;renderModal()}
-   if(showRev){ui.seenReveal=r.lastReveal.seq;sfx.reveal()}render()
+   if(showRev){ui.seenReveal=r.lastReveal.seq;startRevHold(r.lastReveal)}render()
    const t=S.turn;if(S.screen==='game'&&t&&t.pending&&canAct()&&!ui.modal)openPending()}
  },e=>toast('Verbindung zum Online-Spiel unterbrochen'));setTimeout(presTick,400)}
 function mpQueue(){if(!MP||!S||!S.online)return;clearTimeout(MP.tm);MP.tm=setTimeout(mpPush,20)}
@@ -927,7 +930,6 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
  if(t.bet)h+='<div class="betbar"><b>Wetteinsatz '+t.bet.stake+'</b> auf '+t.bet.cats.map(id=>CAT[id].name).join(', ')+'</div>';
  if(canPeek()){const v=peekViewer();h+='<div class="betbar" style="background:linear-gradient(rgba(255,179,64,.12),rgba(255,179,64,.12)),var(--bg);color:#ffcf80">Spionage aktiv: noch '+(v.peekUntil-(CATS.length-openCats(v).length))+' Runde(n) Gesamtpunkte sichtbar</div>'}
  if(S.players.length>1)h+='<div class="standings">'+S.players.map((q,i)=>'<button class="st nm '+(i===vi?'on':'')+'" style="--pc:'+pcolI(i).c+'" data-a="viewp" data-i="'+i+'"><div class="p">'+(S.online?'<span class="dot'+(isOnlineUid(q.uid)?'':' off')+'"></span>':(i===S.cur?'<span class="dot"></span>':''))+esc(q.name)+(S.bomb&&S.bomb.holder===i?' <span class="bombi">💣</span>':'')+(S.online&&q.uid===UID?' <span style="font-size:12px;opacity:.6">(du)</span>':'')+'</div><div class="n">'+(i===S.cur?'am Zug':'noch '+openCats(q).length+' offen')+(S.online&&!isOnlineUid(q.uid)?' · offline':'')+(canPeek()?' · <b style="color:#ffb340">'+totals(q).total+' P.</b>':'')+'</div></button>').join('')+'</div>';
- {const L=S.lastReveal;if(L&&L.n===S.logN&&EV[L.ev]){const ev=EV[L.ev],c=CAT[L.cat],r=L.res||{};let spin=false,anim='';if(ev.after==='fate'||ev.after==='wheel'||(ev.after==='don'&&r.die)){if(ui.revAnimSeq!==L.seq){ui.revAnimSeq=L.seq;ui.revAnimUntil=Date.now()+1500;setTimeout(()=>{if(S)render()},1550)}spin=Date.now()<ui.revAnimUntil;anim=ev.after!=='wheel'?'<div class="bigdie rsdie'+(spin?' spin':'')+'">'+pips(spin?r6():(r.die||1))+'</div>':'<div class="wheelbox rswheel'+(spin?' spin':'')+'">'+(spin?'?':(r.wheel==='x2'?'×2':'+'+r.wheel))+'</div>'}h+='<div class="revstrip c-'+ev.g+'"><div class="ec-med">'+ev.gl+'</div><div class="grow"><div class="ec-k">'+(()=>{const wi=S.players.findIndex(q=>q.name===L.who);return wi>=0?nmC(wi):esc(L.who)})()+' hat aufgedeckt</div><div class="rs-t">'+ev.title+'</div>'+anim+(spin?'<div class="rs-x">…</div>':'')+(!spin&&r.text?'<div class="rs-x">'+r.text+'</div>':'')+(!spin&&c&&r.after!=null?'<div class="rs-v">'+c.name+' = <b class="'+(r.after<0?'negv':'')+'">'+fmtN(r.after)+'</b>'+(r.before!=null&&r.before!==r.after?' <span>(vorher '+fmtN(r.before)+')</span>':'')+'</div>':'')+(L.kb?'<div class="kbline" style="margin-top:4px">'+kbLabel(L.kb)+'</div>':'')+'</div></div>'}}
  if(S.bombBoom&&S.bombBoom.n===S.logN&&S.players[S.bombBoom.who])h+='<div class="boomstrip"><span class="bb">💥</span><div class="grow"><div class="rs-t">Bumm! Die Zeitbombe ist hochgegangen</div><div class="rs-x">'+nmC(S.bombBoom.who)+' verliert 50 Punkte.</div></div></div>';
  else if(S.bomb&&S.players[S.bomb.holder])h+='<div class="bombbar"><span class="bombi">💣</span>Die Zeitbombe tickt bei '+nmC(S.bomb.holder)+'</div>';
  if(S.potOn){const pv=S.pot||0;h+='<div class="potbar'+(ui.lastPot!=null&&ui.lastPot!==pv?' bump':'')+'"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">🔑</span>Im Tresor<b>'+pv+'</b></div>';ui.lastPot=pv}
@@ -1157,10 +1159,21 @@ function homeHTML(){const list=Object.values(GAMES).map(g=>{try{return{g,s:JSON.
  h+='<div class="block"><button class="btn gray" data-a="stats">Statistiken</button></div><div class="gfoot" style="text-align:center">Spiele werden auf diesem Gerät gespeichert. · <a href="#" data-a="sound" style="color:var(--blue)">'+(SND.on?'Ton an':'Ton aus')+'</a></div>';
  return h}
 ui.cerDone={};
-function endHold(){return !!(ui.fxPending||(ui.modal&&ui.modal.type==='reveal')||document.querySelector('.kfx'))}
+function endHold(){return !!(ui.revHold||ui.fxPending||(ui.modal&&ui.modal.type==='reveal')||document.querySelector('.kfx'))}
 function rollShuffle(){document.querySelectorAll('.die.roll').forEach(el=>{const fin=el.innerHTML;let n=0;const iv=setInterval(()=>{if(!el.isConnected||++n>5){clearInterval(iv);if(el.isConnected)el.innerHTML=fin;return}el.innerHTML=pips(1+Math.floor(Math.random()*6))},70)})}
+function startRevHold(L){if(!L||!EV[L.ev])return;const a=document.getElementById('app');const ev=EV[L.ev];const spin=ev.after==='fate'||ev.after==='wheel'||(ev.after==='don'&&L.res&&L.res.die);const dur=spin?3600:2800;
+ clearTimeout(ui.revT);ui.revHold={html:a.innerHTML,L,spin,mounted:false};ui.revT=setTimeout(()=>{ui.revHold=null;const a2=document.getElementById('app');if(a2.style)a2.style.pointerEvents='';render()},dur)}
+function mountRevHold(a){const H=ui.revHold,L=H.L,ev=EV[L.ev],c=CAT[L.cat],r=L.res||{};a.innerHTML=H.html;if(a.style)a.style.pointerEvents='none';H.mounted=true;
+ const wi=S.players.findIndex(q=>q.name===L.who);
+ const val=(c&&r.after!=null?'<div class="rs-v">'+c.name+' = <b class="'+(r.after<0?'negv':'')+'">'+fmtN(r.after)+'</b>'+(r.before!=null&&r.before!==r.after?' <span>(vorher '+fmtN(r.before)+')</span>':'')+'</div>':'')+(L.kb?'<div class="kbline" style="margin-top:4px">'+kbLabel(L.kb)+'</div>':'');
+ let anim='';if(H.spin)anim=ev.after==='wheel'?'<div class="wheelbox rswheel spin">?</div>':'<div class="bigdie rsdie spin">'+pips(r6())+'</div>';
+ const extra='<div class="rv-anim">'+anim+'</div><div class="rv-res'+(H.spin?' hide':'')+'">'+(r.text?'<div class="evnote">'+r.text+'</div>':'')+val+'</div>';
+ ui.flip=true;const html=cardFront(ev,ev.title,ev.text,extra);ui.flip=false;
+ const el=a.querySelector('.evcard.c-verdeckt');if(el){const w=el.closest('.flipwrap')||el;w.outerHTML=html}else{const top=a.querySelector('.top');if(top)top.insertAdjacentHTML('afterend',html)}
+ sfx.flip();spinFaces();const card=a.querySelector('.flipwrap')||a.querySelector('.evcard.rare,.evcard');if(card)card.scrollIntoView({block:'center',behavior:'smooth'});
+ if(H.spin)setTimeout(()=>{if(ui.revHold!==H)return;const an=a.querySelector('.rv-anim');if(an)an.innerHTML=ev.after==='wheel'?'<div class="wheelbox rswheel">'+(r.wheel==='x2'?'×2':'+'+r.wheel)+'</div>':'<div class="bigdie rsdie">'+pips(r.die||1)+'</div>';const rs=a.querySelector('.rv-res');if(rs)rs.classList.remove('hide');sfx.reveal()},1500)}
 function spinFaces(){document.querySelectorAll('#app .bigdie.spin').forEach(el=>{if(el.__iv)return;el.__iv=setInterval(()=>{if(!el.isConnected){clearInterval(el.__iv);return}el.innerHTML=pips(1+Math.floor(Math.random()*6))},75)})}
-function render(){const a=document.getElementById('app');if(S&&S.screen==='game'){const k=S.id+'|'+S.cur;if(ui.curKey&&ui.curKey!==k){a.classList.remove('pswap');void a.offsetWidth;a.classList.add('pswap');clearTimeout(ui.pswT);ui.pswT=setTimeout(()=>a.classList.remove('pswap'),600)}ui.curKey=k}else ui.curKey=null;a.innerHTML=S?((S.screen==='game'||(S.screen==='end'&&!ui.cerDone[S.id]&&endHold()&&S.turn))?gameHTML():endHTML()):(view==='setup'?setupHTML():view==='lobby'?lobbyHTML():view==='join'?joinHTML():view==='stats'?statsHTML():homeHTML());if(S&&S.screen==='end'&&!ui.cerDone[S.id]&&!endHold()){ui.cerDone[S.id]=true;ui.cerAnim=S.id;a.innerHTML=endHTML();setTimeout(ceremony,60);setTimeout(()=>{ui.cerAnim=null},6000)}if(typeof syncUndo==='function')syncUndo();spinFaces()}
+function render(){const a=document.getElementById('app');if(ui.revHold){if(!ui.revHold.mounted)mountRevHold(a);return}if(S&&S.screen==='game'){const k=S.id+'|'+S.cur;if(ui.curKey&&ui.curKey!==k){a.classList.remove('pswap');void a.offsetWidth;a.classList.add('pswap');clearTimeout(ui.pswT);ui.pswT=setTimeout(()=>a.classList.remove('pswap'),600)}ui.curKey=k}else ui.curKey=null;a.innerHTML=S?((S.screen==='game'||(S.screen==='end'&&!ui.cerDone[S.id]&&endHold()&&S.turn))?gameHTML():endHTML()):(view==='setup'?setupHTML():view==='lobby'?lobbyHTML():view==='join'?joinHTML():view==='stats'?statsHTML():homeHTML());if(S&&S.screen==='end'&&!ui.cerDone[S.id]&&!endHold()){ui.cerDone[S.id]=true;ui.cerAnim=S.id;a.innerHTML=endHTML();setTimeout(ceremony,60);setTimeout(()=>{ui.cerAnim=null},6000)}if(typeof syncUndo==='function')syncUndo();spinFaces()}
 
 function dieTap(i){const t=S.turn,ev=evOf(t);if(t.rolls===0)return;
  if(S.online&&ev&&ev.fremd&&t.rolls===1&&t.fremdDone&&!t.tool){toast('Diese Würfel hat '+S.players[t.decider].name+' für dich gewählt');return}
@@ -1359,7 +1372,7 @@ function botPending(){const t=S.turn,p=S.players[S.cur],k=t.pending;
  const key=botPickKey(k);if(key==null){t.pending=null;save();render();return}applyPick(k,key)}
 function botNeed(){const m=ui.modal;if(m.need==='don'){m.ctx.don=m.amount<=30?r6():0;commit(m.id,m.raw,m.ctx);return}if(m.need==='slots'){const R=['+25','×2','×3'];m.ctx.reels=[0,0,0].map(()=>R[Math.floor(Math.random()*3)])}else if(m.need==='thief'){let bi=-1,bt=-1e9;S.players.forEach((q,i)=>{if(i!==S.cur){const v=botTot(i);if(v>bt){bt=v;bi=i}}});m.ctx.target=bi}else if(m.need==='fate')m.ctx.fdie=r6();else m.ctx.n=0;
  commit(m.id,m.raw,m.ctx)}
-function botTick(){if(!S||S.online||S.screen!=='game'||!S.players.some(q=>q.bot))return;if(Date.now()<botT||ui.fxPending||document.querySelector('.kfx')||ui.rolling)return;
+function botTick(){if(!S||S.online||S.screen!=='game'||!S.players.some(q=>q.bot)||ui.revHold)return;if(Date.now()<botT||ui.fxPending||document.querySelector('.kfx')||ui.rolling)return;
  const t=S.turn,p=S.players[S.cur];
  if(!p.bot){if(t.pending==='oppforce'&&t.decider!=null&&S.players[t.decider].bot){if(ui.modal&&ui.modal.type==='pick'){ui.modal=null;renderModal()}const key=botPickKey('oppforce');if(key)applyPick('oppforce',key);botWait(900)}return}
  if(ui.modal){const m=ui.modal;
