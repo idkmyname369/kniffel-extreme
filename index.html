@@ -1335,9 +1335,10 @@ const sfx={
   noiseHit(a,t,{pink:true,att:0.05,dec:1.1,vol:0.08,filters:[['lowpass',380]],rev:0.05});
   for(let k=0;k<nd;k++){const pan=(Math.random()-.5)*.7;let tt=t+0.02+Math.random()*0.22;const hits=4+Math.floor(Math.random()*2);let gap=0.16+Math.random()*0.06;
    for(let i=0;i<hits;i++){const v=1-i/hits*0.6;
-    noiseHit(a,tt,{dec:0.004,vol:0.42*v,filters:[['highpass',1800]],pan});
-    noiseHit(a,tt,{dec:0.04+Math.random()*0.03,vol:0.24*v,filters:[['bandpass',2300+Math.random()*2400,9]],rev:0.12,pan});
-    if(i<2||Math.random()<.4)noiseHit(a,tt,{dec:0.035,vol:0.2*v,filters:[['lowpass',260]],pan});
+    noiseHit(a,tt,{dec:0.008,vol:0.32*v,filters:[['bandpass',1500,1.2]],pan});
+    noiseHit(a,tt,{dec:0.06+Math.random()*0.04,vol:0.3*v,filters:[['bandpass',850+Math.random()*700,5]],rev:0.14,pan});
+    osc(a,tt,{f:520+Math.random()*260,f2:380,dec:0.05,vol:0.11*v,pan});
+    noiseHit(a,tt,{dec:0.05,vol:0.26*v,filters:[['lowpass',200]],pan});
     tt+=gap;gap*=0.68+Math.random()*0.1}}
   buzz(25)},
  flip(){const a=audio();if(!a)return;const t=a.currentTime;
