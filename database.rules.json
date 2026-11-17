@@ -7,6 +7,21 @@
         ".read": "auth != null && $code.length === 6",
         ".write": "auth != null && $code.length === 6 && (!data.exists() || data.child('seats').child(auth.uid).exists() || (data.child('status').val() === 'lobby' && newData.child('seats').child(auth.uid).exists()))"
       }
+    },
+    "inv": {
+      "$to": {
+        ".read": "auth != null && auth.uid === $to",
+        "$from": {
+          ".write": "auth != null && (auth.uid === $from || auth.uid === $to)",
+          ".validate": "newData.hasChildren(['name','code','t']) && newData.child('code').isString() && newData.child('code').val().length === 6 && newData.child('name').isString() && newData.child('name').val().length <= 20"
+        }
+      }
+    },
+    "push": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid"
+      }
     }
   }
 }

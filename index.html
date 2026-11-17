@@ -48,6 +48,9 @@ input::placeholder{color:var(--ter)}
 .introx{font-size:15.5px;line-height:1.5;color:var(--sec);min-height:168px;text-align:left}.introx b{color:var(--text)}
 .introdots{display:flex;justify-content:center;gap:7px;margin:16px 0}.introdots span{width:7px;height:7px;border-radius:50%;background:var(--ter);opacity:.5}.introdots span.on{background:var(--text);opacity:1}
 html,body{touch-action:manipulation}
+.btn.wa{background:#25D366;color:#fff;box-shadow:0 4px 14px rgba(37,211,102,.25)}
+.frrow{gap:4px}.frstar{flex:none;width:34px;height:34px;font-size:21px;color:var(--ter);margin-left:-6px}.frstar.on{color:#ffcf6a}
+.frname{text-align:left;min-height:34px;display:flex;align-items:center}.frname:disabled{opacity:.55}.frstate.here{color:var(--sec)}.frstate{flex:none;font-size:14px;color:var(--blue)}.frstate.ok{color:#30d158}
 .stepper{display:flex;align-items:center;background:var(--card3);border-radius:9px;overflow:hidden}
 .stepper button{width:44px;height:32px;font-size:20px;color:var(--text)}
 .stepper b{min-width:26px;text-align:center;font-weight:600;font-size:16px}
@@ -432,7 +435,7 @@ body.remind::after{content:"";position:fixed;inset:0;pointer-events:none;z-index
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="firebase-config.js?v=3"></script>
+<script src="firebase-config.js?v=4"></script>
 <script>
 /* ---------- Würfel-Logik (6 Würfel) ---------- */
 const cnt=(d,v)=>d.filter(x=>x===v).length;
@@ -555,7 +558,7 @@ const NEW_IDS=['topf','bomb','revenge','don','x7','teuer10','twos','threes','fiv
 const LSOLD='kniffel-extreme-v3',LSSEL='kniffel-extreme-sel-v3',LSG='kniffel-extreme-games-v1';
 
 let S=null;
-let setup={bots:0,botLvl:(()=>{try{const v=JSON.parse(localStorage.getItem('kx-botlvl'));if(Array.isArray(v))return v}catch(e){}return[1,1,1,1,1]})(),botNames:['Bot 1','Bot 2','Bot 3','Bot 4','Bot 5'],n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
+let setup={myName:(()=>{try{return localStorage.getItem('kx-myname')||''}catch(e){return''}})(),bots:0,botLvl:(()=>{try{const v=JSON.parse(localStorage.getItem('kx-botlvl'));if(Array.isArray(v))return v}catch(e){}return[1,1,1,1,1]})(),botNames:['Bot 1','Bot 2','Bot 3','Bot 4','Bot 5'],n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
 let ui={modal:null,flip:false,rolling:false,rollIdx:-1};
 let view='home';
 try{saveSel()}catch(e){}
@@ -570,7 +573,7 @@ function persistLocal(){if(persistLocal.t)return;persistLocal.t=setTimeout(persi
 addEventListener('pagehide',()=>{if(persistLocal.t)persistNow()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&persistLocal.t)persistNow()});
 const newId=()=>'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function save(){if(!S)return;S.updated=Date.now();S.rev=(S.rev||0)+1;const old=GAMES[S.id];GAMES[S.id]={id:S.id,updated:S.updated,finished:S.screen==='end',synced:!!(old&&old.synced),json:JSON.stringify(S)};persistLocal();queuePush(S.id);if(S.online)mpQueue()}
-let RCOL=null,cloud='local',DB=null,DB_ALT=null,UID=null,MP=null;
+let RCOL=null,cloud='local',DB=null,DB_ALT=null,UID=null,MP=null,RDB=null;
 const PQ={busy:{},dirty:{},tm:{}};
 function queuePush(id){if(!RCOL)return;clearTimeout(PQ.tm[id]);PQ.tm[id]=setTimeout(()=>push(id),700)}
 async function push(id){if(PQ.busy[id]){PQ.dirty[id]=true;return}const g=GAMES[id];if(!g||!RCOL)return;PQ.busy[id]=true;
@@ -585,7 +588,7 @@ async function initCloud(){try{
  try{if(firebase.auth){const cr=await Promise.race([firebase.auth().signInAnonymously(),new Promise((_,r)=>setTimeout(()=>r('t'),8000))]);if(cr&&cr.user)UID=cr.user.uid}}catch(e){console.warn('auth',e)}
  if(window.FIREBASE_CONFIG.databaseURL&&firebase.database){
   // Realtime Database: schnelle Synchronisation über WebSocket
-  const rdb=firebase.database();
+  const rdb=firebase.database();RDB=rdb;
   const flat=(o,pre,out)=>{for(const k in o){const v=o[k],key=pre?pre+'/'+k:k;if(v&&typeof v==='object'&&!Array.isArray(v))flat(v,key,out);else out[key]=v===undefined?null:v}return out};
   DB={doc:p=>{const r=rdb.ref(p);return{
    get:async()=>{const sn=await r.get();return{exists:sn.exists(),id:p.split('/').pop(),data:()=>sn.val(),metadata:{fromCache:false}}},
@@ -897,7 +900,7 @@ function mpLeave(){if(MP&&MP.unsub){try{MP.unsub()}catch(e){}}MP=null}
 function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,ref,busy:false,dirty:false,tm:null,lobby:null,warned:false};MP=m;
  m.unsub=ref.onSnapshot(snap=>{if(MP!==m)return;
   if(!snap.exists){m.lobby=null;if(!S&&view==='lobby'&&!snap.metadata.fromCache){toast('Dieses Spiel gibt es nicht mehr');view='home';mpLeave();render()}return}
-  const d=snap.data();m.lobby=d;
+  const d=snap.data();m.lobby=d;if(d&&d.status&&d.status!=='lobby')frRecord(d.seats);
   presUpdate(d);
   if(d.next&&d.next!==m.code){const nc=d.next;toast('Revanche gestartet!');ui.seenReveal=0;ui.seenFx=0;S=null;mpSubscribe(nc);return}
   if(d.status==='lobby'){if(!S){view='lobby';render()}return}
@@ -938,11 +941,11 @@ async function mpStart(){const m=MP,d=m&&m.lobby;if(!d||d.host!==UID)return;cons
 async function mpLeaveLobby(){const m=MP,d=m&&m.lobby;if(m&&d){try{if(d.host===UID)await m.ref.delete();else await m.ref.update({seats:{[UID]:null}})}catch(e){}}mpLeave();view='home';render()}
 function lobbyHTML(){const d=MP&&MP.lobby;if(!d)return'<button class="backbtn" data-a="mpleave">‹ Zurück</button><div class="large">Lobby</div><p class="lead">Verbinde …</p>';
  const seats=Object.entries(d.seats||{}).filter(x=>x[1]).sort((a,b)=>a[1].t-b[1].t),host=d.host===UID;
- let h='<button class="backbtn" data-a="mpleave">‹ '+(host?'Lobby schließen':'Verlassen')+'</button><div class="eyebrow">Online-Spiel</div><div class="large">Lobby</div><p class="lead">Schick deinen Mitspielern diesen Einladungscode. Sie öffnen Kniffel Royale, tippen auf „Online beitreten“ und geben ihn ein.</p>';
- h+='<div class="codebox">'+esc(d.code)+'</div><div class="block"><button class="btn tint" data-a="mpcopy">Einladung kopieren</button></div>';
+ let h='<button class="backbtn" data-a="mpleave">‹ '+(host?'Lobby schließen':'Verlassen')+'</button><div class="eyebrow">Online-Spiel</div><div class="large">Lobby</div><p class="lead">Schick deinen Mitspielern den Einladungslink. Wer ihn antippt, landet direkt hier in der Lobby.</p>';
+ h+='<div class="block"><button class="btn wa" data-a="mpwa">'+WA_ICON+'Über WhatsApp einladen</button><div class="btnrow" style="margin-top:10px"><button class="btn tint" data-a="mpshare">Link teilen</button><button class="btn tint" data-a="mpcopy">Link kopieren</button></div><div class="gfoot" style="text-align:center">Einladungscode: <b style="color:var(--text);letter-spacing:.12em">'+esc(d.code)+'</b></div></div>';
  h+='<div class="block"><div class="gtitle">Spieler ('+seats.length+'/6)</div><div class="group">'+(()=>{const cl=assignColors(seats.map(x=>x[1].color!=null?x[1].color:null));return seats.map(([uid,s],i)=>'<div class="cell"><div class="rank">'+(i+1)+'</div><div class="grow ct" style="color:'+PALETTE[cl[i]].l+'">'+esc(s.name)+(uid===UID?' <span class="cs">(du)</span>':'')+'</div>'+(uid===d.host?'<span class="tag">Gastgeber</span>':'')+(uid===UID?'<button class="swatch" data-a="pickcol" data-k="o" data-i="0" style="background:'+PALETTE[cl[i]].c+'"></button>':'<span class="swatch" style="background:'+PALETTE[cl[i]].c+';opacity:.85"></span>')+'</div>').join('')})()+'</div>';
  h+='<div class="gfoot">'+(d.settings.mode==='digital'?'Digitale Würfel':'Eigene Würfel')+' · '+d.settings.events.length+' Ereigniskarten aktiv · Tresor '+(d.settings.events.includes('topf')?'an':'aus')+'. Jeder spielt auf seinem eigenen Handy, Züge erscheinen bei allen live.</div></div>';
- h+='<div class="block"><div class="group rules"><p><b style="color:var(--text)">So laden sie sich ein:</b> Schick deinen Mitspielern den Link zu dieser App und den Code. Ein Konto brauchen sie nicht.</p></div></div>';
+  h+=friendsHTML(seats);
  h+=host?'<div class="sticky"><button class="btn" data-a="mpstart" '+(seats.length<2?'disabled':'')+'>'+(seats.length<2?'Warte auf Mitspieler …':'Spiel starten')+'</button></div>':'<div class="gfoot" style="text-align:center">Warte, bis der Gastgeber das Spiel startet …</div>';
  return h}
 function joinHTML(){return'<button class="backbtn" data-a="home">‹ Übersicht</button><div class="large">Online beitreten</div><p class="lead">Gib den Einladungscode und deinen Namen ein.</p><div class="block"><div class="group"><div class="cell"><input type="text" data-jc="1" maxlength="6" autocapitalize="characters" placeholder="Code, z. B. K7XM2P" value="'+esc(setup.joinCode||'')+'" style="text-transform:uppercase;letter-spacing:.15em;font-weight:600"></div><div class="cell"><input type="text" data-mn="1" maxlength="14" placeholder="Dein Name" value="'+esc(setup.myName||'')+'"></div></div></div><div class="block"><button class="btn" data-a="mpjoin">Beitreten</button></div>'}
@@ -1210,7 +1213,7 @@ function homeHTML(){const list=Object.values(GAMES).map(g=>{try{return{g,s:JSON.
  h+='<div class="block"><div class="gtitle">Nicht beendete Spiele</div>'+(run.length?'<div class="group">'+run.map(x=>{const p=x.s.players[x.s.cur];const r=CATS.length-openCats(p).length+1;return item(x,'Runde '+Math.min(r,CATS.length)+' · '+esc(p.name)+' ist dran · '+fmtDate(x.g.updated))}).join('')+'</div>':'<div class="group"><div class="cell cs">Keine laufenden Spiele.</div></div>')+'</div>';
  h+='<div class="block"><div class="gtitle">Bereits gespielte Spiele</div>'+(done.length?'<div class="group">'+done.map(x=>{const r=x.s.players.map(p=>({p,t:totals(p).total})).sort((a,b)=>b.t-a.t);return item(x,(r.length>1?'Sieger: '+esc(r[0].p.name)+' · ':'')+r[0].t+' Punkte · '+fmtDate(x.g.updated))}).join('')+'</div>':'<div class="group"><div class="cell cs">Noch keine beendeten Spiele.</div></div>')+'</div>';
  h+='<div class="block"><button class="btn gray" data-a="stats">Statistiken</button></div>';
- h+='<div class="block"><div class="gtitle">Einstellungen</div><div class="group"><button class="cell" data-a="intro"><div class="grow"><div class="ct">Einführung</div><div class="cs">Regeln und Karten kurz erklärt</div></div><span class="chev">›</span></button><button class="cell" data-a="sound"><div class="grow"><div class="ct">Ton</div><div class="cs">Würfel, Karten und Effekte</div></div>'+sw(SND.on)+'</button></div><div class="gfoot" style="text-align:center">Spiele werden auf diesem Gerät gespeichert.</div></div>';
+ h+='<div class="block"><div class="gtitle">Einstellungen</div><div class="group"><button class="cell" data-a="intro"><div class="grow"><div class="ct">Einführung</div><div class="cs">Regeln und Karten kurz erklärt</div></div><span class="chev">›</span></button><button class="cell" data-a="pushtog"><div class="grow"><div class="ct">Einladungen als Mitteilung</div><div class="cs">Push-Nachricht, wenn dich jemand in eine Lobby einlädt</div></div>'+sw(pushOn())+'</button><button class="cell" data-a="sound"><div class="grow"><div class="ct">Ton</div><div class="cs">Würfel, Karten und Effekte</div></div>'+sw(SND.on)+'</button></div><div class="gfoot" style="text-align:center">Spiele werden auf diesem Gerät gespeichert.</div></div>';
  return h}
 ui.cerDone={};
 function endHold(){return !!(ui.revHold||ui.fxPending||(ui.modal&&ui.modal.type==='reveal')||document.querySelector('.kfx,.bfx'))}
@@ -1241,7 +1244,7 @@ if((S.online||localBotGame())&&ev&&ev.fremd&&t.rolls===1&&t.fremdDone&&!t.tool&&
   t.held[i]=!t.held[i]}
  save();render()}
 
-document.addEventListener('input',e=>{const d=e.target.dataset;if(d.ni!==undefined)setup.names[+d.ni]=e.target.value;if(d.bn!==undefined){setup.botNames=setup.botNames||BOT_NAMES.slice();setup.botNames[+d.bn]=e.target.value}if(d.mn)setup.myName=e.target.value;if(d.jc)setup.joinCode=e.target.value});
+document.addEventListener('input',e=>{const d=e.target.dataset;if(d.ni!==undefined)setup.names[+d.ni]=e.target.value;if(d.bn!==undefined){setup.botNames=setup.botNames||BOT_NAMES.slice();setup.botNames[+d.bn]=e.target.value}if(d.mn){setup.myName=e.target.value;try{localStorage.setItem('kx-myname',e.target.value)}catch(x){}}if(d.jc)setup.joinCode=e.target.value});
 document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('.peekbtn')){e.preventDefault();ui.peekHold=true;render()}});
 ['pointerup','pointercancel'].forEach(n=>document.addEventListener(n,()=>{if(ui.peekHold){ui.peekHold=false;render()}}));
 document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&&e.target.dataset.bg){ui.modal=null;renderModal();return}
@@ -1260,7 +1263,13 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'mpjoin':mpJoin();break;
   case'mpstart':mpStart();break;
   case'mpleave':mpLeaveLobby();break;
-  case'mpcopy':{const code=MP&&MP.lobby?MP.lobby.code:'';const txt='Spiel mit mir Kniffel Royale! Öffne '+location.href.split('#')[0]+' , tippe auf „Online beitreten“ und gib diesen Code ein: '+code;try{navigator.clipboard.writeText(txt).then(()=>toast('Einladung kopiert'),()=>toast('Code: '+code))}catch(err){toast('Code: '+code)}break}
+  case'mpcopy':{const code=MP&&MP.lobby?MP.lobby.code:'';const txt=inviteLink(code);try{navigator.clipboard.writeText(txt).then(()=>toast('Link kopiert'),()=>toast('Code: '+code))}catch(err){toast('Code: '+code)}break}
+  case'mpwa':{const code=MP&&MP.lobby?MP.lobby.code:'';if(code)window.open('https://wa.me/?text='+encodeURIComponent(inviteText(code)),'_blank');break}
+  case'mpshare':{const code=MP&&MP.lobby?MP.lobby.code:'';if(!code)break;if(navigator.share){navigator.share({title:'Kniffel Royale',text:'Spiel mit mir Kniffel Royale! 🎲 Tippe auf den Link, um direkt in meine Lobby zu kommen:',url:inviteLink(code)}).catch(()=>{})}else{try{navigator.clipboard.writeText(inviteText(code)).then(()=>toast('Einladung kopiert'))}catch(err){toast('Code: '+code)}}break}
+  case'frfav':{const f=frLoad(),k=b.dataset.k;if(f[k]){f[k].fav=!f[k].fav;frSave(f);render()}break}
+  case'frinv':sendInvite(b.dataset.k);break;
+  case'frdel':{const f=frLoad(),k=b.dataset.k;if(f[k]){delete f[k];frSave(f);render()}break}
+  case'pushtog':togglePush();break;
   case'fremddone':{const t=S.turn;t.fremdDone=true;save();render();break}
   case'nminus':setup.n=Math.max(1,setup.n-1);render();break;
   case'nplus':setup.n=Math.min(6-(setup.bots||0),setup.n+1);render();break;
@@ -1630,8 +1639,65 @@ function showIntro(k){let el=document.querySelector('.intro');if(!el){el=documen
 (()=>{let seen=false;try{seen=localStorage.getItem('kx-intro')==='1'||Object.keys(GAMES||{}).length>0}catch(e){}if(!seen)setTimeout(()=>{if(view==='home'&&!S)showIntro(0)},600)})();
 
 {const f=window.stickyFade=()=>{const st=document.querySelector('.sticky');if(!st)return;const pv=st.previousElementSibling,bt=st.querySelector('.btn');if(!pv||!bt)return;const r=st.getBoundingClientRect(),bb=bt.getBoundingClientRect().bottom,pb=pv.getBoundingClientRect().bottom;let gt=0,gb=0,hide=false;if(pb<=bb)hide=true;else if(pb<r.bottom){const k=(r.bottom-pb)/Math.max(1,r.bottom-bb);gt=k*(bb-r.top);gb=r.bottom-pb}st.classList.toggle('atend',hide);st.style.setProperty('--gt',gt.toFixed(1)+'px');st.style.setProperty('--gb',gb.toFixed(1)+'px')};addEventListener('scroll',f,{passive:true});addEventListener('resize',f);if(typeof MutationObserver!=='undefined')new MutationObserver(()=>requestAnimationFrame(f)).observe(document.getElementById('app')||document.body,{childList:true,subtree:false})}
+/* ---------- Einladungen: Link, WhatsApp, Freunde, Push ---------- */
+const VAPID_PUB='BHqkEQWQHGrWGlIZS8buXlmPW-X_LSWOon1z92KGk0ctZidINiAZqT0TtZte_kR_0EpP4uoaW1PlS5QsFI3RtMI';
+const WA_ICON='<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.9 11.9 0 0 0 4.6 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.5-.3z"/></svg>';
+function appBase(){return location.origin+location.pathname.replace(/index\.html$/,'')}
+function inviteLink(code){return appBase()+'?join='+code}
+function inviteText(code){return'Spiel mit mir Kniffel Royale! 🎲 Tippe hier, um direkt in meine Lobby zu kommen: '+inviteLink(code)}
+function frLoad(){try{return JSON.parse(localStorage.getItem('kx-friends'))||{}}catch(e){return{}}}
+function frSave(f){try{localStorage.setItem('kx-friends',JSON.stringify(f))}catch(e){}}
+function frRecord(seats){if(!seats||!UID)return;const f=frLoad();let ch=false;
+ for(const u in seats){const s=seats[u];if(!s||u===UID||!s.name)continue;const nm=String(s.name).trim(),k=nm.toLowerCase();if(!k)continue;const e=f[k]||(f[k]={name:nm,uids:[],fav:false,last:0});
+  if(e.uids[0]!==u){e.uids=[u].concat(e.uids.filter(x=>x!==u)).slice(0,3);ch=true}if(Date.now()-e.last>300000){e.last=Date.now();e.name=nm;ch=true}}
+ if(ch)frSave(f)}
+function frList(){return Object.entries(frLoad()).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>(b.fav-a.fav)||(b.last-a.last))}
+function friendsHTML(seats){const fl=frList(),here=new Set(seats.map(x=>x[0]));
+ let h='<div class="block"><div class="gtitle">Mitspieler einladen</div>';
+ if(!fl.length)return h+'<div class="group"><div class="cell cs">Hier erscheinen alle, mit denen du schon online gespielt hast.</div></div></div>';
+ h+='<div class="group">'+fl.map(f=>{const inL=f.uids.some(u=>here.has(u)),sent=ui.invSent&&ui.invSent[f.k]&&Date.now()-ui.invSent[f.k]<120000;
+  return'<div class="cell frrow"><button class="frstar'+(f.fav?' on':'')+'" data-a="frfav" data-k="'+esc(f.k)+'" aria-label="Favorit">'+(f.fav?'★':'☆')+'</button><button class="grow frname" data-a="frinv" data-k="'+esc(f.k)+'"'+(inL?' disabled':'')+'><span class="ct" style="flex:1">'+esc(f.name)+'</span><span class="frstate'+(sent?' ok':inL?' here':'')+'">'+(inL?'in der Lobby':sent?'Eingeladen ✓':'Einladen')+'</span></button></div>'}).join('')+'</div>';
+ return h+'<div class="gfoot">Tippe auf einen Namen, um eine Einladung aufs Handy zu schicken. Mit dem Stern hältst du Favoriten oben.</div></div>'}
+async function sendInvite(k){const f=frLoad()[k],d=MP&&MP.lobby;if(!f||!d)return;if(!RDB||!UID){toast('Keine Verbindung zum Server');return}
+ const me=((d.seats||{})[UID]||{}).name||setup.myName||'Jemand';ui.invSent=ui.invSent||{};ui.invSent[k]=Date.now();render();let ok=0;
+ for(const u of f.uids){try{await RDB.ref('inv/'+u+'/'+UID).set({name:String(me).slice(0,20),code:d.code,t:Date.now()});ok++;pushNotify(u,me)}catch(e){}}
+ if(ok)toast(f.name+' wurde eingeladen');else{delete ui.invSent[k];render();infoSheet('Einladung nicht möglich','Die Einladung konnte nicht gesendet werden. Schick stattdessen den Link über WhatsApp.')}
+ setTimeout(()=>{if(view==='lobby')render()},120500)}
+async function pushNotify(u,me){if(!window.PUSH_URL)return;try{const tk=await firebase.auth().currentUser.getIdToken();fetch(window.PUSH_URL,{method:'POST',headers:{'content-type':'text/plain'},body:JSON.stringify({to:u,token:tk,from:String(me).slice(0,20)})}).catch(()=>{})}catch(e){}}
+let INV=[];
+function invListen(){if(!RDB||!UID)return;RDB.ref('inv/'+UID).on('value',sn=>{const v=sn.val()||{},now=Date.now();INV=[];
+ for(const from in v){const x=v[from];if(!x||!x.code||now-(x.t||0)>30*60000){RDB.ref('inv/'+UID+'/'+from).remove().catch(()=>{});continue}INV.push(Object.assign({from},x))}
+ INV.sort((a,b)=>b.t-a.t);showInvites()},()=>{})}
+function invDone(x){if(RDB&&UID)RDB.ref('inv/'+UID+'/'+x.from).remove().catch(()=>{})}
+function invAccept(x){invDone(x);document.querySelector('.invsheet')&&document.querySelector('.invsheet').remove();setup.joinCode=x.code;setup.online=false;
+ if(MP&&MP.lobby&&MP.lobby.code===x.code){view='lobby';render();return}
+ if((setup.myName||'').trim())mpJoin();else{view='join';render();toast('Gib noch deinen Namen ein')}}
+function showInvites(){const x=INV[0];if(!x)return;if(MP&&MP.lobby&&MP.lobby.code===x.code){invDone(x);return}
+ if(ui.autoInv&&Date.now()-ui.autoInv<20000){ui.autoInv=0;invAccept(x);return}
+ if(document.querySelector('.invsheet'))return;const el=document.createElement('div');el.className='intro invsheet';
+ el.innerHTML='<div class="introbox"><div class="introi">🎲</div><div class="introt">'+esc(x.name)+' lädt dich ein</div><div class="introx" style="min-height:0;text-align:center">zu einer Runde Kniffel Royale.</div><div class="btnrow" style="margin-top:18px"><button class="btn gray" data-iv="no">Ablehnen</button><button class="btn" data-iv="yes">Beitreten</button></div></div>';
+ document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add('in'));sfx.ping&&sfx.ping();
+ el.onclick=e=>{const b=e.target.closest('[data-iv]');if(!b)return;if(b.dataset.iv==='yes')invAccept(x);else{invDone(x);el.remove()}}}
+function pushOn(){try{return localStorage.getItem('kx-push')==='1'&&'Notification' in window&&Notification.permission==='granted'}catch(e){return false}}
+function b64u(s){const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))}
+async function pushSave(sub){if(!RDB||!UID||!sub)return;const j=sub.toJSON();await RDB.ref('push/'+UID).set({endpoint:j.endpoint,keys:j.keys||{},t:Date.now()})}
+async function togglePush(){const ios=/iPhone|iPad|iPod/.test(navigator.userAgent),standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
+ if(pushOn()){try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub)await sub.unsubscribe();if(RDB&&UID)await RDB.ref('push/'+UID).remove()}catch(e){}try{localStorage.setItem('kx-push','0')}catch(e){}render();toast('Mitteilungen aus');return}
+ if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){infoSheet('Mitteilungen nicht möglich',ios&&!standalone?'Auf dem iPhone funktionieren Mitteilungen nur in der App vom Home-Bildschirm. Tippe in Safari auf „Teilen“ → „Zum Home-Bildschirm“, öffne Kniffel Royale von dort und schalte es dann hier ein.':'Dieser Browser unterstützt leider keine Mitteilungen.');return}
+ if(!RDB||!UID){toast('Keine Verbindung – versuch es gleich nochmal');return}
+ let perm;try{perm=await Notification.requestPermission()}catch(e){perm='denied'}
+ if(perm!=='granted'){infoSheet('Mitteilungen blockiert','Erlaube Mitteilungen für Kniffel Royale in den Einstellungen deines Handys und versuch es dann nochmal.');return}
+ try{const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});await pushSave(sub);localStorage.setItem('kx-push','1');toast('Einladungen kommen jetzt als Mitteilung')}catch(e){infoSheet('Mitteilungen nicht möglich','Das Einrichten hat nicht geklappt. Versuch es später nochmal.')}
+ render()}
+async function pushRefresh(){if(!pushOn())return;try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub)await pushSave(sub)}catch(e){}}
+const JP=(()=>{try{const q=new URLSearchParams(location.search),c=(q.get('join')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6),inv=q.has('inv');if(c||inv)history.replaceState(null,'',location.pathname);return{c,inv}}catch(e){return{c:'',inv:false}}})();
+if(JP.c){setup.joinCode=JP.c;view='join'}if(JP.inv)ui.autoInv=Date.now();
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',m=>{if(m.data&&m.data.kx==='inv'){ui.autoInv=Date.now();showInvites()}});
+function frBackfill(){try{if(localStorage.getItem('kx-fr-bf'))return;Object.values(GAMES).forEach(g=>{try{const r=JSON.parse(g.json);if(!r.online)return;const st={};r.players.forEach(q=>{if(q.uid)st[q.uid]={name:q.name}});frRecord(st)}catch(e){}});localStorage.setItem('kx-fr-bf','1')}catch(e){}}
+function afterCloud(){if(UID)frBackfill();invListen();pushRefresh();if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c))mpJoin()}
+
 render();
-initCloud();
+initCloud().then(afterCloud);
 </script>
 </body>
 </html>

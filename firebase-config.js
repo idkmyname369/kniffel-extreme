@@ -8,3 +8,6 @@ window.FIREBASE_CONFIG = {
   appId: "1:529517204282:web:dd5f52f58e85910cc3f603",
   databaseURL: "https://kn1ffel-extreme-default-rtdb.europe-west1.firebasedatabase.app"
 };
+
+// Adresse des Push-Dienstes (Cloudflare Worker) für Einladungen als Mitteilung
+window.PUSH_URL = '';
