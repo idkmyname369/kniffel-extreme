@@ -11,3 +11,6 @@ window.FIREBASE_CONFIG = {
 
 // Adresse des Push-Dienstes (Cloudflare Worker) für Einladungen als Mitteilung
 window.PUSH_URL = 'https://kn1ffel-push.joshbeatzz.workers.dev';
+
+// Anmeldung mit Apple (braucht ein kostenpflichtiges Apple-Entwicklerkonto). Auf true setzen, sobald eingerichtet.
+window.APPLE_SIGNIN = false;
