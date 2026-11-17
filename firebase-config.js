@@ -10,4 +10,4 @@ window.FIREBASE_CONFIG = {
 };
 
 // Adresse des Push-Dienstes (Cloudflare Worker) für Einladungen als Mitteilung
-window.PUSH_URL = '';
+window.PUSH_URL = 'https://kn1ffel-push.joshbeatzz.workers.dev';
