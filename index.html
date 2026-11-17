@@ -761,7 +761,7 @@ function _applyPick(kind,key){const t=S.turn,me=S.players[S.cur];if(kind==='reve
 
 /* ---------- Verdeckte Effekte ---------- */
 const SLOT_SYM=['+25','×2','×3'];
-const FREE_ACT=new Set(['pickcol','setcol','cardinfo','viewp','board','menu','close','home','ddtoggle','askdel','del','new','open','mpnew','mpjoinview','mpcreate','mpjoin','mpstart','mpleave','mpcopy','cards','sound','undo','mprematch']);
+const FREE_ACT=new Set(['pickcol','setcol','cardinfo','viewp','board','menu','close','home','ddtoggle','askdel','del','new','open','mpnew','mpjoinview','mpcreate','mpjoin','mpstart','mpleave','mpcopy','cards','sound','undo','mprematch','askleave','leave','mpwa','mpshare','frfav','frinv','frdel','intro','stats','pushtog','pushtest']);
 function spinSlots(m){if(m.spinning)return;m.spinning=true;const btn=document.getElementById('spinbtn');if(btn){btn.disabled=true;btn.textContent='Die Walzen drehen sich …'}
  const reels=[0,1,2].map(()=>rnd(SLOT_SYM));let v=m.amount;const steps=['Start: '+v];
  reels.forEach((res,i)=>{const strip=document.getElementById('strip'+i),win=document.getElementById('reel'+i);if(!strip||!win)return;const H=win.clientHeight;const n=26+i*10;let html='<div>'+strip.textContent+'</div>';for(let k=1;k<n;k++)html+='<div>'+SLOT_SYM[(k+i)%3]+'</div>';html+='<div>'+res+'</div>';strip.style.transition='none';strip.style.transform='translateY(0)';strip.innerHTML=html;void strip.offsetHeight;
