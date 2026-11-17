@@ -57,6 +57,7 @@ export default {
     if (req.method !== 'POST') return out('Kniffel Royale Push');
     let b; try { b = JSON.parse(await req.text()) } catch (e) { return out('bad', 400) }
     const to = String(b.to || ''), token = String(b.token || ''), from = String(b.from || '').replace(/[\u0000-\u001f]/g, '').slice(0, 20);
+    const type = b.type === 'turn' ? 'turn' : 'inv', code = String(b.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     if (!/^[A-Za-z0-9_-]{6,64}$/.test(to) || token.length < 20) return out('bad', 400);
     // Liest das Abo mit dem Firebase-Token des Absenders – ungültige Tokens lehnt Firebase ab.
     const r = await fetch(String(env.DB_URL).trim().replace(/\/$/, '') + '/push/' + to + '.json?auth=' + encodeURIComponent(token));
@@ -69,7 +70,10 @@ export default {
     const headers = { TTL: '1800', Urgency: 'high', Authorization: 'vapid t=' + jwt + ', k=' + vapidPub(env) };
     let body = null;
     if (sub.keys && sub.keys.p256dh && sub.keys.auth) {
-      body = await encrypt(sub, (from ? from + ' lädt dich zu einer Runde ein.' : 'Du wurdest zu einer Runde eingeladen.') + ' Tippe, um beizutreten.');
+      const msg = type === 'turn'
+        ? { b: 'Du bist dran! Tippe, um weiterzuspielen.', u: './?game=' + code, g: 'kx-turn' }
+        : { b: (from ? from + ' lädt dich zu einer Runde ein.' : 'Du wurdest zu einer Runde eingeladen.') + ' Tippe, um beizutreten.', u: './?inv=1', g: 'kx-invite' };
+      body = await encrypt(sub, JSON.stringify(msg));
       headers['Content-Encoding'] = 'aes128gcm'; headers['Content-Type'] = 'application/octet-stream';
     }
     const res = await fetch(sub.endpoint, { method: 'POST', headers, body });
