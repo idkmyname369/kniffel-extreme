@@ -66,7 +66,7 @@ export default {
     let ep; try { ep = new URL(sub.endpoint) } catch (e) { return out('bad endpoint', 400) }
     if (ep.protocol !== 'https:' || !PUSH_HOSTS.test(ep.hostname)) return out('bad endpoint', 400);
     const jwt = await vapidJWT(ep.origin, env);
-    const headers = { TTL: '1800', Urgency: 'high', Topic: 'kx-invite', Authorization: 'vapid t=' + jwt + ', k=' + vapidPub(env) };
+    const headers = { TTL: '1800', Urgency: 'high', Authorization: 'vapid t=' + jwt + ', k=' + vapidPub(env) };
     let body = null;
     if (sub.keys && sub.keys.p256dh && sub.keys.auth) {
       body = await encrypt(sub, (from ? from + ' lädt dich zu einer Runde ein.' : 'Du wurdest zu einer Runde eingeladen.') + ' Tippe, um beizutreten.');
