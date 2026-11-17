@@ -49,7 +49,7 @@ input::placeholder{color:var(--ter)}
 .introdots{display:flex;justify-content:center;gap:7px;margin:16px 0}.introdots span{width:7px;height:7px;border-radius:50%;background:var(--ter);opacity:.5}.introdots span.on{background:var(--text);opacity:1}
 html,body{touch-action:manipulation}
 .btn.wa{background:#25D366;color:#fff;box-shadow:0 4px 14px rgba(37,211,102,.25)}
-.frrow{gap:4px}.frstar{flex:none;width:34px;height:34px;font-size:21px;color:var(--ter);margin-left:-6px}.frstar.on{color:#ffcf6a}
+.frrow{padding:0;overflow:hidden;gap:0}.frin{display:flex;align-items:center;gap:4px;width:100%;min-height:50px;padding:8px 16px;background:var(--card);position:relative;z-index:1;transition:transform .22s ease}.frrow.drag .frin{transition:none}.frdel{position:absolute;right:0;top:0;bottom:0;width:96px;background:#ff453a;color:#fff;font-size:15px;font-weight:600}.frrow.gone{transition:max-height .25s ease,opacity .25s;max-height:0!important;min-height:0;opacity:0}.frstar{flex:none;width:34px;height:34px;font-size:21px;color:var(--ter);margin-left:-6px}.frstar.on{color:#ffcf6a}
 .frname{text-align:left;min-height:34px;display:flex;align-items:center}.frname:disabled{opacity:.55}.frstate.here{color:var(--sec)}.frstate{flex:none;font-size:14px;color:var(--blue)}.frstate.ok{color:#30d158}
 .stepper{display:flex;align-items:center;background:var(--card3);border-radius:9px;overflow:hidden}
 .stepper button{width:44px;height:32px;font-size:20px;color:var(--text)}
@@ -1656,8 +1656,8 @@ function friendsHTML(seats){const fl=frList(),here=new Set(seats.map(x=>x[0]));
  let h='<div class="block"><div class="gtitle">Mitspieler einladen</div>';
  if(!fl.length)return h+'<div class="group"><div class="cell cs">Hier erscheinen alle, mit denen du schon online gespielt hast.</div></div></div>';
  h+='<div class="group">'+fl.map(f=>{const inL=f.uids.some(u=>here.has(u)),sent=ui.invSent&&ui.invSent[f.k]&&Date.now()-ui.invSent[f.k]<120000;
-  return'<div class="cell frrow"><button class="frstar'+(f.fav?' on':'')+'" data-a="frfav" data-k="'+esc(f.k)+'" aria-label="Favorit">'+(f.fav?'★':'☆')+'</button><button class="grow frname" data-a="frinv" data-k="'+esc(f.k)+'"'+(inL?' disabled':'')+'><span class="ct" style="flex:1">'+esc(f.name)+'</span><span class="frstate'+(sent?' ok':inL?' here':'')+'">'+(inL?'in der Lobby':sent?'Eingeladen ✓':'Einladen')+'</span></button></div>'}).join('')+'</div>';
- return h+'<div class="gfoot">Tippe auf einen Namen, um eine Einladung aufs Handy zu schicken. Mit dem Stern hältst du Favoriten oben.</div></div>'}
+  return'<div class="cell frrow"><button class="frdel" data-a="frdel" data-k="'+esc(f.k)+'">Löschen</button><div class="frin"><button class="frstar'+(f.fav?' on':'')+'" data-a="frfav" data-k="'+esc(f.k)+'" aria-label="Favorit">'+(f.fav?'★':'☆')+'</button><button class="grow frname" data-a="frinv" data-k="'+esc(f.k)+'"'+(inL?' disabled':'')+'><span class="ct" style="flex:1">'+esc(f.name)+'</span><span class="frstate'+(sent?' ok':inL?' here':'')+'">'+(inL?'in der Lobby':sent?'Eingeladen ✓':'Einladen')+'</span></button></div></div>'}).join('')+'</div>';
+ return h+'<div class="gfoot">Tippe auf einen Namen, um eine Einladung aufs Handy zu schicken. Mit dem Stern hältst du Favoriten oben, nach links wischen löscht.</div></div>'}
 async function sendInvite(k){const f=frLoad()[k],d=MP&&MP.lobby;if(!f||!d)return;if(!RDB||!UID){toast('Keine Verbindung zum Server');return}
  const me=((d.seats||{})[UID]||{}).name||setup.myName||'Jemand';ui.invSent=ui.invSent||{};ui.invSent[k]=Date.now();render();let ok=0;
  for(const u of f.uids){try{await RDB.ref('inv/'+u+'/'+UID).set({name:String(me).slice(0,20),code:d.code,t:Date.now()});ok++;pushNotify(u,me)}catch(e){}}
@@ -1695,6 +1695,21 @@ if(JP.c){setup.joinCode=JP.c;view='join'}if(JP.inv)ui.autoInv=Date.now();
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',m=>{if(m.data&&m.data.kx==='inv'){ui.autoInv=Date.now();showInvites()}});
 function frBackfill(){try{if(localStorage.getItem('kx-fr-bf'))return;Object.values(GAMES).forEach(g=>{try{const r=JSON.parse(g.json);if(!r.online)return;const st={};r.players.forEach(q=>{if(q.uid)st[q.uid]={name:q.name}});frRecord(st)}catch(e){}});localStorage.setItem('kx-fr-bf','1')}catch(e){}}
 function afterCloud(){if(UID)frBackfill();invListen();pushRefresh();if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c))mpJoin()}
+
+/* Wischen zum Löschen (Mitspieler-Liste) */
+(()=>{let row=null,x0=0,y0=0,dx=0,base=0,mode=null;const W=96;
+ const close=except=>document.querySelectorAll('.frrow.open').forEach(r=>{if(r!==except){r.classList.remove('open');r.querySelector('.frin').style.transform=''}});
+ document.addEventListener('touchstart',e=>{const r=e.target.closest('.frrow');if(!r){close();return}if(e.target.closest('.frdel'))return;close(r);row=r;x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0;mode=null;base=r.classList.contains('open')?-W:0},{passive:true});
+ document.addEventListener('touchmove',e=>{if(!row)return;const t=e.touches[0],mx=t.clientX-x0,my=t.clientY-y0;
+  if(!mode){if(Math.abs(mx)<8&&Math.abs(my)<8)return;mode=Math.abs(mx)>Math.abs(my)?'x':'y';if(mode==='x')row.classList.add('drag')}
+  if(mode!=='x')return;e.preventDefault();dx=Math.min(0,base+mx);row.querySelector('.frin').style.transform='translateX('+dx+'px)'},{passive:false});
+ document.addEventListener('touchend',()=>{if(!row)return;const r=row;row=null;r.classList.remove('drag');if(mode!=='x'){return}
+  const inn=r.querySelector('.frin'),w=r.offsetWidth;
+  if(dx<-w*0.55){inn.style.transform='translateX(-100%)';r.style.maxHeight=r.offsetHeight+'px';requestAnimationFrame(()=>r.classList.add('gone'));setTimeout(()=>{const f=frLoad(),k=r.querySelector('.frdel').dataset.k;if(f[k]){delete f[k];frSave(f)}render()},260)}
+  else if(dx<-W/2){r.classList.add('open');inn.style.transform='translateX(-'+W+'px)'}
+  else{r.classList.remove('open');inn.style.transform=''}
+  const stop=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener('click',stop,{capture:true,once:true});setTimeout(()=>document.removeEventListener('click',stop,{capture:true}),60)});
+})();
 
 render();
 initCloud().then(afterCloud);
