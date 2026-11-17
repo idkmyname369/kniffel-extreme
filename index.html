@@ -51,6 +51,7 @@ html,body{touch-action:manipulation}
 .btn.wa{background:#25D366;color:#fff;box-shadow:0 4px 14px rgba(37,211,102,.25)}
 .frrow{padding:0;overflow:hidden;gap:0}.frin{display:flex;align-items:center;gap:4px;width:100%;min-height:50px;padding:8px 16px;background:var(--card);position:relative;z-index:1;transition:transform .22s ease}.frrow.drag .frin{transition:none}.frdel{position:absolute;right:0;top:0;bottom:0;width:96px;background:#ff453a;color:#fff;font-size:15px;font-weight:600}.frrow.gone{transition:max-height .25s ease,opacity .25s;max-height:0!important;min-height:0;opacity:0}.frstar{flex:none;width:34px;height:34px;font-size:21px;color:var(--ter);margin-left:-6px}.frstar.on{color:#ffcf6a}
 .frname{text-align:left;min-height:34px;display:flex;align-items:center}.frname:disabled{opacity:.55}.frstate.here{color:var(--sec)}.frstate{flex:none;font-size:14px;color:var(--blue)}.frstate.ok{color:#30d158}
+.intro.joincover{background:rgba(18,18,20,.97);z-index:400}.jcbox{display:flex;flex-direction:column;align-items:center;gap:18px}.jct{font-size:17px;font-weight:600}.jcspin{width:42px;height:42px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:#ffcf6a;animation:jcs .8s linear infinite}@keyframes jcs{to{transform:rotate(360deg)}}.jccancel{color:var(--sec);font-size:15px;margin-top:10px}
 .stepper{display:flex;align-items:center;background:var(--card3);border-radius:9px;overflow:hidden}
 .stepper button{width:44px;height:32px;font-size:20px;color:var(--text)}
 .stepper b{min-width:26px;text-align:center;font-weight:600;font-size:16px}
@@ -1637,7 +1638,7 @@ function showIntro(k){let el=document.querySelector('.intro');if(!el){el=documen
  el.innerHTML='<div class="introbox"><button class="introskip" data-intro="skip">Überspringen</button><div class="introi">'+s.i+'</div><div class="introt">'+s.t+'</div><div class="introx">'+s.x+'</div><div class="introdots">'+INTRO.map((_,i)=>'<span class="'+(i===k?'on':'')+'"></span>').join('')+'</div><div class="btnrow">'+(k>0?'<button class="btn gray" data-intro="'+(k-1)+'">Zurück</button>':'')+'<button class="btn" data-intro="'+(last?'skip':k+1)+'">'+(last?'Los geht’s':'Weiter')+'</button></div></div>';
  el.onclick=e=>{const b=e.target.closest('[data-intro]');if(!b)return;const v=b.dataset.intro;if(v==='skip'){try{localStorage.setItem('kx-intro','1')}catch(x){}el.classList.remove('in');setTimeout(()=>el.remove(),250)}else showIntro(+v)};
  let x0=null;el.ontouchstart=e=>{x0=e.touches[0].clientX};el.ontouchend=e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50){const n=k+(dx<0?1:-1);if(n>=0&&n<INTRO.length)showIntro(n)}}}
-(()=>{let seen=false;try{seen=localStorage.getItem('kx-intro')==='1'||Object.keys(GAMES||{}).length>0}catch(e){}if(!seen)setTimeout(()=>{if(view==='home'&&!S)showIntro(0)},600)})();
+(()=>{let seen=false;try{seen=localStorage.getItem('kx-intro')==='1'||Object.keys(GAMES||{}).length>0}catch(e){}if(!seen)setTimeout(()=>{if(view==='home'&&!S&&!ui.autoInv&&!document.querySelector('.joincover'))showIntro(0)},600)})();
 
 {const f=window.stickyFade=()=>{const st=document.querySelector('.sticky');if(!st)return;const pv=st.previousElementSibling,bt=st.querySelector('.btn');if(!pv||!bt)return;const r=st.getBoundingClientRect(),bb=bt.getBoundingClientRect().bottom,pb=pv.getBoundingClientRect().bottom;let gt=0,gb=0,hide=false;if(pb<=bb)hide=true;else if(pb<r.bottom){const k=(r.bottom-pb)/Math.max(1,r.bottom-bb);gt=k*(bb-r.top);gb=r.bottom-pb}st.classList.toggle('atend',hide);st.style.setProperty('--gt',gt.toFixed(1)+'px');st.style.setProperty('--gb',gb.toFixed(1)+'px')};addEventListener('scroll',f,{passive:true});addEventListener('resize',f);if(typeof MutationObserver!=='undefined')new MutationObserver(()=>requestAnimationFrame(f)).observe(document.getElementById('app')||document.body,{childList:true,subtree:false})}
 /* ---------- Einladungen: Link, WhatsApp, Freunde, Push ---------- */
@@ -1656,15 +1657,15 @@ function frList(){return Object.entries(frLoad()).map(([k,v])=>Object.assign({k}
 function friendsHTML(seats){const fl=frList(),here=new Set(seats.map(x=>x[0]));
  let h='<div class="block"><div class="gtitle">Mitspieler einladen</div>';
  if(!fl.length)return h+'<div class="group"><div class="cell cs">Hier erscheinen alle, mit denen du schon online gespielt hast.</div></div></div>';
- h+='<div class="group">'+fl.map(f=>{const inL=f.uids.some(u=>here.has(u)),sent=ui.invSent&&ui.invSent[f.k]&&Date.now()-ui.invSent[f.k]<120000;
-  return'<div class="cell frrow"><button class="frdel" data-a="frdel" data-k="'+esc(f.k)+'">Löschen</button><div class="frin"><button class="frstar'+(f.fav?' on':'')+'" data-a="frfav" data-k="'+esc(f.k)+'" aria-label="Favorit">'+(f.fav?'★':'☆')+'</button><button class="grow frname" data-a="frinv" data-k="'+esc(f.k)+'"'+(inL?' disabled':'')+'><span class="ct" style="flex:1">'+esc(f.name)+'</span><span class="frstate'+(sent?' ok':inL?' here':'')+'">'+(inL?'in der Lobby':sent?'Eingeladen ✓':'Einladen')+'</span></button></div></div>'}).join('')+'</div>';
+ h+='<div class="group">'+fl.map(f=>{const inL=f.uids.some(u=>here.has(u)),st=ui.invSent&&ui.invSent[f.k],sent=st&&Date.now()-st<15000,again=st&&!sent;
+  return'<div class="cell frrow"><button class="frdel" data-a="frdel" data-k="'+esc(f.k)+'">Löschen</button><div class="frin"><button class="frstar'+(f.fav?' on':'')+'" data-a="frfav" data-k="'+esc(f.k)+'" aria-label="Favorit">'+(f.fav?'★':'☆')+'</button><button class="grow frname" data-a="frinv" data-k="'+esc(f.k)+'"'+(inL?' disabled':'')+'><span class="ct" style="flex:1">'+esc(f.name)+'</span><span class="frstate'+(sent?' ok':inL?' here':'')+'">'+(inL?'in der Lobby':sent?'Eingeladen ✓':again?'Nochmal einladen':'Einladen')+'</span></button></div></div>'}).join('')+'</div>';
  return h+'<div class="gfoot">Tippe auf einen Namen, um eine Einladung aufs Handy zu schicken. Mit dem Stern hältst du Favoriten oben, nach links wischen löscht.</div></div>'}
-async function sendInvite(k){const f=frLoad()[k],d=MP&&MP.lobby;if(!f||!d)return;if(!RDB||!UID){toast('Keine Verbindung zum Server');return}
+async function sendInvite(k){const f=frLoad()[k],d=MP&&MP.lobby;if(!f||!d)return;{const st=ui.invSent&&ui.invSent[k];if(st&&Date.now()-st<15000){toast('In '+Math.ceil((15000-(Date.now()-st))/1000)+' s kannst du nochmal einladen');return}}if(!RDB||!UID){toast('Keine Verbindung zum Server');return}
  const me=((d.seats||{})[UID]||{}).name||setup.myName||'Jemand';ui.invSent=ui.invSent||{};ui.invSent[k]=Date.now();render();let ok=0;
  let pr=[];for(const u of f.uids){try{await RDB.ref('inv/'+u+'/'+UID).set({name:String(me).slice(0,20),code:d.code,t:Date.now()});ok++;pr.push(pushNotify(u,me))}catch(e){}}
  Promise.all(pr).then(rs=>{if(rs.length&&!rs.includes('ok'))infoSheet('Keine Mitteilung gesendet','Die Einladung erscheint bei '+f.name+', sobald die App offen ist. Eine Push-Mitteilung ging nicht raus: '+pushErrText(rs[0]))});
  if(ok)toast(f.name+' wurde eingeladen');else{delete ui.invSent[k];render();infoSheet('Einladung nicht möglich','Die Einladung konnte nicht gesendet werden. Schick stattdessen den Link über WhatsApp.')}
- setTimeout(()=>{if(view==='lobby')render()},120500)}
+ setTimeout(()=>{if(view==='lobby')render()},15200)}
 async function pushNotify(u,me){if(!window.PUSH_URL)return'kein Push-Dienst eingetragen';try{const tk=await firebase.auth().currentUser.getIdToken();const r=await fetch(window.PUSH_URL,{method:'POST',headers:{'content-type':'text/plain'},body:JSON.stringify({to:u,token:tk,from:String(me).slice(0,20)})});const t=await r.text();return r.ok?'ok':r.status+' '+t}catch(e){return'Fehler: '+(e&&e.message||e)}}
 const PUSH_ERR={'403':'Der Push-Dienst darf die Datenbank nicht lesen (Firebase-Regeln oder DB_URL prüfen).','404':'Der Empfänger hat „Einladungen als Mitteilung“ nicht eingeschaltet.','400':'Ungültige Anfrage an den Push-Dienst.','502':'Apple/Google hat die Mitteilung abgelehnt.'};
 function pushErrText(r){const c=String(r).split(' ')[0];return(PUSH_ERR[c]||'')+' ('+r+')'}
@@ -1674,9 +1675,9 @@ function invListen(){if(!RDB||!UID)return;RDB.ref('inv/'+UID).on('value',sn=>{co
  for(const from in v){const x=v[from];if(!x||!x.code||now-(x.t||0)>30*60000){RDB.ref('inv/'+UID+'/'+from).remove().catch(()=>{});continue}INV.push(Object.assign({from},x))}
  INV.sort((a,b)=>b.t-a.t);showInvites()},()=>{})}
 function invDone(x){if(RDB&&UID)RDB.ref('inv/'+UID+'/'+x.from).remove().catch(()=>{})}
-function invAccept(x){invDone(x);document.querySelector('.invsheet')&&document.querySelector('.invsheet').remove();setup.joinCode=x.code;setup.online=false;
- if(MP&&MP.lobby&&MP.lobby.code===x.code){view='lobby';render();return}
- if((setup.myName||'').trim())mpJoin();else{view='join';render();toast('Gib noch deinen Namen ein')}}
+async function invAccept(x){invDone(x);document.querySelector('.invsheet')&&document.querySelector('.invsheet').remove();setup.joinCode=x.code;setup.online=false;
+ if(MP&&MP.lobby&&MP.lobby.code===x.code){joinCover(false);view='lobby';render();return}
+ if((setup.myName||'').trim()){joinCover(true,'Trete der Lobby bei …');try{await mpJoin()}catch(e){}joinCover(false)}else{joinCover(false);view='join';render();toast('Gib noch deinen Namen ein')}}
 function showInvites(){const x=INV[0];if(!x)return;if(MP&&MP.lobby&&MP.lobby.code===x.code){invDone(x);return}
  if(ui.autoInv&&Date.now()-ui.autoInv<60000){ui.autoInv=0;invAccept(x);return}
  if(document.querySelector('.invsheet'))return;const el=document.createElement('div');el.className='intro invsheet';
@@ -1696,11 +1697,14 @@ async function togglePush(){const ios=/iPhone|iPad|iPod/.test(navigator.userAgen
  render()}
 async function pushRefresh(){if(!pushOn())return;try{const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});await pushSave(sub)}catch(e){}}
 const JP=(()=>{try{const q=new URLSearchParams(location.search),c=(q.get('join')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6),inv=q.has('inv');if(c||inv)history.replaceState(null,'',location.pathname);return{c,inv}}catch(e){return{c:'',inv:false}}})();
-function invWait(){ui.autoInv=Date.now();const t0=ui.autoInv;setTimeout(()=>{if(ui.autoInv===t0){ui.autoInv=0;toast('Keine offene Einladung gefunden')}},12000)}
-if(JP.c){setup.joinCode=JP.c;view='join'}if(JP.inv)invWait();
+function joinCover(on,txt){let el=document.querySelector('.joincover');if(!on){if(el){el.classList.remove('in');setTimeout(()=>el.remove(),250)}return}
+ if(!el){el=document.createElement('div');el.className='intro joincover';el.innerHTML='<div class="jcbox"><div class="jcspin"></div><div class="jct"></div><button class="jccancel">Abbrechen</button></div>';document.body.appendChild(el);el.classList.add('in');el.querySelector('.jccancel').onclick=()=>{ui.autoInv=0;JP.c='';joinCover(false)}}
+ el.querySelector('.jct').textContent=txt||'Einladung wird geöffnet …'}
+function invWait(){ui.autoInv=Date.now();const t0=ui.autoInv;joinCover(true);setTimeout(()=>{if(ui.autoInv===t0){ui.autoInv=0;joinCover(false);toast('Keine offene Einladung gefunden')}},15000)}
+if(JP.c){setup.joinCode=JP.c;view='join';if((setup.myName||'').trim())joinCover(true,'Trete der Lobby bei …')}if(JP.inv)invWait();
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',m=>{if(m.data&&m.data.kx==='inv'){invWait();showInvites()}});
 function frBackfill(){try{if(localStorage.getItem('kx-fr-bf'))return;Object.values(GAMES).forEach(g=>{try{const r=JSON.parse(g.json);if(!r.online)return;const st={};r.players.forEach(q=>{if(q.uid)st[q.uid]={name:q.name}});frRecord(st)}catch(e){}});localStorage.setItem('kx-fr-bf','1')}catch(e){}}
-function afterCloud(){if(UID)frBackfill();invListen();pushRefresh();if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c))mpJoin()}
+async function afterCloud(){if(UID)frBackfill();invListen();pushRefresh();if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c)){try{await mpJoin()}catch(e){}joinCover(false)}}
 
 /* Wischen zum Löschen (Mitspieler-Liste) */
 (()=>{let row=null,x0=0,y0=0,dx=0,base=0,mode=null;const W=96;
