@@ -1678,7 +1678,7 @@ function invAccept(x){invDone(x);document.querySelector('.invsheet')&&document.q
  if(MP&&MP.lobby&&MP.lobby.code===x.code){view='lobby';render();return}
  if((setup.myName||'').trim())mpJoin();else{view='join';render();toast('Gib noch deinen Namen ein')}}
 function showInvites(){const x=INV[0];if(!x)return;if(MP&&MP.lobby&&MP.lobby.code===x.code){invDone(x);return}
- if(ui.autoInv&&Date.now()-ui.autoInv<20000){ui.autoInv=0;invAccept(x);return}
+ if(ui.autoInv&&Date.now()-ui.autoInv<60000){ui.autoInv=0;invAccept(x);return}
  if(document.querySelector('.invsheet'))return;const el=document.createElement('div');el.className='intro invsheet';
  el.innerHTML='<div class="introbox"><div class="introi">🎲</div><div class="introt">'+esc(x.name)+' lädt dich ein</div><div class="introx" style="min-height:0;text-align:center">zu einer Runde Kniffel Royale.</div><div class="btnrow" style="margin-top:18px"><button class="btn gray" data-iv="no">Ablehnen</button><button class="btn" data-iv="yes">Beitreten</button></div></div>';
  document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add('in'));sfx.ping&&sfx.ping();
@@ -1696,8 +1696,9 @@ async function togglePush(){const ios=/iPhone|iPad|iPod/.test(navigator.userAgen
  render()}
 async function pushRefresh(){if(!pushOn())return;try{const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});await pushSave(sub)}catch(e){}}
 const JP=(()=>{try{const q=new URLSearchParams(location.search),c=(q.get('join')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6),inv=q.has('inv');if(c||inv)history.replaceState(null,'',location.pathname);return{c,inv}}catch(e){return{c:'',inv:false}}})();
-if(JP.c){setup.joinCode=JP.c;view='join'}if(JP.inv)ui.autoInv=Date.now();
-if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',m=>{if(m.data&&m.data.kx==='inv'){ui.autoInv=Date.now();showInvites()}});
+function invWait(){ui.autoInv=Date.now();const t0=ui.autoInv;setTimeout(()=>{if(ui.autoInv===t0){ui.autoInv=0;toast('Keine offene Einladung gefunden')}},12000)}
+if(JP.c){setup.joinCode=JP.c;view='join'}if(JP.inv)invWait();
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',m=>{if(m.data&&m.data.kx==='inv'){invWait();showInvites()}});
 function frBackfill(){try{if(localStorage.getItem('kx-fr-bf'))return;Object.values(GAMES).forEach(g=>{try{const r=JSON.parse(g.json);if(!r.online)return;const st={};r.players.forEach(q=>{if(q.uid)st[q.uid]={name:q.name}});frRecord(st)}catch(e){}});localStorage.setItem('kx-fr-bf','1')}catch(e){}}
 function afterCloud(){if(UID)frBackfill();invListen();pushRefresh();if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c))mpJoin()}
 
