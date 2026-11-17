@@ -903,7 +903,7 @@ function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,
   if(!snap.exists){m.lobby=null;if(!S&&view==='lobby'&&!snap.metadata.fromCache){toast('Dieses Spiel gibt es nicht mehr');view='home';mpLeave();render()}return}
   const d=snap.data();m.lobby=d;if(d&&d.status&&d.status!=='lobby')frRecord(d.seats);
   presUpdate(d);
-  if(d.next&&d.next!==m.code){const nc=d.next;toast('Revanche gestartet!');ui.seenReveal=0;ui.seenFx=0;S=null;mpSubscribe(nc);return}
+  if(d.next&&d.next!==m.code){const nc=d.next;if(d.nextWhy==='del'){const oid='mp-'+m.code;delete GAMES[oid];persistLocal();remoteDelete(oid);toast('Der Gastgeber hat das Spiel gelöscht – zurück in der Lobby');ui.modal=null;renderModal();view='lobby'}else toast('Revanche gestartet!');ui.seenReveal=0;ui.seenFx=0;S=null;mpSubscribe(nc);return}
   if(d.status==='lobby'){if(!S){view='lobby';render()}return}
   if(typeof d.json!=='string')return;let r;try{r=JSON.parse(d.json)}catch(e){return}
   if(ui.seenReveal==null||!S||S.id!==r.id)ui.seenReveal=(r.lastReveal&&(!S||S.id!==r.id))?r.lastReveal.seq:(ui.seenReveal||0);
@@ -1115,7 +1115,7 @@ function modalHTML(){const m=ui.modal;
   '<div class="field"><input type="number" inputmode="numeric" id="numin" placeholder="Richtige Punkte" value="'+m.val+'"></div><div class="err" id="err"></div><div class="btnrow" style="margin-bottom:10px"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn" data-a="editok">Speichern</button></div><button class="btn gray" data-a="editdel" style="color:var(--red)">Eintrag entfernen (Kategorie wieder frei)</button>'}
  if(m.type==='cards')return cardsHTML();
  if(m.type==='menu')return'<div class="grab"></div><h2>Menü</h2><p class="muted">Das Spiel wird automatisch gespeichert und kann jederzeit aus der Übersicht fortgesetzt werden.</p><div class="btnrow" style="flex-direction:column"><button class="btn gray" data-a="close">Weiterspielen</button><button class="btn gray" data-a="cards">Ereigniskarten ansehen</button><button class="btn gray" data-a="sound">'+(SND.on?'Ton & Vibration: an':'Ton & Vibration: aus')+'</button><button class="btn gray" data-a="home">Zur Übersicht</button><button class="btn red" data-a="askdel" data-id="'+S.id+'">Spiel löschen</button></div>';
- if(m.type==='del'){const g=GAMES[m.id];let nm='';try{nm=JSON.parse(g.json).players.map(p=>p.name).join(', ')}catch(e){}return'<div class="grab"></div><h2>Spiel löschen?</h2><p class="muted">'+esc(nm)+' – das Spiel wird endgültig gelöscht.</p><div class="btnrow"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn red" data-a="del" data-id="'+m.id+'">Löschen</button></div>'}
+ if(m.type==='del'){const g=GAMES[m.id];let nm='';try{nm=JSON.parse(g.json).players.map(p=>p.name).join(', ')}catch(e){}const hl=hostLive(m.id);return'<div class="grab"></div><h2>Spiel löschen?</h2><p class="muted">'+esc(nm)+(hl?' – das Spiel wird für alle Mitspieler beendet. Ihr landet zusammen in der Lobby und könnt direkt ein neues Spiel starten.':' – das Spiel wird endgültig gelöscht.')+'</p><div class="btnrow"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn red" data-a="del" data-id="'+m.id+'">Löschen</button></div>'}
  if(m.type==='bet'){const ev=EV.bet;return'<div class="grab"></div><div class="reveal">'+glyph(ev)+'<h2>Wetteinsatz</h2><p class="muted">Wie viel setzt du? Danach bekommst du 3 zufällige offene Kategorien. Schaffst du eine davon, gibt es dort deine Punkte plus den Einsatz. Schaffst du keine, steht der Einsatz als Minus in einer der drei – du wählst, in welcher.</p></div><div class="quick stakes">'+[50,60,70,80,90,100].map(v=>'<button data-a="betv" data-v="'+v+'">'+v+'</button>').join('')+'</div>'}
  if(m.type==='duel'){const ev=EV.duel,dig=S.mode==='digital';let h='<div class="grab"></div><div class="reveal">'+glyph(ev)+'<h2>'+ev.title+(m.round>1&&m.phase!=='done'?' · Stechen':'')+'</h2><p class="muted">'+ev.text+'</p></div>';
   if(m.phase==='tie')h+='<div class="calc" style="color:var(--orange)">Gleichstand! '+m.cont.map(i=>esc(S.players[i].name)).join(' und ')+' würfeln noch mal.</div>';
@@ -1289,7 +1289,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'new':setup.online=false;view='setup';render();window.scrollTo(0,0);break;
   case'open':{const g=GAMES[b.dataset.id];if(!g)return;try{S=JSON.parse(g.json)}catch(e){toast('Spiel konnte nicht geladen werden');return}ui.viewP=null;ui.seenReveal=S.lastReveal?S.lastReveal.seq:0;ui.seenFx=S.fx?S.fx.seq:0;ui.cerAnim=null;if(S.online){if(DB&&UID)mpSubscribe(S.online.code);else toast('Offline – du siehst den letzten Stand');}ui.modal=null;renderModal();render();window.scrollTo(0,0);break}
   case'askdel':ui.modal={type:'del',id:b.dataset.id};renderModal();break;
-  case'del':{const id=b.dataset.id;delete GAMES[id];persistLocal();remoteDelete(id);if(S&&S.id===id)S=null;view='home';ui.modal=null;renderModal();render();break}
+  case'del':{const id=b.dataset.id;{const r=hostLive(id);if(r){ui.modal=null;renderModal();mpDeleteToLobby(id,r);break}}delete GAMES[id];persistLocal();remoteDelete(id);if(S&&S.id===id)S=null;view='home';ui.modal=null;renderModal();render();break}
   case'draw':drawEvent();break;
   case'openpick':openPending();break;
   case'psel':{const k=b.dataset.k;if(m.kind==='sac2'){let sel=m.sel.slice();const op=k.split('|')[0];if(sel.length&&sel[0].split('|')[0]!==op)sel=[];const i=sel.indexOf(k);if(i>=0)sel.splice(i,1);else{if(sel.length>=2)sel.shift();sel.push(k)}m.sel=sel}else m.sel=k;renderModal();break}
@@ -1610,6 +1610,12 @@ function statsHTML(){const fin=Object.values(GAMES).map(g=>{try{return JSON.pars
  const pl=Object.values(pech).sort((a,b)=>b.n-a.n);
  if(pl.length)h+='<div class="block"><div class="gtitle">Pech-Zähler</div><div class="group">'+pl.map(o=>'<div class="cell"><div class="grow"><div class="ct">'+esc(o.name)+'</div><div class="cs">'+o.n+' große Pechmomente · zusammen <b class="negv">'+fmtN(o.sum)+'</b> Punkte'+'</div></div></div>').join('')+'</div></div>';
  return h}
+/* Online-Spiel löschen → alle zurück in die Lobby */
+function hostLive(id){const g=GAMES[id];if(!g)return null;let r;try{r=JSON.parse(g.json)}catch(e){return null}return(r&&r.online&&r.online.host===UID&&r.screen!=='end'&&DB)?r:null}
+async function mpDeleteToLobby(id,r){const code=genCode(),seats={};r.players.forEach((p,i)=>{if(p.uid)seats[p.uid]={name:p.name,t:i,color:p.color!=null?p.color:null}});
+ try{await DB.doc('mp/'+code).set({kind:'kx-online',code,host:UID,status:'lobby',created:Date.now(),updated:Date.now(),settings:{mode:r.mode,events:(r.events||[]).slice()},seats})}catch(e){infoSheet('Löschen nicht möglich',PERM_TXT);return}
+ try{await DB.doc('mp/'+r.online.code).update({next:code,nextWhy:'del',status:'end',updated:Date.now()})}catch(e){}
+ delete GAMES[id];persistLocal();remoteDelete(id);S=null;ui.seenReveal=0;ui.seenFx=0;mpSubscribe(code);view='lobby';render();window.scrollTo(0,0);toast('Spiel gelöscht – alle sind zurück in der Lobby')}
 /* Revanche online */
 async function mpRematch(){if(!S||!S.online||S.online.host!==UID||!DB)return;const names=S.players.map(p=>p.name),uids=S.players.map(p=>p.uid),mode=S.mode,events=S.events.slice(),old=MP&&MP.ref;const code=genCode();const seats={};uids.forEach((u,i)=>seats[u]={name:names[i],t:i});
  newGame(names,mode,events);delete GAMES[S.id];S.id='mp-'+code;S.online={code,host:UID};S.players.forEach((p,i)=>p.uid=uids[i]);S.turn=freshTurn();S.rev=1;
