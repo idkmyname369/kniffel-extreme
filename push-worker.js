@@ -1,7 +1,7 @@
 // Kniffel Royale – Push-Einladungen (Cloudflare Worker)
 // Einstellungen im Worker (Settings → Variables and Secrets):
 //   DB_URL            = https://kn1ffel-extreme-default-rtdb.europe-west1.firebasedatabase.app
-//   VAPID_PUBLIC      = öffentlicher Schlüssel (steht auch in index.html)
+//   (VAPID_PUBLIC wird nicht mehr gebraucht – er wird aus dem privaten Schlüssel berechnet)
 //   VAPID_PRIVATE_JWK = privater Schlüssel als JSON (als „Secret“ anlegen, niemals veröffentlichen)
 
 const PUSH_HOSTS = /(^|\.)(push\.apple\.com|fcm\.googleapis\.com|googleapis\.com|push\.services\.mozilla\.com|notify\.windows\.com)$/;
@@ -10,8 +10,16 @@ const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\
 const unb64u = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - s.length % 4) % 4)), c => c.charCodeAt(0));
 const cat = (...a) => { const o = new Uint8Array(a.reduce((n, x) => n + x.length, 0)); let i = 0; for (const x of a) { o.set(x, i); i += x.length } return o };
 
+function vapidJwk(env) {
+  const raw = String(env.VAPID_PRIVATE_JWK || '').trim().replace(/[\u201C\u201D\u201E\u2033]/g, '"');
+  const j = JSON.parse(raw);
+  return { kty: 'EC', crv: 'P-256', x: j.x.trim(), y: j.y.trim(), d: j.d.trim() };
+}
+// Öffentlichen Schlüssel direkt aus dem privaten ableiten – so können sie nie auseinanderlaufen.
+function vapidPub(env) { const j = vapidJwk(env); return b64u(cat(new Uint8Array([4]), unb64u(j.x), unb64u(j.y))) }
+
 async function vapidJWT(aud, env) {
-  const jwk = JSON.parse(env.VAPID_PRIVATE_JWK);
+  const jwk = vapidJwk(env);
   const key = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
   const head = b64u(enc.encode(JSON.stringify({ typ: 'JWT', alg: 'ES256' })));
   const body = b64u(enc.encode(JSON.stringify({ aud, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: 'mailto:idkmyname369@users.noreply.github.com' })));
@@ -51,20 +59,22 @@ export default {
     const to = String(b.to || ''), token = String(b.token || ''), from = String(b.from || '').replace(/[\u0000-\u001f]/g, '').slice(0, 20);
     if (!/^[A-Za-z0-9_-]{6,64}$/.test(to) || token.length < 20) return out('bad', 400);
     // Liest das Abo mit dem Firebase-Token des Absenders – ungültige Tokens lehnt Firebase ab.
-    const r = await fetch(env.DB_URL.replace(/\/$/, '') + '/push/' + to + '.json?auth=' + encodeURIComponent(token));
+    const r = await fetch(String(env.DB_URL).trim().replace(/\/$/, '') + '/push/' + to + '.json?auth=' + encodeURIComponent(token));
     if (!r.ok) return out('denied', 403);
     const sub = await r.json();
     if (!sub || !sub.endpoint) return out('no subscription', 404);
     let ep; try { ep = new URL(sub.endpoint) } catch (e) { return out('bad endpoint', 400) }
     if (ep.protocol !== 'https:' || !PUSH_HOSTS.test(ep.hostname)) return out('bad endpoint', 400);
     const jwt = await vapidJWT(ep.origin, env);
-    const headers = { TTL: '1800', Urgency: 'high', Topic: 'kx-invite', Authorization: 'vapid t=' + jwt + ', k=' + env.VAPID_PUBLIC };
+    const headers = { TTL: '1800', Urgency: 'high', Topic: 'kx-invite', Authorization: 'vapid t=' + jwt + ', k=' + vapidPub(env) };
     let body = null;
     if (sub.keys && sub.keys.p256dh && sub.keys.auth) {
       body = await encrypt(sub, (from ? from + ' lädt dich zu einer Runde ein.' : 'Du wurdest zu einer Runde eingeladen.') + ' Tippe, um beizutreten.');
       headers['Content-Encoding'] = 'aes128gcm'; headers['Content-Type'] = 'application/octet-stream';
     }
     const res = await fetch(sub.endpoint, { method: 'POST', headers, body });
-    return out(String(res.status), res.ok ? 200 : 502);
+    if (res.ok) return out(String(res.status));
+    let why = ''; try { why = (await res.text()).slice(0, 200) } catch (e) { }
+    return out(res.status + ' ' + why, 502);
   }
 };
