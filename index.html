@@ -1213,7 +1213,7 @@ function homeHTML(){const list=Object.values(GAMES).map(g=>{try{return{g,s:JSON.
  h+='<div class="block"><div class="gtitle">Nicht beendete Spiele</div>'+(run.length?'<div class="group">'+run.map(x=>{const p=x.s.players[x.s.cur];const r=CATS.length-openCats(p).length+1;return item(x,'Runde '+Math.min(r,CATS.length)+' · '+esc(p.name)+' ist dran · '+fmtDate(x.g.updated))}).join('')+'</div>':'<div class="group"><div class="cell cs">Keine laufenden Spiele.</div></div>')+'</div>';
  h+='<div class="block"><div class="gtitle">Bereits gespielte Spiele</div>'+(done.length?'<div class="group">'+done.map(x=>{const r=x.s.players.map(p=>({p,t:totals(p).total})).sort((a,b)=>b.t-a.t);return item(x,(r.length>1?'Sieger: '+esc(r[0].p.name)+' · ':'')+r[0].t+' Punkte · '+fmtDate(x.g.updated))}).join('')+'</div>':'<div class="group"><div class="cell cs">Noch keine beendeten Spiele.</div></div>')+'</div>';
  h+='<div class="block"><button class="btn gray" data-a="stats">Statistiken</button></div>';
- h+='<div class="block"><div class="gtitle">Einstellungen</div><div class="group"><button class="cell" data-a="intro"><div class="grow"><div class="ct">Einführung</div><div class="cs">Regeln und Karten kurz erklärt</div></div><span class="chev">›</span></button><button class="cell" data-a="pushtog"><div class="grow"><div class="ct">Einladungen als Mitteilung</div><div class="cs">Push-Nachricht, wenn dich jemand in eine Lobby einlädt</div></div>'+sw(pushOn())+'</button><button class="cell" data-a="sound"><div class="grow"><div class="ct">Ton</div><div class="cs">Würfel, Karten und Effekte</div></div>'+sw(SND.on)+'</button></div><div class="gfoot" style="text-align:center">Spiele werden auf diesem Gerät gespeichert.</div></div>';
+ h+='<div class="block"><div class="gtitle">Einstellungen</div><div class="group"><button class="cell" data-a="intro"><div class="grow"><div class="ct">Einführung</div><div class="cs">Regeln und Karten kurz erklärt</div></div><span class="chev">›</span></button><button class="cell" data-a="pushtog"><div class="grow"><div class="ct">Einladungen als Mitteilung</div><div class="cs">Push-Nachricht, wenn dich jemand in eine Lobby einlädt</div></div>'+sw(pushOn())+'</button>'+(pushOn()?'<button class="cell" data-a="pushtest"><div class="grow"><div class="ct" style="color:var(--blue)">Test-Mitteilung senden</div><div class="cs">Schickt dir selbst eine Einladung</div></div></button>':'')+'<button class="cell" data-a="sound"><div class="grow"><div class="ct">Ton</div><div class="cs">Würfel, Karten und Effekte</div></div>'+sw(SND.on)+'</button></div><div class="gfoot" style="text-align:center">Spiele werden auf diesem Gerät gespeichert.</div></div>';
  return h}
 ui.cerDone={};
 function endHold(){return !!(ui.revHold||ui.fxPending||(ui.modal&&ui.modal.type==='reveal')||document.querySelector('.kfx,.bfx'))}
@@ -1270,6 +1270,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'frinv':sendInvite(b.dataset.k);break;
   case'frdel':{const f=frLoad(),k=b.dataset.k;if(f[k]){delete f[k];frSave(f);render()}break}
   case'pushtog':togglePush();break;
+  case'pushtest':pushTest();break;
   case'fremddone':{const t=S.turn;t.fremdDone=true;save();render();break}
   case'nminus':setup.n=Math.max(1,setup.n-1);render();break;
   case'nplus':setup.n=Math.min(6-(setup.bots||0),setup.n+1);render();break;
@@ -1660,10 +1661,14 @@ function friendsHTML(seats){const fl=frList(),here=new Set(seats.map(x=>x[0]));
  return h+'<div class="gfoot">Tippe auf einen Namen, um eine Einladung aufs Handy zu schicken. Mit dem Stern hältst du Favoriten oben, nach links wischen löscht.</div></div>'}
 async function sendInvite(k){const f=frLoad()[k],d=MP&&MP.lobby;if(!f||!d)return;if(!RDB||!UID){toast('Keine Verbindung zum Server');return}
  const me=((d.seats||{})[UID]||{}).name||setup.myName||'Jemand';ui.invSent=ui.invSent||{};ui.invSent[k]=Date.now();render();let ok=0;
- for(const u of f.uids){try{await RDB.ref('inv/'+u+'/'+UID).set({name:String(me).slice(0,20),code:d.code,t:Date.now()});ok++;pushNotify(u,me)}catch(e){}}
+ let pr=[];for(const u of f.uids){try{await RDB.ref('inv/'+u+'/'+UID).set({name:String(me).slice(0,20),code:d.code,t:Date.now()});ok++;pr.push(pushNotify(u,me))}catch(e){}}
+ Promise.all(pr).then(rs=>{if(rs.length&&!rs.includes('ok'))infoSheet('Keine Mitteilung gesendet','Die Einladung erscheint bei '+f.name+', sobald die App offen ist. Eine Push-Mitteilung ging nicht raus: '+pushErrText(rs[0]))});
  if(ok)toast(f.name+' wurde eingeladen');else{delete ui.invSent[k];render();infoSheet('Einladung nicht möglich','Die Einladung konnte nicht gesendet werden. Schick stattdessen den Link über WhatsApp.')}
  setTimeout(()=>{if(view==='lobby')render()},120500)}
-async function pushNotify(u,me){if(!window.PUSH_URL)return;try{const tk=await firebase.auth().currentUser.getIdToken();fetch(window.PUSH_URL,{method:'POST',headers:{'content-type':'text/plain'},body:JSON.stringify({to:u,token:tk,from:String(me).slice(0,20)})}).catch(()=>{})}catch(e){}}
+async function pushNotify(u,me){if(!window.PUSH_URL)return'kein Push-Dienst eingetragen';try{const tk=await firebase.auth().currentUser.getIdToken();const r=await fetch(window.PUSH_URL,{method:'POST',headers:{'content-type':'text/plain'},body:JSON.stringify({to:u,token:tk,from:String(me).slice(0,20)})});const t=await r.text();return r.ok?'ok':r.status+' '+t}catch(e){return'Fehler: '+(e&&e.message||e)}}
+const PUSH_ERR={'403':'Der Push-Dienst darf die Datenbank nicht lesen (Firebase-Regeln oder DB_URL prüfen).','404':'Der Empfänger hat „Einladungen als Mitteilung“ nicht eingeschaltet.','400':'Ungültige Anfrage an den Push-Dienst.','502':'Apple/Google hat die Mitteilung abgelehnt.'};
+function pushErrText(r){const c=String(r).split(' ')[0];return(PUSH_ERR[c]||'')+' ('+r+')'}
+async function pushTest(){if(!pushOn()){toast('Erst „Einladungen als Mitteilung“ einschalten');return}if(!UID){toast('Keine Verbindung');return}await pushRefresh();toast('Test wird gesendet … App jetzt schließen');const r=await pushNotify(UID,'Test');if(r!=='ok')infoSheet('Test fehlgeschlagen',pushErrText(r))}
 let INV=[];
 function invListen(){if(!RDB||!UID)return;RDB.ref('inv/'+UID).on('value',sn=>{const v=sn.val()||{},now=Date.now();INV=[];
  for(const from in v){const x=v[from];if(!x||!x.code||now-(x.t||0)>30*60000){RDB.ref('inv/'+UID+'/'+from).remove().catch(()=>{});continue}INV.push(Object.assign({from},x))}
@@ -1689,7 +1694,7 @@ async function togglePush(){const ios=/iPhone|iPad|iPod/.test(navigator.userAgen
  if(perm!=='granted'){infoSheet('Mitteilungen blockiert','Erlaube Mitteilungen für Kniffel Royale in den Einstellungen deines Handys und versuch es dann nochmal.');return}
  try{const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});await pushSave(sub);localStorage.setItem('kx-push','1');toast('Einladungen kommen jetzt als Mitteilung')}catch(e){infoSheet('Mitteilungen nicht möglich','Das Einrichten hat nicht geklappt. Versuch es später nochmal.')}
  render()}
-async function pushRefresh(){if(!pushOn())return;try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub)await pushSave(sub)}catch(e){}}
+async function pushRefresh(){if(!pushOn())return;try{const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});await pushSave(sub)}catch(e){}}
 const JP=(()=>{try{const q=new URLSearchParams(location.search),c=(q.get('join')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6),inv=q.has('inv');if(c||inv)history.replaceState(null,'',location.pathname);return{c,inv}}catch(e){return{c:'',inv:false}}})();
 if(JP.c){setup.joinCode=JP.c;view='join'}if(JP.inv)ui.autoInv=Date.now();
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',m=>{if(m.data&&m.data.kx==='inv'){ui.autoInv=Date.now();showInvites()}});
