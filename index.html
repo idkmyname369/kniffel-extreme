@@ -1450,14 +1450,12 @@ function env(a,g,t0,att,peak,dec,curve){g.gain.setValueAtTime(0.0001,t0);g.gain.
 function noiseHit(a,t0,o){const s=nsrc(a,(o.att||0.002)+o.dec+0.05,o.pink);let n=s;(o.filters||[]).forEach(([type,f,q,f2])=>{const fl=a.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,t0);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,t0+(o.att||0.002)+o.dec);if(q)fl.Q.value=q;n.connect(fl);n=fl});const g=a.createGain();env(a,g,t0,o.att||0.002,o.vol,o.dec);n.connect(g);route(a,g,o.rev||0,o.pan||0);s.start(t0);s.stop(t0+(o.att||0.002)+o.dec+0.05)}
 function osc(a,t0,o){const s=a.createOscillator();s.type=o.type||'sine';s.frequency.setValueAtTime(o.f,t0);if(o.f2)s.frequency.exponentialRampToValueAtTime(o.f2,t0+(o.att||0.003)+o.dec);const g=a.createGain();env(a,g,t0,o.att||0.003,o.vol,o.dec);let n=s;if(o.lp){const fl=a.createBiquadFilter();fl.type='lowpass';fl.frequency.value=o.lp;s.connect(fl);n=fl}n.connect(g);route(a,g,o.rev||0,o.pan||0);s.start(t0);s.stop(t0+(o.att||0.003)+o.dec+0.05)}
 function bell(a,t0,f,vol,dec,rev){const c=a.createOscillator(),m=a.createOscillator(),mg=a.createGain(),g=a.createGain();c.frequency.value=f;m.frequency.value=f*3.5;mg.gain.setValueAtTime(f*2.2,t0);mg.gain.exponentialRampToValueAtTime(f*0.05,t0+dec);m.connect(mg);mg.connect(c.frequency);env(a,g,t0,0.002,vol,dec);c.connect(g);route(a,g,rev==null?0.35:rev);c.start(t0);m.start(t0);c.stop(t0+dec+0.1);m.stop(t0+dec+0.1)}
-function cardSlide(a,t){const D=.5;
- const n=nsrc(a,D+.2,true),bp=a.createBiquadFilter();bp.type='bandpass';bp.Q.value=.75;bp.frequency.setValueAtTime(900,t);bp.frequency.linearRampToValueAtTime(1900,t+.18);bp.frequency.linearRampToValueAtTime(1250,t+D);
- const hs=a.createBiquadFilter();hs.type='highshelf';hs.frequency.value=3500;hs.gain.value=-10;
- const g=a.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(.46,t+.07);g.gain.linearRampToValueAtTime(.58,t+.2);g.gain.linearRampToValueAtTime(.36,t+.36);g.gain.exponentialRampToValueAtTime(0.0001,t+D);
- const tex=a.createGain();tex.gain.value=.55;const m=nsrc(a,D+.2,false),ml=a.createBiquadFilter();ml.type='lowpass';ml.frequency.value=38;const mg=a.createGain();mg.gain.value=1.6;m.connect(ml);ml.connect(mg);mg.connect(tex.gain);
- n.connect(bp);bp.connect(hs);hs.connect(tex);tex.connect(g);route(a,g,.12,-.1);n.start(t);n.stop(t+D+.1);m.start(t);m.stop(t+D+.1);
- const n2=nsrc(a,D+.2,true),lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=380;const g2=a.createGain();g2.gain.setValueAtTime(0.0001,t);g2.gain.linearRampToValueAtTime(.22,t+.1);g2.gain.exponentialRampToValueAtTime(0.0001,t+D*.9);n2.connect(lp);lp.connect(g2);route(a,g2,.08);n2.start(t);n2.stop(t+D+.1);
- noiseHit(a,t+.36,{att:.06,dec:.16,vol:.07,filters:[['highpass',2600,.5],['lowpass',7000,.5]],rev:.15,pan:.1})}
+function cardSlide(a,t){const D=.36;
+ const n=nsrc(a,D+.2,true),bp=a.createBiquadFilter();bp.type='bandpass';bp.Q.value=1.6;bp.frequency.setValueAtTime(2000,t);bp.frequency.linearRampToValueAtTime(3300,t+.14);bp.frequency.linearRampToValueAtTime(2500,t+D);
+ const hp=a.createBiquadFilter();hp.type='highpass';hp.frequency.value=900;hp.Q.value=.5;
+ const g=a.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(.42,t+.05);g.gain.linearRampToValueAtTime(.5,t+.15);g.gain.linearRampToValueAtTime(.28,t+.27);g.gain.exponentialRampToValueAtTime(0.0001,t+D);
+ const tex=a.createGain();tex.gain.value=.5;const m=nsrc(a,D+.2,false),ml=a.createBiquadFilter();ml.type='lowpass';ml.frequency.value=55;const mg=a.createGain();mg.gain.value=1.5;m.connect(ml);ml.connect(mg);mg.connect(tex.gain);
+ n.connect(bp);bp.connect(hp);hp.connect(tex);tex.connect(g);route(a,g,.1,-.1);n.start(t);n.stop(t+D+.1);m.start(t);m.stop(t+D+.1)}
 const sfx={
  dice(nd){const a=audio();if(!a)return;const t=a.currentTime;nd=nd||6;
   noiseHit(a,t,{pink:true,att:0.05,dec:1.1,vol:0.08,filters:[['lowpass',380]],rev:0.05});
