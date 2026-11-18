@@ -873,7 +873,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  if(!need&&after==='don'&&ctx.don==null&&b.f>0)need='don';
  if(!need&&after==='thief'&&ctx.target==null&&b.f>0)need='thief';
  if(!need&&after==='gift'&&ctx.target==null&&b.f>0)need='gift';
- if(need){ui.modal={type:'need',need,id,raw,ctx,val:'',amount:b.f};renderModal();return}
+ if(need){if(ev&&ev.after&&!ev.vis&&!t.shown){t.shown=true;ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip();save();render()}ui.modal={type:'need',need,id,raw,ctx,val:'',amount:b.f};renderModal();return}
  const entry={raw:r,final:b.f,tag:b.parts.join(' ')};
  const __undo=JSON.stringify(S);const __ps=S.potOn?potSnap():null,__sc=S.cur,__hs0=potSnap();
  p.half=false;
@@ -963,7 +963,7 @@ function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,
   const showRev=r.lastReveal&&r.lastReveal.seq>(ui.seenReveal||0)&&r.lastReveal.uid!==UID;
   if(!S||S.id!==r.id||(r.rev||0)>(S.rev||0)){const prev=S;S=r;
    if(prev&&prev.id===r.id&&prev.players.length>r.players.length){const gone=prev.players.filter(q=>!r.players.some(x=>x.uid===q.uid));ui.modal=null;renderModal();ui.undo=null;ui.revHold=null;if(gone.length)toast(gone.map(q=>q.name).join(', ')+' hat das Spiel verlassen')}
-   if(prev&&prev.id===r.id&&prev.turn&&r.turn&&prev.cur===r.cur){if((r.turn.rolls||0)>(prev.turn.rolls||0)){ui.rolling=true;setTimeout(()=>ui.rolling=false,520);sfx.dice((r.turn.held||[]).filter(x=>!x).length||6)}if(r.turn.ev&&r.turn.ev!==prev.turn.ev){ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip()}}
+   if(prev&&prev.id===r.id&&prev.turn&&r.turn&&prev.cur===r.cur){if((r.turn.rolls||0)>(prev.turn.rolls||0)){ui.rolling=true;setTimeout(()=>ui.rolling=false,520);sfx.dice((r.turn.held||[]).filter(x=>!x).length||6)}if((r.turn.ev&&r.turn.ev!==prev.turn.ev)||(r.turn.shown&&!prev.turn.shown)){ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip()}}
    if(!prev||prev.id!==r.id)ui.seenBoom=r.bombBoom?r.bombBoom.n:null;else if(r.bombBoom&&r.bombBoom.n!==ui.seenBoom){ui.seenBoom=r.bombBoom.n;ui.fxPending=true;const BB=r.bombBoom;setTimeout(()=>bombFX(BB),300)}
    if(ui.seenFx==null||!prev||prev.id!==r.id)ui.seenFx=(!prev||prev.id!==r.id)?(r.fx?r.fx.seq:0):(ui.seenFx||0);
    const showFx=r.fx&&r.fx.seq>(ui.seenFx||0)&&r.fx.uid!==UID;if(showFx){ui.seenFx=r.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(r.fx.kind,r.fx.who),60)}view='game';const old=GAMES[S.id];GAMES[S.id]={id:S.id,updated:Date.now(),finished:S.screen==='end',synced:!!(old&&old.synced),json:m.baseStr};persistLocal();queuePush(S.id);
@@ -1072,7 +1072,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
  if(t.drawn&&t.none)h+=cardFront({g:'wertung',gl:'–'},'Keine Karte mehr',Y('Du hast alle aktiven Ereigniskarten schon bekommen. Normal weiterspielen.'),'');
  if(!t.drawn&&S.online&&!act)h+=cardBack('div','',esc(p.name)+' zieht gleich eine Karte');
  else if(!t.drawn)h+=cardBack('button','data-a="draw"','Vor deinem ersten Wurf antippen');
- else if(ev&&ev.after&&!ev.vis&&!t.retryRevealed)h+=cardFront(HIDDEN,'Verdeckte Karte',Y('Erst würfeln und deine Kategorie wählen – danach wird die Karte aufgedeckt.'),'');
+ else if(ev&&ev.after&&!ev.vis&&!t.retryRevealed&&!t.shown)h+=cardFront(HIDDEN,'Verdeckte Karte',Y('Erst würfeln und deine Kategorie wählen – danach wird die Karte aufgedeckt.'),'');
  else if(ev)h+=cardFront(ev,ev.title,ev.text,(t.note?'<div class="evnote">'+Y(t.note)+'</div>':'')+(t.pending?'<button class="btn" data-a="openpick">Karte ausführen</button>':''));
  let dd='';{const oc=openCats(p).filter(c=>!t.drawn||t.pending||allowed(p,t,c));dd+='<div class="opendd'+(ui.openList?' on':'')+'"><button class="ddbtn" data-a="ddtoggle"><span>Noch offene Kategorien</span><span class="ddcount">'+oc.length+'</span><span class="ddchev">'+(ui.openList?'⌃':'⌄')+'</span></button>';
   if(ui.openList){const show=dig&&t.rolls>0&&!t.tool&&t.drawn&&!t.pending;dd+='<div class="ddlist">'+(()=>{const fv=c=>baseFinal(p,t,c.calc(dOf(t)),t.rolls,c.id).f;const good=c=>allowed(p,t,c)&&fv(c)>0;return show?[['Kannst du werten',oc.filter(good)],['Müsstest du streichen',oc.filter(c=>!good(c))]]:[['Oberer Teil',oc.filter(c=>c.sec==='oben')],['Unterer Teil',oc.filter(c=>c.sec==='unten')]]})().map(([lab,l])=>{if(!l.length)return'';return'<div class="sub-h">'+lab+'</div>'+l.map(c=>{const ok=allowed(p,t,c);let r='';if(isBlocked(t,c.id))r='<span class="blk">Gesperrt</span>';else if(t.lock===c.id)r='<span class="tag">Pflicht</span>';else if(show){const raw=c.calc(dOf(t));{const f=baseFinal(p,t,raw,t.rolls,c.id).f;r='<span class="pv '+(f>0?'':'zero')+(f<0?' negv':'')+'">'+fmtN(f)+'</span>'}}
