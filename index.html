@@ -251,6 +251,7 @@ td small{color:#ffb340;font-size:10px;margin-left:3px}
 .oppban{position:fixed;left:10px;right:10px;top:calc(env(safe-area-inset-top) + 8px);z-index:450;display:flex;gap:11px;align-items:flex-start;padding:11px 13px;border-radius:20px;background:rgba(44,44,48,.82);backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 .5px rgba(255,255,255,.08);transform:translateY(-130%);transition:transform .38s cubic-bezier(.2,.9,.25,1.1);max-width:520px;margin:0 auto}.oppban.in{transform:none}
 .ob-ic{flex:none;width:38px;height:38px;border-radius:9px;background:#141416;display:flex;align-items:center;justify-content:center;overflow:hidden}.ob-ic img{width:30px;height:auto}
 .ob-h{display:flex;justify-content:space-between;font-weight:700;font-size:15px}.ob-t{font-weight:400;font-size:13px;color:var(--sec)}.ob-m{font-size:14.5px;margin-top:1px}.ob-m b{color:#ffd257}.ob-s{font-size:13px;color:var(--sec);margin-top:2px}
+.pnsave{flex:none;color:#fff;background:var(--blue);border-radius:9px;padding:6px 12px;font-size:14px;font-weight:600}
 .potbar{width:100%;text-align:left;font-family:inherit;}.potinfo{font-size:13px;opacity:.6;margin-left:2px}.potrow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--sep)}.potrow:last-child{border-bottom:0}
 .potbar{display:flex;align-items:center;gap:8px;margin:-6px 0 14px;padding:9px 13px;border-radius:12px;background:linear-gradient(90deg,rgba(255,204,64,.14),rgba(255,204,64,.04)),var(--bg);border:1px solid rgba(255,204,64,.22);color:#ffd257;font-size:14px;font-weight:600}
 .potbar b{font-size:17px;font-variant-numeric:tabular-nums;margin-left:auto}
@@ -810,7 +811,7 @@ function _applyPick(kind,key){const t=S.turn,me=S.players[S.cur];if(kind==='reve
 
 /* ---------- Verdeckte Effekte ---------- */
 const SLOT_SYM=['+25','×2','×3'];
-const FREE_ACT=new Set(['pickcol','setcol','cardinfo','viewp','board','menu','close','home','ddtoggle','askdel','del','new','open','mpnew','mpjoinview','mpcreate','mpjoin','mpstart','mpleave','mpcopy','cards','sound','undo','mprematch','potlog','profile','authview','authmode','authgo','authreset','authprov','logout','logoutok','acctdel','acctdelok','resetask','resetok','reauthgo','rxopen','rxsend','rxtog','askleave','leave','mpwa','mpshare','frfav','frinv','frdel','intro','stats','pushtog','pushtest']);
+const FREE_ACT=new Set(['pickcol','setcol','cardinfo','viewp','board','menu','close','home','ddtoggle','askdel','del','new','open','mpnew','mpjoinview','mpcreate','mpjoin','mpstart','mpleave','mpcopy','cards','sound','undo','mprematch','potlog','pnsave','profile','authview','authmode','authgo','authreset','authprov','logout','logoutok','acctdel','acctdelok','resetask','resetok','reauthgo','rxopen','rxsend','rxtog','askleave','leave','mpwa','mpshare','frfav','frinv','frdel','intro','stats','pushtog','pushtest']);
 function spinSlots(m){if(m.spinning)return;m.spinning=true;const btn=document.getElementById('spinbtn');if(btn){btn.disabled=true;btn.textContent='Die Walzen drehen sich …'}
  const reels=[0,1,2].map(()=>rnd(SLOT_SYM));let v=m.amount;const steps=['Start: '+v];
  reels.forEach((res,i)=>{const strip=document.getElementById('strip'+i),win=document.getElementById('reel'+i);if(!strip||!win)return;const H=win.clientHeight;const n=26+i*10;let html='<div>'+strip.textContent+'</div>';for(let k=1;k<n;k++)html+='<div>'+SLOT_SYM[(k+i)%3]+'</div>';html+='<div>'+res+'</div>';strip.style.transition='none';strip.style.transform='translateY(0)';strip.innerHTML=html;void strip.offsetHeight;
@@ -995,12 +996,12 @@ async function mpPush(){const m=MP;if(!m||!S||!S.online)return;if(m.busy){m.dirt
  if(!upd)upd=Object.assign({json:full,jrev:S.rev||0,dl:null},st);
  try{await m.ref.update(upd);m.baseStr=full;m.baseRev=S.rev||0;m.docRev=S.rev||0;turnPush()}catch(e){if(!m.warned){m.warned=true;infoSheet('Zug konnte nicht gesendet werden',PERM_TXT)}}
  m.busy=false;if(m.dirty){m.dirty=false;mpPush()}}
-async function mpCreate(){if(!needCloud())return;const name=(setup.myName||'').trim();if(!name){toast('Bitte gib deinen Namen ein');return}if(!setup.sel.length){}
+async function mpCreate(){if(!needCloud())return;const name=(setup.myName||'').trim();if(name){const cr=await claimName(name);if(cr==='taken'){infoSheet('Name schon vergeben','„'+name+'“ benutzt schon jemand anderes. Bitte wähle einen anderen Namen.');return}}if(!name){toast('Bitte gib deinen Namen ein');return}if(!setup.sel.length){}
  const code=genCode();const ref=DB.doc('mp/'+code);
  try{await ref.set({kind:'kx-online',code,host:UID,status:'lobby',created:Date.now(),updated:Date.now(),settings:{mode:setup.mode,events:setup.sel.slice()},seats:{[UID]:{name,t:Date.now()}}})}catch(e){infoSheet('Spiel konnte nicht erstellt werden',PERM_TXT);return}
  setup.online=false;mpSubscribe(code);view='lobby';render();window.scrollTo(0,0)}
 async function mpJoin(){const code=(setup.joinCode||'').toUpperCase().replace(/[^A-Z0-9]/g,''),name=(setup.myName||'').trim();
- if(code.length!==6){toast('Der Code hat 6 Zeichen');return}if(!name){toast('Bitte gib deinen Namen ein');return}if(!needCloud())return;
+ if(code.length!==6){toast('Der Code hat 6 Zeichen');return}if(!name){toast('Bitte gib deinen Namen ein');return}if(!needCloud())return;{const cr=await claimName(name);if(cr==='taken'){joinCover(false);infoSheet('Name schon vergeben','„'+name+'“ benutzt schon jemand anderes. Bitte wähle einen anderen Namen.');return}}
  let ref=DB.doc('mp/'+code);let snap;try{snap=await ref.get()}catch(e){snap={exists:false}}
  if(!snap.exists&&DB_ALT){try{const r2=DB_ALT.doc('mp/'+code),s2=await r2.get();if(s2.exists){DB=DB_ALT;DB_ALT=null;ref=r2;snap=s2}}catch(e){}}
  if(!snap.exists&&!snap.data){}
@@ -1326,7 +1327,7 @@ if((S.online||localBotGame())&&ev&&ev.fremd&&t.rolls===1&&t.fremdDone&&!t.tool&&
   t.held[i]=!t.held[i]}
  save();render()}
 
-document.addEventListener('input',e=>{const d=e.target.dataset;if(d.ni!==undefined)setup.names[+d.ni]=e.target.value;if(d.bn!==undefined){setup.botNames=setup.botNames||BOT_NAMES.slice();setup.botNames[+d.bn]=e.target.value}if(d.rp!==undefined&&ui.modal)ui.modal.pw=e.target.value;if(d.ae!==undefined&&ui.auth)ui.auth.email=e.target.value;if(d.ap!==undefined&&ui.auth)ui.auth.pw=e.target.value;if(d.mn){setup.myName=e.target.value;cloudQueue();try{localStorage.setItem('kx-myname',e.target.value)}catch(x){}}if(d.jc)setup.joinCode=e.target.value});
+document.addEventListener('input',e=>{const d=e.target.dataset;if(d.ni!==undefined)setup.names[+d.ni]=e.target.value;if(d.bn!==undefined){setup.botNames=setup.botNames||BOT_NAMES.slice();setup.botNames[+d.bn]=e.target.value}if(d.rp!==undefined&&ui.modal)ui.modal.pw=e.target.value;if(d.pn!==undefined){const had=ui.pn!=null&&ui.pn.trim()!==(setup.myName||'').trim();ui.pn=e.target.value;ui.pnErr='';const now=ui.pn.trim()!==(setup.myName||'').trim()&&!!ui.pn.trim();if(had!==now){const pos=e.target.selectionStart;render();const f=document.querySelector('[data-pn]');if(f){f.focus();try{f.setSelectionRange(pos,pos)}catch(x){}}}}if(d.ae!==undefined&&ui.auth)ui.auth.email=e.target.value;if(d.ap!==undefined&&ui.auth)ui.auth.pw=e.target.value;if(d.mn){setup.myName=e.target.value;cloudQueue();try{localStorage.setItem('kx-myname',e.target.value)}catch(x){}}if(d.jc)setup.joinCode=e.target.value});
 document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('.peekbtn')){e.preventDefault();ui.peekHold=true;render()}});
 ['pointerup','pointercancel'].forEach(n=>document.addEventListener(n,()=>{if(ui.peekHold){ui.peekHold=false;render()}}));
 document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&&e.target.dataset.bg){ui.modal=null;renderModal();return}
@@ -1352,6 +1353,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'frinv':sendInvite(b.dataset.k);break;
   case'frdel':{const f=frLoad(),k=b.dataset.k;if(f[k]){delete f[k];frSave(f);render()}break}
   case'pushtog':togglePush();break;
+  case'pnsave':saveProfileName();break;
   case'potlog':ui.modal={type:'potlog'};renderModal();break;
   case'profile':view='profile';render();window.scrollTo(0,0);break;
   case'authview':ui.auth={mode:b.dataset.m||'link',email:(ui.auth&&ui.auth.email)||'',err:''};view='auth';render();window.scrollTo(0,0);break;
@@ -1383,8 +1385,8 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'pfopen':setup.pfOpen=!setup.pfOpen;render();break;
   case'selall':setup.sel=EVENTS.map(e=>e.id);saveSel();render();break;
   case'selnone':setup.sel=[];saveSel();render();break;
-  case'start':{const nb=setup.online?0:(setup.bots||0);const names=setup.names.slice(0,setup.n).map((n,i)=>n.trim()||'Spieler '+(i+1)).concat((setup.botNames||BOT_NAMES).slice(0,nb).map((n,i)=>(n||'').trim()||'Bot '+(i+1)));newGame(names,nb?'digital':setup.mode,setup.sel.slice(),names.map((_,i)=>i>=setup.n),names.map((_,i)=>i<setup.n?(setup.colors||[])[i]:(setup.botColors||[])[i-setup.n]),names.map((_,i)=>i<setup.n?null:((setup.botLvl||[])[i-setup.n]??1)));window.scrollTo(0,0);break}
-  case'new':setup.online=false;view='setup';render();window.scrollTo(0,0);break;
+  case'start':{const nb=setup.online?0:(setup.bots||0);const names=setup.names.slice(0,setup.n).map((n,i)=>n.trim()||'Spieler '+(i+1)).concat((setup.botNames||BOT_NAMES).slice(0,nb).map((n,i)=>(n||'').trim()||'Bot '+(i+1)));{const lc=names.map(x=>x.toLowerCase());const dup=names.find((x,i)=>lc.indexOf(x.toLowerCase())!==i);if(dup){toast('„'+dup+'“ kommt doppelt vor – jeder Name nur einmal');break}}newGame(names,nb?'digital':setup.mode,setup.sel.slice(),names.map((_,i)=>i>=setup.n),names.map((_,i)=>i<setup.n?(setup.colors||[])[i]:(setup.botColors||[])[i-setup.n]),names.map((_,i)=>i<setup.n?null:((setup.botLvl||[])[i-setup.n]??1)));window.scrollTo(0,0);break}
+  case'new':setup.online=false;{const mn=(setup.myName||'').trim();if(mn&&(!setup.names[0]||/^Spieler \d$/.test(setup.names[0])))setup.names[0]=mn}view='setup';render();window.scrollTo(0,0);break;
   case'open':openGame(b.dataset.id);break;
   case'askdel':ui.modal={type:'del',id:b.dataset.id};renderModal();break;
   case'del':{const id=b.dataset.id;{const r=hostLive(id);if(r){ui.modal=null;renderModal();mpDeleteToLobby(id,r);break}}{const r=memberLive(id);if(r){ui.modal=null;renderModal();mpLeaveGame(id,r);break}}delete GAMES[id];persistLocal();remoteDelete(id);if(S&&S.id===id)S=null;view='home';ui.modal=null;renderModal();render();break}
@@ -1758,7 +1760,7 @@ function profileCard(){const xp=xpTotal(),B=lvBar(xp),nm=(setup.myName||'').trim
 function profileHTML(){const xp=xpTotal(),B=lvBar(xp),ac=acctKind(),x=xpLoad(),games=Object.keys(x).length;
  let h='<button class="backbtn" data-a="home">‹ Übersicht</button><div class="large">Profil</div>';
  h+='<div class="block"><div class="profhero"><div class="lvbadge big t'+lvTier(B.l)+'">'+B.l+'</div><div class="ph-t">'+lvTitle(B.l)+'</div><div class="xpbar big"><i style="width:'+B.pct.toFixed(1)+'%"></i></div><div class="cs">'+fmtN(B.cur)+' / '+fmtN(B.need)+' XP bis Level '+(B.l+1)+' · insgesamt '+fmtN(xp)+' XP aus '+games+' Spielen</div></div></div>';
- h+='<div class="block"><div class="gtitle">Dein Name</div><div class="group"><div class="cell"><input type="text" data-mn="1" maxlength="14" placeholder="Dein Name" value="'+esc(setup.myName||'')+'"></div></div><div class="gfoot">Mit diesem Namen spielst du online. In lokalen Spielen mit mehreren Personen bekommst du XP, wenn ein Spieler so heißt.</div></div>';
+ {const pn=ui.pn!=null?ui.pn:(setup.myName||''),ch=pn.trim()!==(setup.myName||'').trim();h+='<div class="block"><div class="gtitle">Dein Name</div><div class="group"><div class="cell"><input type="text" data-pn="1" maxlength="14" placeholder="Wähle deinen Namen" value="'+esc(pn)+'">'+(ch&&pn.trim()?'<button class="pnsave" data-a="pnsave">'+(ui.pnBusy?'…':'Speichern')+'</button>':'')+'</div></div><div class="gfoot"'+(ui.pnErr?' style="color:var(--red)"':'')+'>'+(ui.pnErr?esc(ui.pnErr):'Dein Name ist einmalig – niemand sonst kann ihn verwenden. Er wird bei neuen Spielen automatisch eingetragen.')+'</div></div>'}
  h+='<div class="block"><div class="gtitle">Konto</div><div class="group">';
  if(ac)h+='<div class="cell"><div class="grow"><div class="ct">Gesichert mit '+ac.prov+'</div><div class="cs">'+esc(ac.email)+'</div></div><span style="color:#30d158">✓</span></div><button class="cell" data-a="logout"><div class="grow ct" style="color:var(--blue)">Abmelden</div></button><button class="cell" data-a="acctdel"><div class="grow ct" style="color:var(--red)">Konto löschen</div></button></div><div class="gfoot">Level, Statistiken, Spiele und Freunde werden in deinem Konto gespeichert. Melde dich auf einem anderen Gerät einfach mit demselben Konto an.</div></div>';
  else h+=authButtons('link')+'</div><div class="gfoot">Sichere deinen Spielstand, damit Level, Statistiken und Freunde bei einem Handywechsel nicht verloren gehen. Ohne Konto bleibt alles nur auf diesem Gerät.</div><button class="btn tint" data-a="authview" data-m="login" style="margin-top:12px">Ich habe schon ein Konto</button></div>';
@@ -1777,7 +1779,7 @@ function authErrText(e){return AUTH_ERR[e&&e.code]||('Das hat nicht geklappt'+(e
 async function authEmail(){const A=ui.auth;if(!A||A.busy)return;const em=(A.email||'').trim(),pw=A.pw||'';if(!em||!pw){A.err='Bitte E-Mail und Passwort eingeben.';render();return}
  if(typeof firebase==='undefined'||!firebase.apps.length){A.err='Keine Verbindung zum Server.';render();return}
  A.busy=true;A.err='';render();const AU=firebase.auth();
- try{if(A.mode==='login'){await cloudFlush();const cr=await AU.signInWithEmailAndPassword(em,pw);await authSwitched(cr.user)}
+ try{if(A.mode==='login'){await cloudFlush();await releaseName();const cr=await AU.signInWithEmailAndPassword(em,pw);await authSwitched(cr.user)}
   else{const cu=AU.currentUser;const cred=firebase.auth.EmailAuthProvider.credential(em,pw);const cr=cu?await cu.linkWithCredential(cred):await AU.createUserWithEmailAndPassword(em,pw);AUTHU=cr.user;A.busy=false;cloudQueue(true);view='profile';render();toast('Spielstand gesichert ✓')}}
  catch(e){A.busy=false;A.err=authErrText(e);render()}}
 async function authReset(){const A=ui.auth,em=(A&&A.email||'').trim();if(!em){A.err='Gib zuerst deine E-Mail ein.';render();return}try{await firebase.auth().sendPasswordResetEmail(em);toast('E-Mail zum Zurücksetzen verschickt')}catch(e){A.err=authErrText(e);render()}}
@@ -1787,21 +1789,21 @@ const GRET=(()=>{try{if(!location.hash||location.hash.indexOf('state=kxg')<0)ret
 if(GRET)joinCover(true,'Anmeldung wird abgeschlossen …');
 async function googleFinish(){const G=GRET;if(!G)return;if(G.mode==='del'&&G.tok){try{const u=firebase.auth().currentUser;await u.reauthenticateWithCredential(firebase.auth.GoogleAuthProvider.credential(G.tok));joinCover(false);await acctWipeCloud(u.uid);await u.delete();acctAfterDelete()}catch(e){joinCover(false);infoSheet('Löschen nicht möglich',authErrText(e))}return}if(!G.tok){joinCover(false);if(G.err&&G.err!=='access_denied')infoSheet('Anmeldung nicht möglich','Google hat die Anmeldung abgelehnt ('+G.err+').');return}
  const AU=firebase.auth(),cred=firebase.auth.GoogleAuthProvider.credential(G.tok),cu=AU.currentUser;
- try{if(cu&&cu.isAnonymous){try{const cr=await cu.linkWithCredential(cred);AUTHU=cr.user;cloudQueue(true);joinCover(false);view='profile';render();toast('Spielstand gesichert ✓');return}catch(e){if(e.code!=='auth/credential-already-in-use'&&e.code!=='auth/email-already-in-use')throw e;await cloudFlush();const cr=await AU.signInWithCredential(e.credential||cred);joinCover(false);await authSwitched(cr.user);return}}
-  await cloudFlush();const cr=await AU.signInWithCredential(cred);joinCover(false);await authSwitched(cr.user)}
+ try{if(cu&&cu.isAnonymous){try{const cr=await cu.linkWithCredential(cred);AUTHU=cr.user;cloudQueue(true);joinCover(false);view='profile';render();toast('Spielstand gesichert ✓');return}catch(e){if(e.code!=='auth/credential-already-in-use'&&e.code!=='auth/email-already-in-use')throw e;await cloudFlush();await releaseName();const cr=await AU.signInWithCredential(e.credential||cred);joinCover(false);await authSwitched(cr.user);return}}
+  await cloudFlush();await releaseName();const cr=await AU.signInWithCredential(cred);joinCover(false);await authSwitched(cr.user)}
  catch(e){joinCover(false);infoSheet('Anmeldung nicht möglich',authErrText(e))}}
 async function authProvider(p){if(typeof firebase==='undefined'||!firebase.apps.length){toast('Keine Verbindung zum Server');return}
  if(p==='google'&&window.GOOGLE_CLIENT_ID){googleRedirect('link');return}
  const prov=p==='apple'?new firebase.auth.OAuthProvider('apple.com'):new firebase.auth.GoogleAuthProvider();if(p==='apple'){prov.addScope('email');prov.addScope('name')}else prov.setCustomParameters({prompt:'select_account'});
  const AU=firebase.auth(),cu=AU.currentUser;
  try{if(cu&&cu.isAnonymous){try{const cr=await cu.linkWithPopup(prov);AUTHU=cr.user;cloudQueue(true);view='profile';render();toast('Spielstand gesichert ✓');return}
-   catch(e){if(e.code!=='auth/credential-already-in-use'&&e.code!=='auth/email-already-in-use')throw e;await cloudFlush();const c2=e.credential||(p==='apple'?firebase.auth.OAuthProvider.credentialFromError&&firebase.auth.OAuthProvider.credentialFromError(e):firebase.auth.GoogleAuthProvider.credentialFromError&&firebase.auth.GoogleAuthProvider.credentialFromError(e));const cr=c2?await AU.signInWithCredential(c2):await AU.signInWithPopup(prov);await authSwitched(cr.user);return}}
-  await cloudFlush();const cr=await AU.signInWithPopup(prov);await authSwitched(cr.user)}
+   catch(e){if(e.code!=='auth/credential-already-in-use'&&e.code!=='auth/email-already-in-use')throw e;await cloudFlush();await releaseName();const c2=e.credential||(p==='apple'?firebase.auth.OAuthProvider.credentialFromError&&firebase.auth.OAuthProvider.credentialFromError(e):firebase.auth.GoogleAuthProvider.credentialFromError&&firebase.auth.GoogleAuthProvider.credentialFromError(e));const cr=c2?await AU.signInWithCredential(c2):await AU.signInWithPopup(prov);await authSwitched(cr.user);return}}
+  await cloudFlush();await releaseName();const cr=await AU.signInWithPopup(prov);await authSwitched(cr.user)}
  catch(e){if(ui.auth){ui.auth.err=authErrText(e);render()}infoSheet('Anmeldung nicht möglich',authErrText(e))}}
-async function authSwitched(u){toast('Angemeldet – Spielstand wird geladen …');UID=u.uid;AUTHU=u;try{localStorage.removeItem('kx-cloud')}catch(e){}await cloudPull(true);persistNow();setTimeout(()=>location.reload(),400)}
+async function authSwitched(u){toast('Angemeldet – Spielstand wird geladen …');try{const k=localStorage.getItem('kx-name-key');if(k){const v=(await RDB.ref('names/'+k).get()).val();if(v===UID)await RDB.ref('names/'+k).remove()}localStorage.removeItem('kx-name-key')}catch(e){}UID=u.uid;AUTHU=u;try{localStorage.removeItem('kx-cloud')}catch(e){}await cloudPull(true);persistNow();setTimeout(()=>location.reload(),400)}
 async function authLogout(){try{await cloudFlush()}catch(e){}try{['kx-xp','kx-friends','kx-myuids','kx-fr-bf','kx-cloud','kx-push'].forEach(k=>localStorage.removeItem(k));GAMES={};persistNow()}catch(e){}try{await firebase.auth().signOut()}catch(e){}location.reload()}
 /* Konto löschen / Spielstand löschen */
-async function acctWipeCloud(uid){try{await RDB.ref().update({['users/'+uid]:null,['push/'+uid]:null,['inv/'+uid]:null})}catch(e){}}
+async function acctWipeCloud(uid){try{await releaseName()}catch(e){}try{await RDB.ref().update({['users/'+uid]:null,['push/'+uid]:null,['inv/'+uid]:null})}catch(e){}}
 async function acctDelete(){const AU=firebase.auth(),u=AU.currentUser;if(!u||u.isAnonymous)return;joinCover(true,'Konto wird gelöscht …');
  try{await acctWipeCloud(u.uid);await u.delete()}catch(e){joinCover(false);if(e.code==='auth/requires-recent-login'){const pr=(u.providerData||[]).map(p=>p.providerId);if(pr.includes('password')){ui.modal={type:'reauth'};renderModal()}else if(pr.includes('google.com')&&window.GOOGLE_CLIENT_ID){googleRedirect('del')}else infoSheet('Neu anmelden nötig','Melde dich bitte einmal ab und wieder an und lösche das Konto dann direkt.');return}infoSheet('Löschen nicht möglich',authErrText(e));return}
  acctAfterDelete()}
@@ -1831,7 +1833,7 @@ async function cloudPull(force){if(!RDB||!UID)return;try{const base='users/'+UID
  if(v.p){try{const P=JSON.parse(v.p);const xl=Object.assign({},P.x||{},xpLoad());try{localStorage.setItem('kx-xp',JSON.stringify(xl))}catch(e){}
   const fl=frLoad();for(const k in (P.f||{})){const a=P.f[k],b=fl[k];if(!b)fl[k]=a;else{b.fav=b.fav||a.fav;b.last=Math.max(b.last||0,a.last||0);b.uids=[...new Set((b.uids||[]).concat(a.uids||[]))].slice(0,3)}}try{localStorage.setItem('kx-friends',JSON.stringify(fl))}catch(e){}
   const us=[...new Set(myUids().concat(P.u||[]))];try{localStorage.setItem('kx-myuids',JSON.stringify(us.slice(-20)))}catch(e){}
-  if(P.n&&!setup.myName){setup.myName=P.n;try{localStorage.setItem('kx-myname',P.n)}catch(e){}}}catch(e){}}
+  if(P.n&&(force||!setup.myName)){setup.myName=P.n;try{localStorage.setItem('kx-myname',P.n)}catch(e){}}}catch(e){}}
  c.t=Date.now();c.p=null;cloudStateSave(c);persistNow();cloudQueue();cloudPull.changed=true}catch(e){console.warn('pull',e)}}
 
 /* Online-Spiel verlassen: Spieler wird komplett entfernt */
@@ -1954,7 +1956,7 @@ function invWait(){ui.autoInv=Date.now();const t0=ui.autoInv;joinCover(true);set
 if(JP.c){setup.joinCode=JP.c;view='join';if((setup.myName||'').trim())joinCover(true,'Trete der Lobby bei …')}if(JP.inv)invWait();if(JP.g)joinCover(true,'Spiel wird geöffnet …');
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',m=>{if(m.data&&m.data.kx==='inv'){invWait();showInvites()}if(m.data&&m.data.kx==='game')openByCode(String(m.data.code||'').toUpperCase())});
 function frBackfill(){try{if(localStorage.getItem('kx-fr-bf'))return;Object.values(GAMES).forEach(g=>{try{const r=JSON.parse(g.json);if(!r.online)return;const st={};r.players.forEach(q=>{if(q.uid)st[q.uid]={name:q.name}});frRecord(st)}catch(e){}});localStorage.setItem('kx-fr-bf','1')}catch(e){}}
-async function afterCloud(){if(GRET&&UID)await googleFinish();if(UID){rememberUid();await cloudPull(false);xpBackfill();frBackfill();if(view==='home'&&!S){const a=document.getElementById('app'),pc=a&&a.querySelector('.profcard'),old=pc?pc.outerHTML:'';if(profileCard()!==old||cloudPull.changed)render()}}invListen();pushRefresh();if(JP.g){openByCode(JP.g);JP.g='';joinCover(false)}if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c)){try{await mpJoin()}catch(e){}joinCover(false)}}
+async function afterCloud(){if(GRET&&UID)await googleFinish();if(UID){nameCheck();rememberUid();await cloudPull(false);xpBackfill();frBackfill();if(view==='home'&&!S){const a=document.getElementById('app'),pc=a&&a.querySelector('.profcard'),old=pc?pc.outerHTML:'';if(profileCard()!==old||cloudPull.changed)render()}}invListen();pushRefresh();if(JP.g){openByCode(JP.g);JP.g='';joinCover(false)}if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c)){try{await mpJoin()}catch(e){}joinCover(false)}}
 
 /* Wischen zum Löschen (Mitspieler-Liste) */
 (()=>{let row=null,x0=0,y0=0,dx=0,base=0,mode=null;const W=96;
@@ -1983,6 +1985,21 @@ function pumpBanner(){if(!BANQ.length||document.querySelector('.oppban'))return;
  document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')));
  const hide=()=>{if(!el.isConnected)return;el.classList.remove('in');setTimeout(()=>{el.remove();pumpBanner()},300)};el.onclick=hide;setTimeout(hide,4800)}
 setInterval(logWatch,400);
+
+/* ---------- Einmalige Spielernamen ---------- */
+function nameKey(n){return String(n||'').trim().toLowerCase().replace(/\s+/g,' ').replace(/[.#$\[\]\/]/g,'_')}
+async function claimName(nm){const k=nameKey(nm);if(!k)return'empty';if(!RDB||!UID)return'offline';
+ try{const cur=(await RDB.ref('names/'+k).get()).val();if(cur&&cur!==UID)return'taken';if(!cur)await RDB.ref('names/'+k).set(UID);
+  const old=localStorage.getItem('kx-name-key');if(old&&old!==k){try{const ov=(await RDB.ref('names/'+old).get()).val();if(ov===UID)await RDB.ref('names/'+old).remove()}catch(e){}}
+  localStorage.setItem('kx-name-key',k);return'ok'}catch(e){return(e&&String(e.code||e.message||'').toLowerCase().includes('permission'))?'taken':'offline'}}
+async function releaseName(){const k=localStorage.getItem('kx-name-key');if(!k||!RDB||!UID)return;try{const v=(await RDB.ref('names/'+k).get()).val();if(v===UID)await RDB.ref('names/'+k).remove()}catch(e){}try{localStorage.removeItem('kx-name-key')}catch(e){}}
+async function saveProfileName(){const nm=(ui.pn||'').trim();if(!nm||ui.pnBusy)return;if(/^(spieler|bot) ?\d*$/i.test(nm)){ui.pnErr='Bitte wähle einen eigenen Namen.';render();return}
+ ui.pnBusy=true;render();const r=await claimName(nm);ui.pnBusy=false;
+ if(r==='taken'){ui.pnErr='„'+nm+'“ ist leider schon vergeben.';render();return}
+ if(r==='offline'){ui.pnErr='Keine Verbindung – der Name konnte nicht geprüft werden.';render();return}
+ const old=(setup.myName||'').trim();setup.myName=nm;try{localStorage.setItem('kx-myname',nm)}catch(e){}if(setup.names[0]===old||/^Spieler \d$/.test(setup.names[0]||''))setup.names[0]=nm;ui.pn=null;ui.pnErr='';cloudQueue();render();toast('Name gespeichert ✓')}
+async function nameCheck(){const nm=(setup.myName||'').trim();if(!nm||!RDB||!UID)return;if(localStorage.getItem('kx-name-key')===nameKey(nm)){try{const v=(await RDB.ref('names/'+nameKey(nm)).get()).val();if(v===UID)return;if(!v){await RDB.ref('names/'+nameKey(nm)).set(UID);return}}catch(e){return}}
+ const r=await claimName(nm);if(r==='taken'){toast('Dein Name „'+nm+'“ ist schon vergeben – bitte wähle einen neuen');ui.pn='';ui.pnErr='„'+nm+'“ benutzt schon jemand anderes. Bitte wähle einen neuen Namen.';if(view==='home'&&!S&&!ui.splashLock){view='profile';render()}}}
 /* ---------- Start-Animation mit Sound ---------- */
 function splashAudio(a,T){const M=mix(a);
  const boom=(t,f,v)=>{osc(a,t,{type:'sine',f:f,f2:f*0.3,att:.004,dec:1.6,vol:v,rev:.18});osc(a,t,{type:'triangle',f:f*2.2,f2:f*.55,att:.002,dec:.32,vol:v*.42,rev:.2});
