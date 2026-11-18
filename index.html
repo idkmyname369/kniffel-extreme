@@ -1433,7 +1433,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
  }});
 /* ===== Extras: Sound, Effekte, Rückgängig, Präsenz, Erinnerung, Statistik ===== */
 let AC=null;const SND={on:(()=>{try{return localStorage.getItem('kx-sound')!=='0'}catch(e){return true}})()};
-function audio(){if(!SND.on)return null;try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C()}if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+function audio(){if(!SND.on)return null;try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C()}if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
 function buzz(p){try{if(SND.on&&navigator.vibrate)navigator.vibrate(p)}catch(e){}}
 function nbuf(a,dur){const b=a.createBuffer(1,Math.max(1,Math.floor(a.sampleRate*dur)),a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
 function tone(a,f,t0,dur,type,vol,f2){const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t0+dur);g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(vol||0.2,t0+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);o.connect(g);g.connect(a.destination);o.start(t0);o.stop(t0+dur+0.05)}
