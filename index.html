@@ -1433,7 +1433,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
  }});
 /* ===== Extras: Sound, Effekte, Rückgängig, Präsenz, Erinnerung, Statistik ===== */
 let AC=null;const SND={on:(()=>{try{return localStorage.getItem('kx-sound')!=='0'}catch(e){return true}})()};
-function audio(){if(!SND.on)return null;try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C()}if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+function audio(){if(!SND.on)return null;try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();try{primeSample(AC,'card')}catch(e){}}if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
 function buzz(p){try{if(SND.on&&navigator.vibrate)navigator.vibrate(p)}catch(e){}}
 function nbuf(a,dur){const b=a.createBuffer(1,Math.max(1,Math.floor(a.sampleRate*dur)),a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
 function tone(a,f,t0,dur,type,vol,f2){const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t0+dur);g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(vol||0.2,t0+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);o.connect(g);g.connect(a.destination);o.start(t0);o.stop(t0+dur+0.05)}
@@ -1450,6 +1450,13 @@ function env(a,g,t0,att,peak,dec,curve){g.gain.setValueAtTime(0.0001,t0);g.gain.
 function noiseHit(a,t0,o){const s=nsrc(a,(o.att||0.002)+o.dec+0.05,o.pink);let n=s;(o.filters||[]).forEach(([type,f,q,f2])=>{const fl=a.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,t0);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,t0+(o.att||0.002)+o.dec);if(q)fl.Q.value=q;n.connect(fl);n=fl});const g=a.createGain();env(a,g,t0,o.att||0.002,o.vol,o.dec);n.connect(g);route(a,g,o.rev||0,o.pan||0);s.start(t0);s.stop(t0+(o.att||0.002)+o.dec+0.05)}
 function osc(a,t0,o){const s=a.createOscillator();s.type=o.type||'sine';s.frequency.setValueAtTime(o.f,t0);if(o.f2)s.frequency.exponentialRampToValueAtTime(o.f2,t0+(o.att||0.003)+o.dec);const g=a.createGain();env(a,g,t0,o.att||0.003,o.vol,o.dec);let n=s;if(o.lp){const fl=a.createBiquadFilter();fl.type='lowpass';fl.frequency.value=o.lp;s.connect(fl);n=fl}n.connect(g);route(a,g,o.rev||0,o.pan||0);s.start(t0);s.stop(t0+(o.att||0.003)+o.dec+0.05)}
 function bell(a,t0,f,vol,dec,rev){const c=a.createOscillator(),m=a.createOscillator(),mg=a.createGain(),g=a.createGain();c.frequency.value=f;m.frequency.value=f*3.5;mg.gain.setValueAtTime(f*2.2,t0);mg.gain.exponentialRampToValueAtTime(f*0.05,t0+dec);m.connect(mg);mg.connect(c.frequency);env(a,g,t0,0.002,vol,dec);c.connect(g);route(a,g,rev==null?0.35:rev);c.start(t0);m.start(t0);c.stop(t0+dec+0.1);m.stop(t0+dec+0.1)}
+/* Aufgenommene Geräusche */
+const SAMP={raw:{},buf:{}};
+function loadSample(n){if(SAMP.raw[n])return;SAMP.raw[n]=fetch('snd/'+n+'.m4a?v=1').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null)}
+function primeSample(a,n){loadSample(n);if(SAMP.buf[n]&&SAMP.buf[n].ctx===a)return;SAMP.buf[n]={ctx:a,b:null};SAMP.raw[n].then(ab=>{if(!ab)return;try{a.decodeAudioData(ab.slice(0),d=>{SAMP.buf[n]={ctx:a,b:d}},()=>{})}catch(e){}})}
+function playSample(a,n,vol){const b=SAMP.buf[n];if(b&&b.ctx===a&&b.b){const s=a.createBufferSource();s.buffer=b.b;const g=a.createGain();g.gain.value=vol||1;s.connect(g);route(a,g,.06);s.start(a.currentTime);return true}
+ primeSample(a,n);return false}
+loadSample('card');
 function cardSlide(a,t){const D=.36;
  const n=nsrc(a,D+.2,true),bp=a.createBiquadFilter();bp.type='bandpass';bp.Q.value=1.6;bp.frequency.setValueAtTime(2000,t);bp.frequency.linearRampToValueAtTime(3300,t+.14);bp.frequency.linearRampToValueAtTime(2500,t+D);
  const hp=a.createBiquadFilter();hp.type='highpass';hp.frequency.value=900;hp.Q.value=.5;
@@ -1468,7 +1475,7 @@ const sfx={
     noiseHit(a,tt,{att:0.002,dec:0.06,vol:0.3*v,filters:[['bandpass',380,1.5]],pan})}
     tt+=gap;gap*=0.68+Math.random()*0.1}}
   buzz(25)},
- flip(){const a=audio();if(!a)return;cardSlide(a,a.currentTime)},
+ flip(){const a=audio();if(!a)return;if(!playSample(a,'card',.95))cardSlide(a,a.currentTime)},
  reveal(){const a=audio();if(!a)return;const t=a.currentTime;sfx.flip();bell(a,t+0.12,1568,0.06,0.9,0.5);bell(a,t+0.2,2349,0.04,0.8,0.5)},
  boom(){const a=audio();if(!a)return;const t=a.currentTime;
   noiseHit(a,t,{dec:0.012,vol:0.9,filters:[['highpass',900]],rev:0.3});
