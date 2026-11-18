@@ -88,6 +88,7 @@ html,body{touch-action:manipulation}
 @keyframes glw3{0%{opacity:0;transform:scale(.6)}15%{opacity:.6}100%{opacity:0;transform:scale(1.05)}}
 @keyframes splashRise{from{opacity:0;transform:translateY(18px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
 .splash #app>*:not(.homelogo),.splashwait #app>*:not(.homelogo),.splashwait .homelogo .hl>*{opacity:0}
+.splash #app,.splashwait #app{pointer-events:none}
 .tapstart{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:transparent;-webkit-tap-highlight-color:transparent;cursor:pointer;transition:opacity .35s}
 .tapstart .ts1{font-family:Lora,Georgia,serif;font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:rgba(255,215,130,.55)}
 .tapstart .ts2{font-size:17px;font-weight:600;letter-spacing:.06em;color:#ffd98a;animation:tsp 1.8s ease-in-out infinite}
@@ -1971,7 +1972,7 @@ function splashAudio(a,T){const M=mix(a);
 function runSplash(){const h=document.documentElement;h.classList.remove('splashq');if(view!=='home'||S||ui.autoInv||JP.c||JP.g)return;
  const a=document.getElementById('app');if(!a||!a.querySelector('.homelogo'))return;h.classList.add('splashwait');ui.splashLock=true;
  const ov=document.createElement('div');ov.className='tapstart';ov.innerHTML='<div class="ts3"></div><div class="ts2">Tippen zum Starten</div>';document.body.appendChild(ov);
- let go=false;const start=e=>{if(go)return;go=true;e&&e.preventDefault&&e.preventDefault();ov.style.opacity='0';setTimeout(()=>ov.remove(),400);startSplash()};
+ let go=false;const start=e=>{if(go)return;go=true;e&&e.preventDefault&&e.preventDefault();ov.style.opacity='0';setTimeout(()=>ov.remove(),1200);const eat=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener('click',eat,true);setTimeout(()=>document.removeEventListener('click',eat,true),1200);startSplash()};
  ov.addEventListener('pointerdown',start);ov.addEventListener('click',start)}
 function startSplash(){const h=document.documentElement,a=document.getElementById('app');h.classList.remove('splashwait');h.classList.add('splash');
  [...a.children].filter(c=>!c.classList.contains('homelogo')).forEach((c,i)=>{c.style.animation='splashRise .8s cubic-bezier(.2,.7,.2,1) '+(2.3+i*.09).toFixed(2)+'s both'});
