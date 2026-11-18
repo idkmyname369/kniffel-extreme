@@ -1970,15 +1970,20 @@ function splashAudio(a,T){const M=mix(a);
  pad(T+4.2,[48,55,60,64,67,72,76],3.8,.68,2900);
  noiseHit(a,T+3.55,{att:.65,dec:.6,vol:.05,filters:[['highpass',7000,.5],['lowpass',12000,.5]],rev:.7})}
 function runSplash(){const h=document.documentElement;h.classList.remove('splashq');if(view!=='home'||S||ui.autoInv||JP.c||JP.g)return;
- const a=document.getElementById('app');if(!a||!a.querySelector('.homelogo'))return;h.classList.add('splashwait');ui.splashLock=true;
+ const a=document.getElementById('app');if(!a||!a.querySelector('.homelogo'))return;h.classList.add('splashwait');ui.splashLock=true;splashPrerender();
  const ov=document.createElement('div');ov.className='tapstart';ov.innerHTML='<div class="ts3"></div><div class="ts2">Tippen zum Starten</div>';document.body.appendChild(ov);
  let go=false;const start=e=>{if(go)return;go=true;e&&e.preventDefault&&e.preventDefault();ov.style.opacity='0';setTimeout(()=>ov.remove(),1200);const eat=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener('click',eat,true);setTimeout(()=>document.removeEventListener('click',eat,true),1200);startSplash()};
- ov.addEventListener('pointerdown',start);ov.addEventListener('click',start)}
+ ov.addEventListener('click',start);ov.addEventListener('touchend',start)}
 function startSplash(){const h=document.documentElement,a=document.getElementById('app');h.classList.remove('splashwait');h.classList.add('splash');
  [...a.children].filter(c=>!c.classList.contains('homelogo')).forEach((c,i)=>{c.style.animation='splashRise .8s cubic-bezier(.2,.7,.2,1) '+(2.3+i*.09).toFixed(2)+'s both'});
- try{const A=audio();if(A){const T=A.currentTime+.03;splashAudio(A,T)}}catch(e){}
+ splashPlay();
  const end=()=>{if(!h.classList.contains('splash'))return;h.classList.remove('splash');[...a.children].forEach(c=>c.style.animation='');document.removeEventListener('pointerdown',end,true);ui.splashLock=false;if(ui.splashPend){ui.splashPend=false;render()}};
  setTimeout(end,5200);setTimeout(()=>document.addEventListener('pointerdown',end,true),400)}
+function splashPrerender(){if(splashPrerender.p||!SND.on)return;const C=window.OfflineAudioContext||window.webkitOfflineAudioContext;if(!C)return;
+ splashPrerender.p=new Promise(res=>{setTimeout(()=>{try{const sr=44100,o=new C(2,sr*9,sr);const keep=MIX;MIX=null;splashAudio(o,0.02);MIX=keep;const r=o.startRendering();if(r&&r.then)r.then(b=>res(b),()=>res(null));else o.oncomplete=e=>res(e.renderedBuffer)}catch(e){res(null)}},30)})}
+function splashPlay(){const A=audio();if(!A)return;try{const b=A.createBuffer(1,1,22050),s0=A.createBufferSource();s0.buffer=b;s0.connect(A.destination);s0.start(0)}catch(e){}
+ const t0=performance.now();const go=buf=>{const late=(performance.now()-t0)/1000;const run=()=>{try{if(buf){const src=A.createBufferSource();src.buffer=buf;src.connect(A.destination);src.start(A.currentTime+.01,Math.min(late,1))}else splashAudio(A,A.currentTime+.03-late)}catch(e){}};if(A.state!=='running'&&A.resume)A.resume().then(run,run);else run()};
+ if(splashPrerender.p)Promise.race([splashPrerender.p,new Promise(r=>setTimeout(()=>r(null),250))]).then(go);else go(null)}
 window.runSplash=runSplash;
 
 render();
