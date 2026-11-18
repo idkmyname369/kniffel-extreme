@@ -14,3 +14,6 @@ window.PUSH_URL = 'https://kn1ffel-push.joshbeatzz.workers.dev';
 
 // Anmeldung mit Apple (braucht ein kostenpflichtiges Apple-Entwicklerkonto). Auf true setzen, sobald eingerichtet.
 window.APPLE_SIGNIN = false;
+
+// OAuth-Client-ID für „Mit Google anmelden“ (Weiterleitung statt Popup, nötig für die Home-Bildschirm-App)
+window.GOOGLE_CLIENT_ID = '';

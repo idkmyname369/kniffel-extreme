@@ -455,7 +455,7 @@ body.remind::after{content:"";position:fixed;inset:0;pointer-events:none;z-index
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="firebase-config.js?v=6"></script>
+<script src="firebase-config.js?v=7"></script>
 <script>
 /* ---------- Würfel-Logik (6 Würfel) ---------- */
 const cnt=(d,v)=>d.filter(x=>x===v).length;
@@ -1728,7 +1728,17 @@ async function authEmail(){const A=ui.auth;if(!A||A.busy)return;const em=(A.emai
   else{const cu=AU.currentUser;const cred=firebase.auth.EmailAuthProvider.credential(em,pw);const cr=cu?await cu.linkWithCredential(cred):await AU.createUserWithEmailAndPassword(em,pw);AUTHU=cr.user;A.busy=false;cloudQueue(true);view='profile';render();toast('Spielstand gesichert ✓')}}
  catch(e){A.busy=false;A.err=authErrText(e);render()}}
 async function authReset(){const A=ui.auth,em=(A&&A.email||'').trim();if(!em){A.err='Gib zuerst deine E-Mail ein.';render();return}try{await firebase.auth().sendPasswordResetEmail(em);toast('E-Mail zum Zurücksetzen verschickt')}catch(e){A.err=authErrText(e);render()}}
+function googleRedirect(mode){const n=Math.random().toString(36).slice(2)+Date.now().toString(36);try{localStorage.setItem('kx-gauth',JSON.stringify({n,mode,t:Date.now()}))}catch(e){}
+ const q=new URLSearchParams({client_id:window.GOOGLE_CLIENT_ID,redirect_uri:appBase(),response_type:'id_token',scope:'openid email profile',nonce:n,state:'kxg',prompt:'select_account'});joinCover(true,'Weiter zu Google …');location.href='https://accounts.google.com/o/oauth2/v2/auth?'+q.toString()}
+const GRET=(()=>{try{if(!location.hash||location.hash.indexOf('state=kxg')<0)return null;const q=new URLSearchParams(location.hash.slice(1));history.replaceState(null,'',location.pathname+location.search);let st={};try{st=JSON.parse(localStorage.getItem('kx-gauth'))||{}}catch(e){}localStorage.removeItem('kx-gauth');return{tok:q.get('id_token'),err:q.get('error'),mode:st.mode||'link'}}catch(e){return null}})();
+if(GRET)joinCover(true,'Anmeldung wird abgeschlossen …');
+async function googleFinish(){const G=GRET;if(!G)return;if(!G.tok){joinCover(false);if(G.err&&G.err!=='access_denied')infoSheet('Anmeldung nicht möglich','Google hat die Anmeldung abgelehnt ('+G.err+').');return}
+ const AU=firebase.auth(),cred=firebase.auth.GoogleAuthProvider.credential(G.tok),cu=AU.currentUser;
+ try{if(cu&&cu.isAnonymous){try{const cr=await cu.linkWithCredential(cred);AUTHU=cr.user;cloudQueue(true);joinCover(false);view='profile';render();toast('Spielstand gesichert ✓');return}catch(e){if(e.code!=='auth/credential-already-in-use'&&e.code!=='auth/email-already-in-use')throw e;await cloudFlush();const cr=await AU.signInWithCredential(e.credential||cred);joinCover(false);await authSwitched(cr.user);return}}
+  await cloudFlush();const cr=await AU.signInWithCredential(cred);joinCover(false);await authSwitched(cr.user)}
+ catch(e){joinCover(false);infoSheet('Anmeldung nicht möglich',authErrText(e))}}
 async function authProvider(p){if(typeof firebase==='undefined'||!firebase.apps.length){toast('Keine Verbindung zum Server');return}
+ if(p==='google'&&window.GOOGLE_CLIENT_ID){googleRedirect('link');return}
  const prov=p==='apple'?new firebase.auth.OAuthProvider('apple.com'):new firebase.auth.GoogleAuthProvider();if(p==='apple'){prov.addScope('email');prov.addScope('name')}else prov.setCustomParameters({prompt:'select_account'});
  const AU=firebase.auth(),cu=AU.currentUser;
  try{if(cu&&cu.isAnonymous){try{const cr=await cu.linkWithPopup(prov);AUTHU=cr.user;cloudQueue(true);view='profile';render();toast('Spielstand gesichert ✓');return}
@@ -1880,7 +1890,7 @@ function invWait(){ui.autoInv=Date.now();const t0=ui.autoInv;joinCover(true);set
 if(JP.c){setup.joinCode=JP.c;view='join';if((setup.myName||'').trim())joinCover(true,'Trete der Lobby bei …')}if(JP.inv)invWait();if(JP.g)joinCover(true,'Spiel wird geöffnet …');
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',m=>{if(m.data&&m.data.kx==='inv'){invWait();showInvites()}if(m.data&&m.data.kx==='game')openByCode(String(m.data.code||'').toUpperCase())});
 function frBackfill(){try{if(localStorage.getItem('kx-fr-bf'))return;Object.values(GAMES).forEach(g=>{try{const r=JSON.parse(g.json);if(!r.online)return;const st={};r.players.forEach(q=>{if(q.uid)st[q.uid]={name:q.name}});frRecord(st)}catch(e){}});localStorage.setItem('kx-fr-bf','1')}catch(e){}}
-async function afterCloud(){if(UID){rememberUid();await cloudPull(false);xpBackfill();frBackfill();if(view==='home'&&!S)render()}invListen();pushRefresh();if(JP.g){openByCode(JP.g);JP.g='';joinCover(false)}if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c)){try{await mpJoin()}catch(e){}joinCover(false)}}
+async function afterCloud(){if(GRET&&UID)await googleFinish();if(UID){rememberUid();await cloudPull(false);xpBackfill();frBackfill();if(view==='home'&&!S)render()}invListen();pushRefresh();if(JP.g){openByCode(JP.g);JP.g='';joinCover(false)}if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c)){try{await mpJoin()}catch(e){}joinCover(false)}}
 
 /* Wischen zum Löschen (Mitspieler-Liste) */
 (()=>{let row=null,x0=0,y0=0,dx=0,base=0,mode=null;const W=96;
