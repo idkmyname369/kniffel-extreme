@@ -187,7 +187,7 @@ html,body{touch-action:manipulation}
 .grab{width:36px;height:5px;border-radius:3px;background:#55565c;margin:0 auto 14px}
 .sheet h2{font-size:22px;font-weight:700;margin:0 0 3px;letter-spacing:-.02em}
 .sheet .muted{color:var(--sec);font-size:14px;margin:0 0 16px;line-height:1.4}
-.calc{background:var(--card2);border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:15px;color:var(--sec)}
+.calc{background:var(--card2);border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:15px;color:var(--sec)}.calc:empty{display:none}
 .calc .big{font-size:34px;font-weight:700;color:var(--text);letter-spacing:-.02em;margin-top:2px;font-variant-numeric:tabular-nums}
 .calc .note{margin-top:8px;color:#6bd8eb;font-size:13.5px}
 .quick{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
@@ -248,6 +248,10 @@ td small{color:#ffb340;font-size:10px;margin-left:3px}
 .lk-st{display:inline-block;margin-top:9px;padding:5px 12px;border-radius:20px;font-size:14px;font-weight:600}
 .lk-st.ok{background:rgba(48,209,88,.18);color:#5be37f}
 .lk-st.no{background:rgba(255,255,255,.08);color:var(--sec)}
+.oppban{position:fixed;left:10px;right:10px;top:calc(env(safe-area-inset-top) + 8px);z-index:450;display:flex;gap:11px;align-items:flex-start;padding:11px 13px;border-radius:20px;background:rgba(44,44,48,.82);backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 .5px rgba(255,255,255,.08);transform:translateY(-130%);transition:transform .38s cubic-bezier(.2,.9,.25,1.1);max-width:520px;margin:0 auto}.oppban.in{transform:none}
+.ob-ic{flex:none;width:38px;height:38px;border-radius:9px;background:#141416;display:flex;align-items:center;justify-content:center;overflow:hidden}.ob-ic img{width:30px;height:auto}
+.ob-h{display:flex;justify-content:space-between;font-weight:700;font-size:15px}.ob-t{font-weight:400;font-size:13px;color:var(--sec)}.ob-m{font-size:14.5px;margin-top:1px}.ob-m b{color:#ffd257}.ob-s{font-size:13px;color:var(--sec);margin-top:2px}
+.potbar{width:100%;text-align:left;font-family:inherit;}.potinfo{font-size:13px;opacity:.6;margin-left:2px}.potrow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--sep)}.potrow:last-child{border-bottom:0}
 .potbar{display:flex;align-items:center;gap:8px;margin:-6px 0 14px;padding:9px 13px;border-radius:12px;background:linear-gradient(90deg,rgba(255,204,64,.14),rgba(255,204,64,.04)),var(--bg);border:1px solid rgba(255,204,64,.22);color:#ffd257;font-size:14px;font-weight:600}
 .potbar b{font-size:17px;font-variant-numeric:tabular-nums;margin-left:auto}
 .potbar.bump{animation:potb .7s}
@@ -696,7 +700,12 @@ let POT_MIN=40,POT_FROM=4,POT_W0=1.5,POT_DIV=25,POT_WMAX=6,POT_REP=true;
 function pV(q){let v=(q.ua||0)+(q.adj||0)+(q.kb||0);for(const k in q.sc)v+=q.sc[k].final||0;return v}
 function potSnap(){return S.players.map(pV)}
 function trackHarm(ps,actor){S.harm=S.harm||{};S.players.forEach((q,i)=>{if(i!==actor&&pV(q)<ps[i])S.harm[i]=actor})}
-function potCharge(ps,transfer,scorer,expect){if(!S.potOn)return 0;let lo=0,ga=0;S.players.forEach((q,i)=>{const b=ps[i]+(i===scorer?expect:0),a=pV(q);if(a<b)lo+=b-a;else ga+=a-b});const n=Math.round(transfer?Math.max(0,lo-ga):lo);if(n>0){S.pot=(S.pot||0)+n}return n}
+const YOU=[["Halte in deinen nächsten Zügen oben die Schaltfläche gedrückt, um die Gesamtpunkte zu sehen.","$ sieht in den nächsten Zügen die Gesamtpunkte."],["Dir hat noch niemand Punkte genommen","$ wurden noch keine Punkte genommen"],["Rettungsring! Du hättest streichen müssen – stattdessen wiederholst du den ganzen Zug.","Rettungsring! $ hätte streichen müssen – stattdessen wiederholt $ den ganzen Zug."],["streiche eine deiner Wertungen","$ streicht eine eigene Wertung"],["Diese Runde musst du werfen","Diese Runde muss $ werfen"],["Erst würfeln und deine Kategorie wählen – danach wird die Karte aufgedeckt.","Die Karte wird aufgedeckt, sobald $ gewertet hat."],["Pechsträhne: Deine Wertung","Pechsträhne: Die Wertung von $"],["Du hast alle aktiven Ereigniskarten schon bekommen.","$ hat alle aktiven Ereigniskarten schon bekommen."],["nach deinem ersten Wurf","nach dem ersten Wurf von $"],["nach deinem Zug","nach dem Zug von $"],["welche Würfel du hältst","welche Würfel $ hält"],["in welcher Kategorie du wertest","in welcher Kategorie $ wertet"],["Diese Runde wertest du","Diese Runde wertet $"],["Schaffst du sie","Schafft $ sie"],["schaffst du eine","schafft $ eine"],["Nur du siehst","Nur $ sieht"],["Du gibst niemandem","$ gibt niemandem"],["Deine bonusrelevanten Punkte","Die bonusrelevanten Punkte von $"],["Dein Konto","Das Konto von $"],["gehören jetzt dir","gehören jetzt $"],["Bei dir gestrichen","Bei $ gestrichen"],["liegt jetzt bei dir","liegt jetzt bei $"],["dein Wurf","der Wurf von $"],["Dein Wurf","Der Wurf von $"],["Du hast","$ hat"],["du hast","$ hat"],["du bekommst","$ bekommt"],["Du darfst","$ darf"],["du darfst","$ darf"]];
+function youN(t,n){if(!t)return t;let r=String(t);YOU.forEach(([a,b])=>{r=r.split(a).join(b.split('$').join(n))});return r}
+function potWhy(){const t=S.turn,ev=t&&t.ev&&EV[t.ev];if(t&&t.bet&&!ev)return'Wette verloren';return ev?'Karte „'+ev.title+'“':'Wertung'}
+function potAdd(i,v,why){if(!(v>0))return;const q=S.players[i];S.potLog=(S.potLog||[]).concat([{n:q?q.name:'?',c:q&&q.color!=null?q.color:null,v:Math.round(v),w:why||potWhy()}]).slice(-40)}
+function potCharge(ps,transfer,scorer,expect){if(!S.potOn)return 0;let lo=0,ga=0;const L=[];S.players.forEach((q,i)=>{const b=ps[i]+(i===scorer?expect:0),a=pV(q);if(a<b){lo+=b-a;L.push([i,b-a])}else ga+=a-b});const n=Math.round(transfer?Math.max(0,lo-ga):lo);
+ if(n>0){S.pot=(S.pot||0)+n;if(transfer||Math.round(lo)!==n){const tot=L.reduce((x,y)=>x+y[1],0)||1;L.forEach(([i,v])=>potAdd(i,v*n/tot))}else L.forEach(([i,v])=>potAdd(i,v))}return n}
 const CARD_W={topf:1,aon:0.6,krain:0.6,crown:0.6,bet:3,retry:4.5,shield:2,b100x2:2,swap:2,sacrifice:2,block:1.15};
 function cw(id){return id==='topf'?Math.min(POT_WMAX,Math.max(POT_W0,(S.pot||0)/POT_DIV)):(CARD_W[id]||1)}
 function wpick(c){const tw=c.reduce((a,id)=>a+cw(id),0);let r=Math.random()*tw;for(const id of c){r-=cw(id);if(r<=0)return id}return c[c.length-1]}
@@ -759,7 +768,7 @@ function drawEvent(){const t=S.turn,p=S.players[S.cur];const __ps=S.potOn?potSna
  else if(ev.now==='peek'){p.peekUntil=(CATS.length-openCats(p).length)+3;t.note=S.online?'Nur du siehst jetzt 3 Runden lang die Gesamtpunkte aller Spieler. Dein Wurf zählt diesen Zug ×3.':'Halte in deinen nächsten Zügen oben die Schaltfläche gedrückt, um die Gesamtpunkte zu sehen. Dein Wurf zählt diesen Zug ×3.'}
  else if(ev.now==='krain'){const n=kniffelCount();const g=n.k*50+n.e*75;p.adj=(p.adj||0)+g;t.note=(n.k||n.e)?'Bisher gewürfelt: '+n.k+'× Kniffel und '+n.e+'× Kniffel Extreme – du bekommst +'+g+' Punkte. Jetzt normal würfeln.':'Bisher wurde noch kein Kniffel gewürfelt – die Karte verfällt. Dafür zählt dein Wurf diesen Zug ×4.';if(!(n.k||n.e))t.voidMult=4}
  else if(ev.now==='bomb'){const n=S.players.length;S.bomb={holder:S.cur,left:n+1+Math.floor(Math.random()*(2*n))};t.note='Die Bombe liegt jetzt bei dir und wandert nach deinem Zug weiter. Jetzt normal würfeln.'}
- else if(ev.now==='topf'){const g=S.pot||0;p.adj=(p.adj||0)+g;S.pot=0;t.note=g+' Punkte aus dem Tresor gehören jetzt dir. Jetzt normal würfeln.'}
+ else if(ev.now==='topf'){const g=S.pot||0;p.adj=(p.adj||0)+g;S.pot=0;S.potLog=[];t.note=g+' Punkte aus dem Tresor gehören jetzt dir. Jetzt normal würfeln.'}
  else if(ev.now==='crown'){const best=CATS.map(c=>({c,e:p.sc[c.id]})).filter(x=>x.e&&x.e.final>0).sort((a,b)=>b.e.final-a.e.final)[0];if(!best){t.voidMult=4;t.note='Du hast noch keine Punkte – die Karte verfällt. Dafür zählt dein Wurf diesen Zug ×4.'}else{const o=best.e.final;best.e.final=o*3;addTag(best.e,'×3');t.note='Krönung: „'+best.c.name+'“ '+o+' → '+best.e.final+'. Jetzt normal würfeln.'}}
  else if(ev.now){const best=CATS.map(c=>p.sc[c.id]).filter(e=>e&&e.final>0).sort((a,b)=>b.final-a.final)[0];const bc=best&&CATS.find(c=>p.sc[c.id]===best);
   if(!best){t.voidMult=4;t.note='Du hast noch keine Punkte – die Karte verfällt. Dafür zählt dein Wurf diesen Zug ×4.'}
@@ -801,7 +810,7 @@ function _applyPick(kind,key){const t=S.turn,me=S.players[S.cur];if(kind==='reve
 
 /* ---------- Verdeckte Effekte ---------- */
 const SLOT_SYM=['+25','×2','×3'];
-const FREE_ACT=new Set(['pickcol','setcol','cardinfo','viewp','board','menu','close','home','ddtoggle','askdel','del','new','open','mpnew','mpjoinview','mpcreate','mpjoin','mpstart','mpleave','mpcopy','cards','sound','undo','mprematch','profile','authview','authmode','authgo','authreset','authprov','logout','logoutok','acctdel','acctdelok','resetask','resetok','reauthgo','rxopen','rxsend','rxtog','askleave','leave','mpwa','mpshare','frfav','frinv','frdel','intro','stats','pushtog','pushtest']);
+const FREE_ACT=new Set(['pickcol','setcol','cardinfo','viewp','board','menu','close','home','ddtoggle','askdel','del','new','open','mpnew','mpjoinview','mpcreate','mpjoin','mpstart','mpleave','mpcopy','cards','sound','undo','mprematch','potlog','profile','authview','authmode','authgo','authreset','authprov','logout','logoutok','acctdel','acctdelok','resetask','resetok','reauthgo','rxopen','rxsend','rxtog','askleave','leave','mpwa','mpshare','frfav','frinv','frdel','intro','stats','pushtog','pushtest']);
 function spinSlots(m){if(m.spinning)return;m.spinning=true;const btn=document.getElementById('spinbtn');if(btn){btn.disabled=true;btn.textContent='Die Walzen drehen sich …'}
  const reels=[0,1,2].map(()=>rnd(SLOT_SYM));let v=m.amount;const steps=['Start: '+v];
  reels.forEach((res,i)=>{const strip=document.getElementById('strip'+i),win=document.getElementById('reel'+i);if(!strip||!win)return;const H=win.clientHeight;const n=26+i*10;let html='<div>'+strip.textContent+'</div>';for(let k=1;k<n;k++)html+='<div>'+SLOT_SYM[(k+i)%3]+'</div>';html+='<div>'+res+'</div>';strip.style.transition='none';strip.style.transform='translateY(0)';strip.innerHTML=html;void strip.offsetHeight;
@@ -870,7 +879,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  p.sc[target]=entry;
  trackHarm(__hs0,__sc);
  if(__ps){const betM=(t.bet&&t.bet.cats.includes(target)&&!(r>0))?t.bet.stake:0;const pn=potCharge(__ps,after==='gift'||after==='share',__sc,Math.max(0,r)+(kb||0)-betM);if(pn)entry.pot=pn}
- ui.viewP=null;S.last={who:p.name,cat:CAT[target].name,val:entry.final,ev:ev?ev.title:null};S.logN=(S.logN||0)+1;S.log=(S.log||[]).concat([{who:p.name,cat:CAT[target].name,val:entry.final,ev:ev?ev.title:null,kb:kb||0,res:res?res.text:null,bet:t.bet?t.bet.stake:null}]).slice(-10);if(res){S.rseq=(S.rseq||0)+1;S.lastReveal={seq:S.rseq,ev:ev.id,cat:target,res,kb,who:p.name,uid:p.uid||null,n:S.logN}}
+ ui.viewP=null;S.last={who:p.name,cat:CAT[target].name,val:entry.final,ev:ev?ev.title:null};S.logN=(S.logN||0)+1;S.log=(S.log||[]).concat([{who:p.name,pi:__sc,uid:p.uid||null,bot:!!p.bot,cat:CAT[target].name,val:entry.final,ev:ev?ev.title:null,kb:kb||0,res:res?res.text:null,bet:t.bet?t.bet.stake:null}]).slice(-10);if(res){S.rseq=(S.rseq||0)+1;S.lastReveal={seq:S.rseq,ev:ev.id,cat:target,res,kb,who:p.name,uid:p.uid||null,n:S.logN}}
  const reveal=after?{type:'reveal',ev:ev.id,cat:target,res,kb,phase:((after==='fate'&&!ctx.fdie)||after==='wheel')?'spin':'done',who:p.name}:null;
  if(S.hist){const vt=q=>{const T=totals(q);return T.total-T.bonus};S.hist.push({n:S.logN,tot:S.players.map(vt),who:__sc,cat:target,ev:ev?ev.id:null,raw:Math.max(0,r),fin:entry.final,kb:kb||0})}
  if(ev){S.ccount=S.ccount||{};S.ccount[ev.id]=(S.ccount[ev.id]||0)+1}
@@ -880,7 +889,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  else if(S.redo&&S.redo.active&&__sc===S.redo.pi){const nx=S.redo.next;ni=(nx!=null&&nx>=0&&nx!==__sc&&S.players[nx]&&openCats(S.players[nx]).length)?nx:nextIndex();S.redo=null}
  else if(S.redo&&!S.redo.active&&__sc!==S.redo.pi){S.redo.next=nextIndex();S.redo.active=true;ni=S.redo.pi;redoNow=true}
  else ni=nextIndex();
- if(S.bomb&&redoNow!=='resume'){S.bomb.left--;if(S.bomb.left<=0){const v=S.bomb.holder,vq=S.players[v];if(vq){vq.adj=(vq.adj||0)-50;if(S.potOn)S.pot=(S.pot||0)+50;S.bombBoom={who:v,n:S.logN};ui.boomPending=true}S.bomb=null}else if(ni>=0)S.bomb.holder=ni}
+ if(S.bomb&&redoNow!=='resume'){S.bomb.left--;if(S.bomb.left<=0){const v=S.bomb.holder,vq=S.players[v];if(vq){vq.adj=(vq.adj||0)-50;if(S.potOn){S.pot=(S.pot||0)+50;potAdd(v,50,'Zeitbombe explodiert')}S.bombBoom={who:v,n:S.logN};ui.boomPending=true}S.bomb=null}else if(ni>=0)S.bomb.holder=ni}
  if(ni<0){S.screen='end'}else{S.cur=ni;if(redoNow==='resume'){S.turn=S.redo.resume.turn;S.redo=null}else if(redoNow){S.turn=S.redo.turn}else{S.turn=freshTurn();if(S.hold&&S.hold.pi===ni)applyHold(S.hold)}}S.hold=null;save();
  const __bm=redoNow!==true;if(!after&&S.screen!=='end'&&!S.players[__sc].bot){ui.undo={json:__undo,post:JSON.stringify(S),id:S.id,ni:S.cur,filled:filledCount(),mode:__bm?'bot':'std',pi:__sc,cat:target,ent:JSON.stringify(entry),bi:S.cur,exp:Infinity,text:CAT[target].name+' = '+fmtN(entry.final)+' eingetragen'}}else ui.undo=null
  if(ui.boomPending){ui.boomPending=false;const BB=S.bombBoom;ui.seenBoom=BB&&BB.n;ui.fxPending=true;setTimeout(()=>bombFX(BB),250)}
@@ -1043,7 +1052,7 @@ function setupHTML(){
 
 function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='digital';const done=CATS.length-openCats(p).length;
  const vi=(ui.viewP!=null&&ui.viewP!==S.cur&&S.players[ui.viewP])?ui.viewP:S.cur,viewing=vi!==S.cur;
- const act=canAct(),mine=!S.online||act;
+ const act=canAct(),mine=!S.online||act,W=!act||(p&&p.bot),Y=x=>W?youN(x,esc(p.name)):x;
  let h='<div class="top"><div><div class="eyebrow">'+(S.online?'Online · '+esc(S.online.code)+' · ':'')+'Runde '+(done+1)+' von '+CATS.length+'</div></div><div style="display:flex;gap:8px;margin-top:4px">'+(!dig&&!viewing&&mine?'<button class="iconbtn accent" data-a="opendice">Würfel</button>':'')+'<button class="iconbtn" data-a="board">Tabelle</button><button class="iconbtn" data-a="menu">•••</button><button class="iconbtn undo-r" data-a="undo" aria-label="Rückgängig" '+(typeof undoOk==='function'&&undoOk()?'':'disabled')+'><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div></div>';
  if(S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran – du siehst live zu.</div>';
  else if(!S.online&&!act)h+='<div class="waitbar"><span class="pulse"></span>'+esc(actorName())+' ist dran …</div>';
@@ -1053,14 +1062,14 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
  if(S.players.length>1)h+='<div class="standings">'+S.players.map((q,i)=>'<button class="st nm '+(i===vi?'on':'')+'" style="--pc:'+pcolI(i).c+'" data-a="viewp" data-i="'+i+'"><div class="p">'+(S.online?'<span class="dot'+(isOnlineUid(q.uid)?'':' off')+'"></span>':(i===S.cur?'<span class="dot"></span>':''))+esc(q.name)+(S.bomb&&S.bomb.holder===i?' <span class="bombi">💣</span>':'')+(S.online&&q.uid===UID?' <span style="font-size:12px;opacity:.6">(du)</span>':'')+'</div><div class="n">'+(i===S.cur?'am Zug':'noch '+openCats(q).length+' offen')+(S.online&&!isOnlineUid(q.uid)?' · offline':'')+'</div>'+(canPeek()?'<div class="pts">'+fmtN(totals(q).total)+' P.</div>':'')+'</button>').join('')+'</div>';
  if(false){}
  else if(S.bomb&&S.players[S.bomb.holder])h+='<div class="bombbar"><span class="bombi">💣</span>Die Zeitbombe tickt bei '+nmC(S.bomb.holder)+'</div>';
- if(S.potOn){const pv=S.pot||0;h+='<div class="potbar'+(ui.lastPot!=null&&ui.lastPot!==pv?' bump':'')+'"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">🔑</span>Im Tresor<b>'+pv+'</b></div>';ui.lastPot=pv}
+ if(S.potOn){const pv=S.pot||0;h+='<button class="potbar'+(ui.lastPot!=null&&ui.lastPot!==pv?' bump':'')+'" data-a="potlog"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">🔑</span>Im Tresor<span class="potinfo">ⓘ</span><b>'+pv+'</b></button>';ui.lastPot=pv}
  if(viewing){const q=S.players[vi];h+='<div class="viewbar"><div class="grow"><div class="evt">Wertung von '+esc(q.name)+'</div><div class="evx">Hier kannst du dir die Wertung ansehen. Tippe eine eingetragene Wertung an, um einen Tippfehler zu korrigieren.</div></div></div><button class="btn tint" data-a="viewp" data-i="'+S.cur+'" style="margin-bottom:20px">Zurück zu '+esc(p.name)+' (am Zug)</button>'+sheetHTML(q,null);return h}
- if(p.half)h+='<div class="banner">Pechsträhne: Deine Wertung zählt diesmal nur die Hälfte.</div>';
- if(t.drawn&&t.none)h+=cardFront({g:'wertung',gl:'–'},'Keine Karte mehr','Du hast alle aktiven Ereigniskarten schon bekommen. Normal weiterspielen.','');
+ if(p.half)h+='<div class="banner">'+Y('Pechsträhne: Deine Wertung zählt diesmal nur die Hälfte.')+'</div>';
+ if(t.drawn&&t.none)h+=cardFront({g:'wertung',gl:'–'},'Keine Karte mehr',Y('Du hast alle aktiven Ereigniskarten schon bekommen. Normal weiterspielen.'),'');
  if(!t.drawn&&S.online&&!act)h+=cardBack('div','',esc(p.name)+' zieht gleich eine Karte');
  else if(!t.drawn)h+=cardBack('button','data-a="draw"','Vor deinem ersten Wurf antippen');
- else if(ev&&ev.after&&!ev.vis&&!t.retryRevealed)h+=cardFront(HIDDEN,'Verdeckte Karte','Erst würfeln und deine Kategorie wählen – danach wird die Karte aufgedeckt.','');
- else if(ev)h+=cardFront(ev,ev.title,ev.text,(t.note?'<div class="evnote">'+t.note+'</div>':'')+(t.pending?'<button class="btn" data-a="openpick">Karte ausführen</button>':''));
+ else if(ev&&ev.after&&!ev.vis&&!t.retryRevealed)h+=cardFront(HIDDEN,'Verdeckte Karte',Y('Erst würfeln und deine Kategorie wählen – danach wird die Karte aufgedeckt.'),'');
+ else if(ev)h+=cardFront(ev,ev.title,ev.text,(t.note?'<div class="evnote">'+Y(t.note)+'</div>':'')+(t.pending?'<button class="btn" data-a="openpick">Karte ausführen</button>':''));
  let dd='';{const oc=openCats(p).filter(c=>!t.drawn||t.pending||allowed(p,t,c));dd+='<div class="opendd'+(ui.openList?' on':'')+'"><button class="ddbtn" data-a="ddtoggle"><span>Noch offene Kategorien</span><span class="ddcount">'+oc.length+'</span><span class="ddchev">'+(ui.openList?'⌃':'⌄')+'</span></button>';
   if(ui.openList){const show=dig&&t.rolls>0&&!t.tool&&t.drawn&&!t.pending;dd+='<div class="ddlist">'+(()=>{const fv=c=>baseFinal(p,t,c.calc(dOf(t)),t.rolls,c.id).f;const good=c=>allowed(p,t,c)&&fv(c)>0;return show?[['Kannst du werten',oc.filter(good)],['Müsstest du streichen',oc.filter(c=>!good(c))]]:[['Oberer Teil',oc.filter(c=>c.sec==='oben')],['Unterer Teil',oc.filter(c=>c.sec==='unten')]]})().map(([lab,l])=>{if(!l.length)return'';return'<div class="sub-h">'+lab+'</div>'+l.map(c=>{const ok=allowed(p,t,c);let r='';if(isBlocked(t,c.id))r='<span class="blk">Gesperrt</span>';else if(t.lock===c.id)r='<span class="tag">Pflicht</span>';else if(show){const raw=c.calc(dOf(t));{const f=baseFinal(p,t,raw,t.rolls,c.id).f;r='<span class="pv '+(f>0?'':'zero')+(f<0?' negv':'')+'">'+fmtN(f)+'</span>'}}
    return'<button class="cell'+(t.drawn&&!t.pending&&!ok?' off':'')+'" data-a="cat" data-id="'+c.id+'"><div class="grow"><div class="ct">'+c.name+'</div></div>'+r+'</button>'}).join('')}).join('')+'</div>'}
@@ -1068,7 +1077,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
  if(!dig)h+=dd;
  const lock=!t.drawn||t.pending||(!S.online&&!act);
  if(t.drawn&&!t.pending&&t.lock&&!p.sc[t.lock]){const c=CAT[t.lock];let st='';if(dig&&t.rolls>0){const raw=c.calc(dOf(t)),f=baseFinal(p,t,raw,t.rolls,c.id).f;st=raw>0?'<div class="lk-st ok">✓ Geschafft – '+fmtN(f)+' Punkte</div>':'<div class="lk-st no">Noch nicht geschafft</div>'}
-  h+='<div class="lockbox"><div class="lk-k">Diese Runde musst du werfen</div><div class="lk-t">'+c.name+'</div><div class="lk-h">'+c.hint+'</div>'+st+'</div>'}
+  h+='<div class="lockbox"><div class="lk-k">'+Y('Diese Runde musst du werfen')+'</div><div class="lk-t">'+c.name+'</div><div class="lk-h">'+c.hint+'</div>'+st+'</div>'}
  let diceH='';const __h0=h.length;
  if(dig){const left=t.max-t.rolls;
   h+='<div class="dicebox '+(lock?'locked':'')+'">'+(S.online&&rxOn()?'<button class="rxbtn" data-a="rxopen" aria-label="Reaktion">😀</button>':'');
@@ -1178,6 +1187,7 @@ function modalHTML(){const m=ui.modal;
  if(m.type==='board')return boardHTML();
  if(m.type==='info')return'<div class="grab"></div><h2>'+esc(m.title)+'</h2><p class="muted">'+esc(m.text)+'</p><button class="btn gray" data-a="close">OK</button>';
  if(m.type==='reauth')return'<div class="grab"></div><h2>Passwort bestätigen</h2><p class="muted">Aus Sicherheitsgründen musst du vor dem Löschen kurz dein Passwort eingeben.</p><div class="group" style="margin-bottom:12px"><div class="cell"><input type="password" data-rp="1" autocomplete="current-password" placeholder="Passwort"></div></div>'+(m.err?'<p class="muted" style="color:var(--red)">'+esc(m.err)+'</p>':'')+'<div class="btnrow"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn red" data-a="reauthgo">Konto löschen</button></div>';
+ if(m.type==='potlog'){const L=(S&&S.potLog)||[];return'<div class="grab"></div><h2>🔑 Im Tresor: '+((S&&S.pot)||0)+'</h2><p class="muted">'+(L.length?'So sind die Punkte in den Tresor gekommen. Wer die Karte „Tresorschlüssel“ zieht, bekommt alles.':'Der Tresor ist leer. Punkte, die durch Karten verloren gehen, landen hier.')+'</p>'+(L.length?'<div class="group" style="padding:2px 14px;margin-bottom:14px;max-height:52vh;overflow:auto">'+L.slice().reverse().map(x=>'<div class="potrow"><div class="grow"><div class="ct" style="'+(x.c!=null&&PALETTE[x.c]?'color:'+PALETTE[x.c].l:'')+'">'+esc(x.n)+'</div><div class="cs">'+esc(x.w)+'</div></div><b style="color:#ffd257">+'+x.v+'</b></div>').join('')+'</div>':'')+'<button class="btn gray" data-a="close">OK</button>'}
  if(m.type==='confirm2')return'<div class="grab"></div><h2>'+esc(m.title)+'</h2><p class="muted">'+esc(m.text)+'</p><div class="btnrow"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn red" data-a="'+m.act+'">'+esc(m.ok)+'</button></div>';
  if(m.type==='levelup')return'<div class="grab"></div><div class="lvup"><div class="lvbadge big t'+lvTier(m.lv)+'">'+m.lv+'</div><h2>Level '+m.lv+' erreicht!</h2><p class="muted">Du bist jetzt <b>'+lvTitle(m.lv)+'</b>.</p></div><button class="btn" data-a="close">Weiter</button>';
  if(m.type==='edit'){const q=S.players[m.pi],c=CAT[m.id],e=q.sc[m.id];let qv=[];if(c.face)qv=[0,1,2,3,4,5,6].map(k=>k*c.face);else if(c.fixed)qv=[0,c.fixed];
@@ -1252,18 +1262,18 @@ function modalHTML(){const m=ui.modal;
   '<div class="btnrow"><button class="btn gray" data-a="'+(m.fromDice?'opendice':'close')+'">'+(m.fromDice?'Zurück':'Abbrechen')+'</button><button class="btn '+(m.raw?'':'red')+'" data-a="ok">'+(m.raw?'Eintragen':'Streichen')+'</button></div>'}
  if(m.type==='input'){let q=[];if(c.face)q=[0,1,2,3,4,5,6].map(k=>k*c.face);else if(c.fixed)q=[0,c.fixed];
   const noK=['ks','gs','hw','fh'].includes(m.id);const kbBox=kniffelEligible(p,m.id)&&!c.face&&m.id!=='ke'&&m.id!=='dpa'&&m.id!=='zd'&&m.id!=='gfh'&&!noK,keBox=keEligible(p,m.id)&&!c.face&&m.id!=='kn'&&!noK;
-  return'<div class="grab"></div><h2>'+c.name+'</h2><p class="muted">'+c.hint+'</p>'+(q.length?'<div class="quick">'+q.map(v=>'<button data-a="qv" data-v="'+v+'" class="'+(String(v)===m.val?'on':'')+'">'+(v===0?'Streichen':v)+'</button>').join('')+'</div>':'')+
-  '<div class="field"><input type="number" inputmode="numeric" id="numin" placeholder="Gewürfelte Punkte" value="'+m.val+'"></div>'+
+  const fx=!!c.fixed&&!c.face;if(fx&&m.val!=='0')m.val=String(c.fixed);
+  return'<div class="grab"></div><h2>'+c.name+'</h2><p class="muted">'+c.hint+'</p>'+(fx?'':'<div class="field"><input type="number" inputmode="numeric" id="numin" placeholder="Gewürfelte Punkte" value="'+(m.val==='0'?'':m.val)+'"></div>')+
   (ev&&ev.cost?'<div class="gtitle" style="padding:6px 2px">Wie oft hast du gewürfelt?</div><div class="seg" style="margin:0 0 10px">'+Array.from({length:t.max},(_,i)=>i+1).map(n=>'<button class="'+(m.rolls===n?'on':'')+'" data-a="mrolls" data-v="'+n+'">'+n+'×</button>').join('')+'</div>':'')+
   (kbBox?'<button class="cell chk" data-a="mkb"><div class="grow">Das war ein weiterer Kniffel (+50)</div>'+sw(m.kb)+'</button>':'')+
   (keBox?'<button class="cell chk" data-a="mke"><div class="grow">Das war ein weiterer Kniffel Extreme (+75)</div>'+sw(m.ke)+'</button>':'')+
   '<div class="err" id="err"></div><div class="calc" id="prev"></div>'+
   (canRetry?'<button class="btn tint" data-a="retry" style="margin-bottom:10px">Statt Streichen: Zug wiederholen</button>':'')+
-  '<div class="btnrow"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn" data-a="okin">Eintragen</button></div>'}
+  '<div class="btnrow"><button class="btn red" data-a="instrike">Streichen</button><button class="btn" data-a="okin">Eintragen'+(fx?' ('+c.fixed+')':'')+'</button></div>'}
  return''}
 
 function updatePreview(){const m=ui.modal;if(!m||m.type!=='input')return;const el=document.getElementById('prev');if(!el)return;const t=S.turn,p=S.players[S.cur];
- if(m.val===''){el.innerHTML='Punkte eingeben oder oben antippen.';return}
+ if(m.val===''){el.innerHTML='Gewürfelte Punkte eingeben.';return}
  const v=+m.val,L=effectLines(p,t,v,m.rolls,m.id,{kb:m.kb,ke:m.ke});
  el.innerHTML=(v?'Eingabe '+v:'Die Kategorie wird gestrichen.')+'<div class="big">'+L.b.f+' Punkte</div>'+L.html}
 
@@ -1342,6 +1352,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'frinv':sendInvite(b.dataset.k);break;
   case'frdel':{const f=frLoad(),k=b.dataset.k;if(f[k]){delete f[k];frSave(f);render()}break}
   case'pushtog':togglePush();break;
+  case'potlog':ui.modal={type:'potlog'};renderModal();break;
   case'profile':view='profile';render();window.scrollTo(0,0);break;
   case'authview':ui.auth={mode:b.dataset.m||'link',email:(ui.auth&&ui.auth.email)||'',err:''};view='auth';render();window.scrollTo(0,0);break;
   case'authmode':ui.auth.mode=b.dataset.m;ui.auth.err='';render();break;
@@ -1424,7 +1435,8 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'mrolls':m.rolls=+b.dataset.v;renderModal();break;
   case'mkb':m.kb=!m.kb;if(m.kb)m.ke=false;renderModal();break;
   case'mke':m.ke=!m.ke;if(m.ke)m.kb=false;renderModal();break;
-  case'okin':{const er=validate(CAT[m.id],m.val);if(er){document.getElementById('err').textContent=er;return}commit(m.id,+m.val,{rolls:m.rolls,kb:m.kb,ke:m.ke});break}
+  case'instrike':m.val='0';commit(m.id,0,{rolls:m.rolls,kb:false,ke:false});break;
+  case'okin':{const c0=CAT[m.id];if(c0.fixed&&!c0.face)m.val=String(c0.fixed);else if(!m.val||m.val==='0'){document.getElementById('err').textContent='Bitte die gewürfelten Punkte eintragen – oder Streichen.';return}const er=validate(c0,m.val);if(er){document.getElementById('err').textContent=er;return}commit(m.id,+m.val,{rolls:m.rolls,kb:m.kb,ke:m.ke});break}
   case'board':ui.modal={type:'board'};renderModal();break;
   case'menu':ui.modal={type:'menu'};renderModal();break;
   case'close':ui.modal=null;renderModal();break;
@@ -1452,7 +1464,7 @@ function osc(a,t0,o){const s=a.createOscillator();s.type=o.type||'sine';s.freque
 function bell(a,t0,f,vol,dec,rev){const c=a.createOscillator(),m=a.createOscillator(),mg=a.createGain(),g=a.createGain();c.frequency.value=f;m.frequency.value=f*3.5;mg.gain.setValueAtTime(f*2.2,t0);mg.gain.exponentialRampToValueAtTime(f*0.05,t0+dec);m.connect(mg);mg.connect(c.frequency);env(a,g,t0,0.002,vol,dec);c.connect(g);route(a,g,rev==null?0.35:rev);c.start(t0);m.start(t0);c.stop(t0+dec+0.1);m.stop(t0+dec+0.1)}
 /* Aufgenommene Geräusche */
 const SAMP={raw:{},buf:{}};
-function loadSample(n){if(SAMP.raw[n])return;SAMP.raw[n]=fetch('snd/'+n+'.m4a?v=2').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null)}
+function loadSample(n){if(SAMP.raw[n])return;if(typeof fetch!=='function'){SAMP.raw[n]=Promise.resolve(null);return}SAMP.raw[n]=fetch('snd/'+n+'.m4a?v=2').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null)}
 function primeSample(a,n){loadSample(n);if(SAMP.buf[n]&&SAMP.buf[n].ctx===a)return;SAMP.buf[n]={ctx:a,b:null};SAMP.raw[n].then(ab=>{if(!ab)return;try{a.decodeAudioData(ab.slice(0),d=>{SAMP.buf[n]={ctx:a,b:d}},()=>{})}catch(e){}})}
 function playSample(a,n,vol){const b=SAMP.buf[n];if(b&&b.ctx===a&&b.b){const s=a.createBufferSource();s.buffer=b.b;const g=a.createGain();g.gain.value=vol||1;s.connect(g);route(a,g,.06);s.start(a.currentTime);return true}
  primeSample(a,n);return false}
@@ -1959,6 +1971,18 @@ async function afterCloud(){if(GRET&&UID)await googleFinish();if(UID){rememberUi
   const stop=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener('click',stop,{capture:true,once:true});setTimeout(()=>document.removeEventListener('click',stop,{capture:true}),60)});
 })();
 
+/* Mitteilungs-Banner: was der Gegner gemacht hat */
+const BANQ=[];
+function logWatch(){if(!S||!S.log){return}if(ui.logSeenId!==S.id){ui.logSeenId=S.id;ui.logSeen=S.logN||0;return}const n=S.logN||0;if(n<=ui.logSeen){if(n<ui.logSeen)ui.logSeen=n;return}
+ const k=Math.min(n-ui.logSeen,S.log.length);ui.logSeen=n;S.log.slice(-k).forEach(e=>{const other=S.online?(!!e.uid&&e.uid!==UID):!!e.bot;if(other)BANQ.push(e)});pumpBanner()}
+function pumpBanner(){if(!BANQ.length||document.querySelector('.oppban'))return;if(ui.revHold||ui.fxPending||document.querySelector('.kfx,.bfx')){clearTimeout(pumpBanner.t);pumpBanner.t=setTimeout(pumpBanner,500);return}
+ const e=BANQ.shift(),q=S&&S.players[e.pi],col=q&&q.color!=null&&PALETTE[q.color]?PALETTE[q.color].l:'#fff';const strip=x=>String(x||'').replace(/<[^>]*>/g,'');
+ const main=e.val>0?esc(e.cat)+': <b>'+fmtN(e.val)+' Punkte</b>':esc(e.cat)+' <b>gestrichen</b>'+(e.val<0?' ('+fmtN(e.val)+')':'');
+ const sub=[e.ev?'Karte „'+esc(e.ev)+'“':'',e.kb?'+'+e.kb+' Kniffel-Bonus':'',e.res?esc(strip(e.res)):''].filter(Boolean).join(' · ');
+ const el=document.createElement('div');el.className='oppban';el.innerHTML='<div class="ob-ic"><img src="logo-k.webp?v=2" alt=""></div><div class="grow"><div class="ob-h"><span style="color:'+col+'">'+esc(e.who)+'</span><span class="ob-t">jetzt</span></div><div class="ob-m">'+main+'</div>'+(sub?'<div class="ob-s">'+sub+'</div>':'')+'</div>';
+ document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')));
+ const hide=()=>{if(!el.isConnected)return;el.classList.remove('in');setTimeout(()=>{el.remove();pumpBanner()},300)};el.onclick=hide;setTimeout(hide,4800)}
+setInterval(logWatch,400);
 /* ---------- Start-Animation mit Sound ---------- */
 function splashAudio(a,T){const M=mix(a);
  const boom=(t,f,v)=>{osc(a,t,{type:'sine',f:f,f2:f*0.3,att:.004,dec:1.6,vol:v,rev:.18});osc(a,t,{type:'triangle',f:f*2.2,f2:f*.55,att:.002,dec:.32,vol:v*.42,rev:.2});
