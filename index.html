@@ -368,7 +368,8 @@ button.cback:active{transform:scale(.985)}
 .rs-x{font-size:14px;color:var(--sec);margin-top:2px;line-height:1.35}
 .rs-v{font-size:14.5px;margin-top:5px}.rs-v span{color:var(--sec);font-size:13px}
 .revstrip.c-wuerfe{--c:#4da3ff;--cr:77,163,255}.revstrip.c-wertung{--c:#ffb340;--cr:255,159,10}.revstrip.c-bonus{--c:#d18cf7;--cr:191,90,242}.revstrip.c-spezial{--c:#ff6b88;--cr:255,55,95}
-.homelogo{display:flex;justify-content:center;margin:4px 0 6px}.homelogo img{width:min(46vw,190px);height:auto;filter:drop-shadow(0 10px 24px rgba(0,0,0,.5))}
+.fl #app{opacity:0}#app{transition:opacity .18s}
+.homelogo{display:flex;justify-content:center;margin:4px 0 6px}.homelogo img{width:min(46vw,190px);height:auto;aspect-ratio:576/725;filter:drop-shadow(0 10px 24px rgba(0,0,0,.5))}
 .evcard.rare{border:1px solid rgba(255,210,110,.75);box-shadow:0 14px 34px rgba(0,0,0,.45),0 0 28px rgba(255,200,90,.28),inset 0 1px 0 rgba(255,255,255,.12)}
 .evcard.rare .ec-frame{border-color:rgba(255,215,120,.5)}
 .holo{position:absolute;inset:0;pointer-events:none;border-radius:inherit;overflow:hidden}
@@ -449,6 +450,7 @@ body.remind::after{content:"";position:fixed;inset:0;pointer-events:none;z-index
 </style>
 </head>
 <body>
+<script>document.documentElement.classList.add('fl');(function(){var d=function(){document.documentElement.classList.remove('fl')};try{Promise.race([document.fonts.ready,new Promise(function(r){setTimeout(r,900)})]).then(function(){requestAnimationFrame(d)})}catch(e){d()}})();</script>
 <div class="wrap" id="app"></div>
 <div id="ov"></div>
 <div class="toast" id="toast"></div>
@@ -1253,7 +1255,7 @@ function renderModal(){const o=document.getElementById('ov');if(!ui.modal){o.inn
 function fmtDate(ts){try{const d=new Date(ts);return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'})+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}catch(e){return''}}
 function homeHTML(){const list=Object.values(GAMES).map(g=>{try{return{g,s:JSON.parse(g.json)}}catch(e){return null}}).filter(Boolean).sort((a,b)=>b.g.updated-a.g.updated);
  const run=list.filter(x=>x.s.screen!=='end'),done=list.filter(x=>x.s.screen==='end');
- let h='<div class="homelogo"><img src="logo.webp?v=2" alt=""></div><div class="eyebrow" style="text-align:center">Würfelspiel · 6 Würfel</div><div class="large" style="text-align:center">Kniffel Royale</div><p class="lead" style="text-align:center">Mit Ereigniskarten, die jede Runde alles verändern können.</p>';
+ let h='<div class="homelogo"><img src="logo.webp?v=2" alt="" width="576" height="725" decoding="sync"></div><div class="eyebrow" style="text-align:center">Würfelspiel · 6 Würfel</div><div class="large" style="text-align:center">Kniffel Royale</div><p class="lead" style="text-align:center">Mit Ereigniskarten, die jede Runde alles verändern können.</p>';
  h+=profileCard();
  h+='<div class="block"><button class="btn" data-a="new">Neues Spiel erstellen</button><div class="btnrow" style="margin-top:10px"><button class="btn tint" data-a="mpnew">Online-Spiel erstellen</button><button class="btn tint" data-a="mpjoinview">Online beitreten</button></div></div>';
  const item=(x,sub)=>'<div class="cell gitem"><button class="grow gopen" data-a="open" data-id="'+x.g.id+'"><div class="ct">'+esc(x.s.players.map(p=>p.name).join(', '))+'</div><div class="cs">'+(x.s.online?'<span class="tag" style="margin-right:6px">Online · '+esc(x.s.online.code)+'</span>':'')+sub+'</div></button><button class="trash" data-a="askdel" data-id="'+x.g.id+'" aria-label="Löschen">Löschen</button></div>';
@@ -1786,7 +1788,7 @@ async function cloudPull(force){if(!RDB||!UID)return;try{const base='users/'+UID
   const fl=frLoad();for(const k in (P.f||{})){const a=P.f[k],b=fl[k];if(!b)fl[k]=a;else{b.fav=b.fav||a.fav;b.last=Math.max(b.last||0,a.last||0);b.uids=[...new Set((b.uids||[]).concat(a.uids||[]))].slice(0,3)}}try{localStorage.setItem('kx-friends',JSON.stringify(fl))}catch(e){}
   const us=[...new Set(myUids().concat(P.u||[]))];try{localStorage.setItem('kx-myuids',JSON.stringify(us.slice(-20)))}catch(e){}
   if(P.n&&!setup.myName){setup.myName=P.n;try{localStorage.setItem('kx-myname',P.n)}catch(e){}}}catch(e){}}
- c.t=Date.now();c.p=null;cloudStateSave(c);persistNow();cloudQueue()}catch(e){console.warn('pull',e)}}
+ c.t=Date.now();c.p=null;cloudStateSave(c);persistNow();cloudQueue();cloudPull.changed=true}catch(e){console.warn('pull',e)}}
 
 /* Online-Spiel verlassen: Spieler wird komplett entfernt */
 function liveOnline(id){const g=GAMES[id];if(!g)return null;let r;try{r=JSON.parse(g.json)}catch(e){return null}return(r&&r.online&&r.screen!=='end'&&DB&&r.players.some(q=>q.uid===UID))?r:null}
@@ -1908,7 +1910,7 @@ function invWait(){ui.autoInv=Date.now();const t0=ui.autoInv;joinCover(true);set
 if(JP.c){setup.joinCode=JP.c;view='join';if((setup.myName||'').trim())joinCover(true,'Trete der Lobby bei …')}if(JP.inv)invWait();if(JP.g)joinCover(true,'Spiel wird geöffnet …');
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',m=>{if(m.data&&m.data.kx==='inv'){invWait();showInvites()}if(m.data&&m.data.kx==='game')openByCode(String(m.data.code||'').toUpperCase())});
 function frBackfill(){try{if(localStorage.getItem('kx-fr-bf'))return;Object.values(GAMES).forEach(g=>{try{const r=JSON.parse(g.json);if(!r.online)return;const st={};r.players.forEach(q=>{if(q.uid)st[q.uid]={name:q.name}});frRecord(st)}catch(e){}});localStorage.setItem('kx-fr-bf','1')}catch(e){}}
-async function afterCloud(){if(GRET&&UID)await googleFinish();if(UID){rememberUid();await cloudPull(false);xpBackfill();frBackfill();if(view==='home'&&!S)render()}invListen();pushRefresh();if(JP.g){openByCode(JP.g);JP.g='';joinCover(false)}if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c)){try{await mpJoin()}catch(e){}joinCover(false)}}
+async function afterCloud(){if(GRET&&UID)await googleFinish();if(UID){rememberUid();await cloudPull(false);xpBackfill();frBackfill();if(view==='home'&&!S){const a=document.getElementById('app'),pc=a&&a.querySelector('.profcard'),old=pc?pc.outerHTML:'';if(profileCard()!==old||cloudPull.changed)render()}}invListen();pushRefresh();if(JP.g){openByCode(JP.g);JP.g='';joinCover(false)}if(JP.c&&(setup.myName||'').trim()&&!(MP&&MP.lobby&&MP.lobby.code===JP.c)){try{await mpJoin()}catch(e){}joinCover(false)}}
 
 /* Wischen zum Löschen (Mitspieler-Liste) */
 (()=>{let row=null,x0=0,y0=0,dx=0,base=0,mode=null;const W=96;
