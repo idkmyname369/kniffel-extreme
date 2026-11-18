@@ -1452,7 +1452,7 @@ function osc(a,t0,o){const s=a.createOscillator();s.type=o.type||'sine';s.freque
 function bell(a,t0,f,vol,dec,rev){const c=a.createOscillator(),m=a.createOscillator(),mg=a.createGain(),g=a.createGain();c.frequency.value=f;m.frequency.value=f*3.5;mg.gain.setValueAtTime(f*2.2,t0);mg.gain.exponentialRampToValueAtTime(f*0.05,t0+dec);m.connect(mg);mg.connect(c.frequency);env(a,g,t0,0.002,vol,dec);c.connect(g);route(a,g,rev==null?0.35:rev);c.start(t0);m.start(t0);c.stop(t0+dec+0.1);m.stop(t0+dec+0.1)}
 /* Aufgenommene Geräusche */
 const SAMP={raw:{},buf:{}};
-function loadSample(n){if(SAMP.raw[n])return;SAMP.raw[n]=fetch('snd/'+n+'.m4a?v=1').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null)}
+function loadSample(n){if(SAMP.raw[n])return;SAMP.raw[n]=fetch('snd/'+n+'.m4a?v=2').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null)}
 function primeSample(a,n){loadSample(n);if(SAMP.buf[n]&&SAMP.buf[n].ctx===a)return;SAMP.buf[n]={ctx:a,b:null};SAMP.raw[n].then(ab=>{if(!ab)return;try{a.decodeAudioData(ab.slice(0),d=>{SAMP.buf[n]={ctx:a,b:d}},()=>{})}catch(e){}})}
 function playSample(a,n,vol){const b=SAMP.buf[n];if(b&&b.ctx===a&&b.b){const s=a.createBufferSource();s.buffer=b.b;const g=a.createGain();g.gain.value=vol||1;s.connect(g);route(a,g,.06);s.start(a.currentTime);return true}
  primeSample(a,n);return false}
