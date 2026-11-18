@@ -249,7 +249,7 @@ td small{color:#ffb340;font-size:10px;margin-left:3px}
 .lk-st.ok{background:rgba(48,209,88,.18);color:#5be37f}
 .lk-st.no{background:rgba(255,255,255,.08);color:var(--sec)}
 .oppban{position:fixed;left:10px;right:10px;top:calc(env(safe-area-inset-top) + 8px);z-index:450;display:flex;gap:11px;align-items:flex-start;padding:11px 13px;border-radius:20px;background:rgba(44,44,48,.82);backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 .5px rgba(255,255,255,.08);transform:translateY(-130%);transition:transform .38s cubic-bezier(.2,.9,.25,1.1);max-width:520px;margin:0 auto}.oppban.in{transform:none}
-.ob-ic{flex:none;width:38px;height:38px;border-radius:9px;background:#141416;display:flex;align-items:center;justify-content:center;overflow:hidden}.ob-ic img{width:30px;height:auto}
+.ob-ic{flex:none;width:38px;height:38px;border-radius:9px;background:#141416;display:flex;align-items:center;justify-content:center;overflow:hidden}.ob-ic img{width:100%;height:100%;object-fit:cover}
 .ob-h{display:flex;justify-content:space-between;font-weight:700;font-size:15px}.ob-t{font-weight:400;font-size:13px;color:var(--sec)}.ob-m{font-size:14.5px;margin-top:1px}.ob-m b{color:#ffd257}.ob-s{font-size:13px;color:var(--sec);margin-top:2px}
 .pnsave{flex:none;color:#fff;background:var(--blue);border-radius:9px;padding:6px 12px;font-size:14px;font-weight:600}
 .potbar{width:100%;text-align:left;font-family:inherit;}.potinfo{font-size:13px;opacity:.6;margin-left:2px}.potrow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--sep)}.potrow:last-child{border-bottom:0}
@@ -779,8 +779,11 @@ function drawEvent(){const t=S.turn,p=S.players[S.cur];const __ps=S.potOn?potSna
  if(__ps&&ev.now!=='topf'&&ev.now!=='bomb')potCharge(__ps,false);
  if(__hs)trackHarm(__hs,S.cur);
  ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip();save();render();
- if(t.pending)setTimeout(()=>{if(S&&S.turn===t&&t.pending&&!ui.modal&&canAct()){openPending()}},550)}
+ if(t.pending)setTimeout(()=>{if(S&&S.turn===t&&t.pending&&!ui.modal&&canAct()){openPendingAuto()}},550)}
 
+function pickKey(){return S?S.id+'|'+(S.logN||0)+'|'+S.cur+'|'+(S.turn&&S.turn.pending):''}
+function pickHideNow(){if(ui.modal&&ui.modal.type==='pick')ui.pickHide=pickKey()}
+function openPendingAuto(){if(ui.pickHide&&ui.pickHide===pickKey())return;openPending()}
 function openPending(){const t=S.turn;if(!t.pending)return;ui.modal=t.pending==='rcount'?{type:'rcount',phase:'ready'}:t.pending==='bet'?{type:'bet'}:t.pending==='duel'?{type:'duel',vals:{},last:{},cont:S.players.map((_,i)=>i),round:1,phase:'ready'}:t.pending==='gamble'?{type:'gamble',phase:'ready'}:{type:'pick',kind:t.pending,sel:t.pending==='sac2'?[]:null};renderModal()}
 function duelEval(m){return _duelEval(m)}
 function _duelEval(m){const t=S.turn,mx=Math.max(...m.cont.map(i=>m.vals[i]));const top=m.cont.filter(i=>m.vals[i]===mx);m.last=Object.assign({},m.last,m.vals);
@@ -966,7 +969,7 @@ function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,
    const showFx=r.fx&&r.fx.seq>(ui.seenFx||0)&&r.fx.uid!==UID;if(showFx){ui.seenFx=r.fx.seq;ui.fxPending=true;setTimeout(()=>kniffelFX(r.fx.kind,r.fx.who),60)}view='game';const old=GAMES[S.id];GAMES[S.id]={id:S.id,updated:Date.now(),finished:S.screen==='end',synced:!!(old&&old.synced),json:m.baseStr};persistLocal();queuePush(S.id);
    if(ui.modal&&!['reveal','board','info','menu','del'].includes(ui.modal.type)&&!canAct()){ui.modal=null;renderModal()}
    if(showRev){ui.seenReveal=r.lastReveal.seq;startRevHold(r.lastReveal)}render()
-   const t=S.turn;if(S.screen==='game'&&t&&t.pending&&canAct()&&!ui.modal)openPending()}
+   const t=S.turn;if(S.screen==='game'&&t&&t.pending&&canAct()&&!ui.modal)openPendingAuto()}
  },e=>toast('Verbindung zum Online-Spiel unterbrochen'));setTimeout(presTick,400)}
 /* Online-Züge als Änderungen (Delta) statt kompletter Spielstand */
 function jdiff(a,b,p,o){if(a===b)return o;const oa=a!==null&&typeof a==='object',ob=b!==null&&typeof b==='object';
@@ -1222,7 +1225,7 @@ function modalHTML(){const m=ui.modal;
   const dn=S.turn.decider!=null?esc(S.players[S.turn.decider].name):'';let h='<div class="grab"></div><h2>'+ev.title+'</h2><p class="muted">'+(m.kind==='oppforce'&&dn?((S.online||localBotGame())?'Du bestimmst, in welcher Kategorie <b style="color:var(--text)">'+esc(S.players[S.cur].name)+'</b> diese Runde wertet. Schafft '+esc(S.players[S.cur].name)+' sie, zählt sie ×3.':'Gib das Handy an <b style="color:var(--text)">'+dn+'</b>: '+dn+' wählt, wo du diese Runde wertest. Schaffst du sie, zählt sie ×3.'):cfg.h)+'</p><div class="pick">';
   for(const o of opts){if(o.group!==lastG){h+='<div class="sub-h">'+esc(o.group)+'</div>';lastG=o.group}
    h+='<button class="cell '+((Array.isArray(m.sel)?m.sel.includes(o.key):m.sel===o.key)?'sel':'')+'" data-a="psel" data-k="'+o.key+'"><div class="radio"></div><div class="grow"><div class="ct">'+o.label+'</div>'+(o.sub?'<div class="cs">'+esc(o.sub)+'</div>':'')+'</div>'+(o.val!=null?'<div class="val">'+o.val+'</div>':'')+(o.diff!=null?'<div class="tag'+(o.diff<0?' neg':'')+'">'+(o.diff>0?'+':'')+o.diff+'</div>':'')+'</button>'}
-  return h+'</div><button class="btn '+(cfg.red?'red':'')+'" data-a="pok" '+((Array.isArray(m.sel)?m.sel.length:m.sel)?'':'disabled')+'>'+cfg.b+(Array.isArray(m.sel)&&m.sel.length?' ('+m.sel.length+')':'')+'</button>'}
+  return h+'</div><button class="btn '+(cfg.red?'red':'')+'" data-a="pok" '+((Array.isArray(m.sel)?m.sel.length:m.sel)?'':'disabled')+'>'+cfg.b+(Array.isArray(m.sel)&&m.sel.length?' ('+m.sel.length+')':'')+'</button><button class="btn gray" data-a="close" style="margin-top:10px">Erst Spielstand ansehen</button>'}
  if(m.type==='cardinfo'){const ev=EV[m.id];const ex=CARD_EX[m.id]||(ev.g==='pflicht'?'Du musst genau diese Kategorie werten. Schaffst du sie, zählt sie ×3 – sonst wird sie gestrichen.':'');return'<div class="grab"></div><div class="reveal">'+glyph(ev)+'<h2>'+ev.title+'</h2><p class="muted">'+hiMult(ev.text)+'</p></div>'+(ex?'<div class="exbox"><div class="ec-k" style="color:var(--sec)">Beispiel</div>'+hiMult(ex)+'</div>':'')+'<button class="btn gray" data-a="close">Schließen</button>'}
  if(m.type==='color'){let taken=[];if(m.k==='o'){const d=MP&&MP.lobby;const seats=Object.entries((d&&d.seats)||{}).filter(x=>x[1]).sort((a,b)=>a[1].t-b[1].t);const cl=assignColors(seats.map(x=>x[1].color!=null?x[1].color:null));taken=seats.map((x,i)=>x[0]===UID?null:cl[i]).filter(x=>x!=null)}else{const L=setupColorList(),me=m.k==='h'?m.i:setup.n+m.i;taken=L.filter((_,j)=>j!==me)}
   return'<div class="grab"></div><h2>Farbe wählen</h2><div class="palette">'+PALETTE.map((c,k)=>'<button class="pal'+(taken.includes(k)?' off':'')+'" data-a="setcol" data-v="'+k+'" '+(taken.includes(k)?'disabled':'')+'><span style="background:'+c.c+'"></span>'+c.n+'</button>').join('')+'</div>'}
@@ -1234,8 +1237,8 @@ function modalHTML(){const m=ui.modal;
   if(m.need==='slots')return h+'<div class="reels">'+[0,1,2].map(i=>'<div class="reel" id="reel'+i+'"><div class="strip" id="strip'+i+'"><div>'+SLOT_SYM[i]+'</div></div></div>').join('')+'</div><div class="calc" id="slotcalc" style="text-align:center">Start: '+m.amount+' Punkte</div><button class="btn" id="spinbtn" data-a="spin">Hebel ziehen</button>';
   if(m.need==='fate')return h+'<div class="calc">'+c.name+': '+m.raw+' Punkte<div class="note" style="color:var(--sec)">Wirf jetzt einen Würfel und tippe das Ergebnis an.</div></div><div class="quick nums">'+[1,2,3,4,5,6].map(v=>'<button data-a="need" data-v="'+v+'">'+v+'</button>').join('')+'</div>';
   if(m.need==='ones'||m.need==='sixes')return h+'<div class="calc">Wie viele '+(['','Einsen','Zweien','Dreien','Vieren','Fünfen','Sechsen'][ev.face||(m.need==='ones'?1:6)])+' lagen nach deinem letzten Wurf?</div><div class="quick nums">'+[0,1,2,3,4,5,6].map(v=>'<button data-a="need" data-v="'+v+'">'+v+'</button>').join('')+'</div>';
-  if(m.need==='gift')return h+'<div class="calc">Du hast '+m.amount+' Punkte eingetragen. Wer bekommt sie geschenkt?</div><div class="pick">'+S.players.map((q,i)=>i===S.cur?'':'<button class="cell" data-a="need" data-v="'+i+'"><div class="grow ct">'+nmC(i)+'</div><span class="chev">›</span></button>').join('')+'</div>';
-  if(m.need==='thief')return h+'<div class="calc">Du hast '+m.amount+' Punkte eingetragen. Wer verliert sie?</div><div class="pick">'+S.players.map((q,i)=>i===S.cur?'':'<button class="cell" data-a="need" data-v="'+i+'"><div class="grow ct">'+esc(q.name)+'</div><span class="chev">›</span></button>').join('')+'</div>';
+  if(m.need==='gift')return h+'<div class="calc">Du hast '+m.amount+' Punkte eingetragen. Wer bekommt sie geschenkt?</div><div class="pick">'+S.players.map((q,i)=>i===S.cur?'':'<button class="cell" data-a="need" data-v="'+i+'"><div class="grow ct">'+nmC(i)+'</div><span class="chev">›</span></button>').join('')+'</div><button class="btn gray" data-a="close" style="margin-top:10px">Erst Spielstand ansehen</button><p class="muted" style="text-align:center;margin-top:8px;font-size:13px">Danach die Kategorie einfach nochmal antippen.</p>';
+  if(m.need==='thief')return h+'<div class="calc">Du hast '+m.amount+' Punkte eingetragen. Wer verliert sie?</div><div class="pick">'+S.players.map((q,i)=>i===S.cur?'':'<button class="cell" data-a="need" data-v="'+i+'"><div class="grow ct">'+esc(q.name)+'</div><span class="chev">›</span></button>').join('')+'</div><button class="btn gray" data-a="close" style="margin-top:10px">Erst Spielstand ansehen</button><p class="muted" style="text-align:center;margin-top:8px;font-size:13px">Danach die Kategorie einfach nochmal antippen.</p>';
   if(m.need==='mix'){const tc=CAT[m.ctx.mixId];let q=[];if(tc.face)q=[0,1,2,3,4,5,6].map(k=>k*tc.face);else if(tc.fixed)q=[0,tc.fixed];
    return h+'<div class="calc">Deine Wertung landet in <b style="color:var(--text)">„'+tc.name+'“</b> ('+tc.hint+'). Was ergeben deine Würfel dort?</div>'+(q.length?'<div class="quick">'+q.map(v=>'<button data-a="qv" data-v="'+v+'" class="'+(String(v)===m.val?'on':'')+'">'+(v===0?'0':v)+'</button>').join('')+'</div>':'')+'<div class="field"><input type="number" inputmode="numeric" id="numin" placeholder="Punkte in „'+tc.name+'“" value="'+m.val+'"></div><div class="err" id="err"></div><button class="btn" data-a="needmix">Übernehmen</button>'}}
  if(m.type==='reveal'){const ev=EV[m.ev],c=CAT[m.cat],r=m.res;let h='<div class="grab"></div><div class="reveal">'+(m.watch?'<div class="eyebrow" style="margin-bottom:10px">'+esc(m.who)+' hat aufgedeckt</div>':'')+glyph(ev)+'<h2>'+ev.title+'</h2><p class="muted">'+ev.text+'</p>';
@@ -1279,7 +1282,7 @@ function updatePreview(){const m=ui.modal;if(!m||m.type!=='input')return;const e
  el.innerHTML=(v?'Eingabe '+v:'Die Kategorie wird gestrichen.')+'<div class="big">'+L.b.f+' Punkte</div>'+L.html}
 
 function renderModal(){const o=document.getElementById('ov');if(!ui.modal){o.innerHTML='';ui.lastModal=null;if(S&&S.screen==='end'&&!ui.cerDone[S.id])render();return}
- const dismiss=!['pick','reveal','need','gamble','duel','bet','rcount'].includes(ui.modal.type);
+ const dismiss=!['pick','reveal','need','gamble','duel','bet','rcount'].includes(ui.modal.type)||ui.modal.type==='pick'||(ui.modal.type==='need'&&['gift','thief'].includes(ui.modal.need));
  const old=o.querySelector('.sheet'),same=old&&ui.lastModal===ui.modal;const st=same?[old,...old.querySelectorAll('*')].filter(e=>e.scrollTop>0).map(e=>[e===old?'.sheet':(e.className?'.'+String(e.className).trim().split(/\s+/).join('.'):null),e.scrollTop]).filter(x=>x[0]):[];ui.lastModal=ui.modal;
  o.innerHTML='<div class="ov'+(same?' keep':'')+'" '+(dismiss?'data-bg="1"':'')+'><div class="sheet">'+modalHTML()+'</div></div>';
  if(same)st.forEach(([sel,v])=>{try{const e=o.querySelector(sel);if(e)e.scrollTop=v}catch(x){}})
@@ -1330,7 +1333,7 @@ if((S.online||localBotGame())&&ev&&ev.fremd&&t.rolls===1&&t.fremdDone&&!t.tool&&
 document.addEventListener('input',e=>{const d=e.target.dataset;if(d.ni!==undefined)setup.names[+d.ni]=e.target.value;if(d.bn!==undefined){setup.botNames=setup.botNames||BOT_NAMES.slice();setup.botNames[+d.bn]=e.target.value}if(d.rp!==undefined&&ui.modal)ui.modal.pw=e.target.value;if(d.pn!==undefined){const had=ui.pn!=null&&ui.pn.trim()!==(setup.myName||'').trim();ui.pn=e.target.value;ui.pnErr='';const now=ui.pn.trim()!==(setup.myName||'').trim()&&!!ui.pn.trim();if(had!==now){const pos=e.target.selectionStart;render();const f=document.querySelector('[data-pn]');if(f){f.focus();try{f.setSelectionRange(pos,pos)}catch(x){}}}}if(d.ae!==undefined&&ui.auth)ui.auth.email=e.target.value;if(d.ap!==undefined&&ui.auth)ui.auth.pw=e.target.value;if(d.mn){setup.myName=e.target.value;cloudQueue();try{localStorage.setItem('kx-myname',e.target.value)}catch(x){}}if(d.jc)setup.joinCode=e.target.value});
 document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('.peekbtn')){e.preventDefault();ui.peekHold=true;render()}});
 ['pointerup','pointercancel'].forEach(n=>document.addEventListener(n,()=>{if(ui.peekHold){ui.peekHold=false;render()}}));
-document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&&e.target.dataset.bg){ui.modal=null;renderModal();return}
+document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&&e.target.dataset.bg){pickHideNow();ui.modal=null;renderModal();return}
  const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a,m=ui.modal;
  if(S&&S.online&&S.screen==='game'&&!FREE_ACT.has(a)&&!canAct()&&!(S.online.host===UID&&['edit','editok','editdel','qv'].includes(a))){toast(actorName()+' ist gerade dran');return}
  switch(a){
@@ -1441,7 +1444,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'okin':{const c0=CAT[m.id];if(c0.fixed&&!c0.face)m.val=String(c0.fixed);else if(!m.val||m.val==='0'){document.getElementById('err').textContent='Bitte die gewürfelten Punkte eintragen – oder Streichen.';return}const er=validate(c0,m.val);if(er){document.getElementById('err').textContent=er;return}commit(m.id,+m.val,{rolls:m.rolls,kb:m.kb,ke:m.ke});break}
   case'board':ui.modal={type:'board'};renderModal();break;
   case'menu':ui.modal={type:'menu'};renderModal();break;
-  case'close':ui.modal=null;renderModal();break;
+  case'close':pickHideNow();ui.modal=null;renderModal();break;
   case'home':ui.modal=null;renderModal();mpLeave();S=null;setup.online=false;view='home';render();window.scrollTo(0,0);break;
   case'again':{const names=S.players.map(p=>p.name),mode=S.mode,ev=S.events,bf=S.players.map(p=>!!p.bot),cs=S.players.map(p=>p.color);newGame(names,mode,ev,bf,cs);window.scrollTo(0,0);break}
  }});
@@ -1981,7 +1984,7 @@ function pumpBanner(){if(!BANQ.length||document.querySelector('.oppban'))return;
  const e=BANQ.shift(),q=S&&S.players[e.pi],col=q&&q.color!=null&&PALETTE[q.color]?PALETTE[q.color].l:'#fff';const strip=x=>String(x||'').replace(/<[^>]*>/g,'');
  const main=e.val>0?esc(e.cat)+': <b>'+fmtN(e.val)+' Punkte</b>':esc(e.cat)+' <b>gestrichen</b>'+(e.val<0?' ('+fmtN(e.val)+')':'');
  const sub=[e.ev?'Karte „'+esc(e.ev)+'“':'',e.kb?'+'+e.kb+' Kniffel-Bonus':'',e.res?esc(strip(e.res)):''].filter(Boolean).join(' · ');
- const el=document.createElement('div');el.className='oppban';el.innerHTML='<div class="ob-ic"><img src="logo-k.webp?v=2" alt=""></div><div class="grow"><div class="ob-h"><span style="color:'+col+'">'+esc(e.who)+'</span><span class="ob-t">jetzt</span></div><div class="ob-m">'+main+'</div>'+(sub?'<div class="ob-s">'+sub+'</div>':'')+'</div>';
+ const el=document.createElement('div');el.className='oppban';el.innerHTML='<div class="ob-ic"><img src="icon-192.png" alt=""></div><div class="grow"><div class="ob-h"><span style="color:'+col+'">'+esc(e.who)+'</span><span class="ob-t">jetzt</span></div><div class="ob-m">'+main+'</div>'+(sub?'<div class="ob-s">'+sub+'</div>':'')+'</div>';
  document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')));
  const hide=()=>{if(!el.isConnected)return;el.classList.remove('in');setTimeout(()=>{el.remove();pumpBanner()},300)};el.onclick=hide;setTimeout(hide,4800)}
 setInterval(logWatch,400);
