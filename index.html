@@ -93,6 +93,7 @@ html,body{touch-action:manipulation}
 @keyframes splashRise{from{opacity:0;transform:translateY(18px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
 .splash #app>*:not(.homelogo),.splashwait #app>*:not(.homelogo),.splashwait .homelogo .hl>*{opacity:0}
 .splash #app,.splashwait #app{pointer-events:none}
+html.splash,html.splashwait{overflow:hidden}html.splash body,html.splashwait body{overflow:hidden;touch-action:none}
 .tapstart{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:transparent;-webkit-tap-highlight-color:transparent;cursor:pointer;transition:opacity .35s}
 .tapstart .ts1{font-family:Lora,Georgia,serif;font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:rgba(255,215,130,.55)}
 .tapstart .ts2{font-size:17px;font-weight:600;letter-spacing:.06em;color:#ffd98a;animation:tsp 1.8s ease-in-out infinite}
@@ -486,7 +487,7 @@ body.remind::after{content:"";position:fixed;inset:0;pointer-events:none;z-index
 </style>
 </head>
 <body>
-<script>document.documentElement.classList.add('fl');try{if(!location.search&&location.hash.indexOf('state=kxg')<0&&matchMedia('(prefers-reduced-motion: no-preference)').matches)document.documentElement.classList.add('splashq')}catch(e){}window.__fontsReady=new Promise(function(r){try{Promise.race([document.fonts.ready,new Promise(function(x){setTimeout(x,900)})]).then(r)}catch(e){r()}});(function(){var n=0,d=function(){var h=document.documentElement;if(h.classList.contains('splashq')){if(!window.runSplash&&n++<60){setTimeout(d,30);return}if(window.runSplash)window.runSplash();else h.classList.remove('splashq')}h.classList.remove('fl')};window.__fontsReady.then(function(){requestAnimationFrame(d)})})();</script>
+<script>try{if('scrollRestoration' in history)history.scrollRestoration='manual'}catch(e){}window.scrollTo(0,0);document.documentElement.classList.add('fl');try{if(!location.search&&location.hash.indexOf('state=kxg')<0&&matchMedia('(prefers-reduced-motion: no-preference)').matches)document.documentElement.classList.add('splashq')}catch(e){}window.__fontsReady=new Promise(function(r){try{Promise.race([document.fonts.ready,new Promise(function(x){setTimeout(x,900)})]).then(r)}catch(e){r()}});(function(){var n=0,d=function(){var h=document.documentElement;if(h.classList.contains('splashq')){if(!window.runSplash&&n++<60){setTimeout(d,30);return}if(window.runSplash)window.runSplash();else h.classList.remove('splashq')}h.classList.remove('fl')};window.__fontsReady.then(function(){requestAnimationFrame(d)})})();</script>
 <div class="wrap" id="app"></div>
 <div id="ov"></div>
 <div class="toast" id="toast"></div>
@@ -2081,11 +2082,11 @@ function splashAudio(a,T){const M=mix(a);
  pad(T+4.2,[48,55,60,64,67,72,76],3.8,.68,2900);
  noiseHit(a,T+3.55,{att:.65,dec:.6,vol:.05,filters:[['highpass',7000,.5],['lowpass',12000,.5]],rev:.7})}
 function runSplash(){const h=document.documentElement;h.classList.remove('splashq');if(view!=='home'||S||ui.autoInv||JP.c||JP.g)return;
- const a=document.getElementById('app');if(!a||!a.querySelector('.homelogo'))return;h.classList.add('splashwait');ui.splashLock=true;splashPrerender();
+ const a=document.getElementById('app');if(!a||!a.querySelector('.homelogo'))return;window.scrollTo(0,0);h.classList.add('splashwait');ui.splashLock=true;splashPrerender();
  const ov=document.createElement('div');ov.className='tapstart';ov.innerHTML='<div class="ts3"></div><div class="ts2">Tippen zum Starten</div>';document.body.appendChild(ov);
  let go=false;const start=e=>{if(go)return;go=true;e&&e.preventDefault&&e.preventDefault();ov.style.opacity='0';setTimeout(()=>ov.remove(),1200);const eat=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener('click',eat,true);setTimeout(()=>document.removeEventListener('click',eat,true),1200);startSplash()};
  ov.addEventListener('click',start);ov.addEventListener('touchend',start)}
-function startSplash(){const h=document.documentElement,a=document.getElementById('app');h.classList.remove('splashwait');h.classList.add('splash');
+function startSplash(){const h=document.documentElement,a=document.getElementById('app');window.scrollTo(0,0);h.classList.remove('splashwait');h.classList.add('splash');
  [...a.children].filter(c=>!c.classList.contains('homelogo')).forEach((c,i)=>{c.style.animation='splashRise 1.05s cubic-bezier(.2,.7,.2,1) '+(2.55+i*.13).toFixed(2)+'s both'});
  splashPlay();
  const end=ev=>{if(!h.classList.contains('splash'))return;h.classList.remove('splash');if(ev&&ev.type){ui.splashCut=true;const S2=ui.splashSnd;if(S2&&AC){try{S2.g.gain.cancelScheduledValues(AC.currentTime);S2.g.gain.setValueAtTime(S2.g.gain.value,AC.currentTime);S2.g.gain.linearRampToValueAtTime(0.0001,AC.currentTime+.25);setTimeout(()=>{try{S2.src.stop()}catch(e){}},320)}catch(e){}}ui.splashSnd=null}setTimeout(()=>musStart(),300);[...a.children].forEach(c=>c.style.animation='');document.removeEventListener('pointerdown',end,true);ui.splashLock=false;if(ui.splashPend){ui.splashPend=false;render()}};
