@@ -2046,6 +2046,18 @@ function splashPlay(){const A=audio();if(!A)return;try{const b=A.createBuffer(1,
  if(splashPrerender.p)Promise.race([splashPrerender.p,new Promise(r=>setTimeout(()=>r(null),250))]).then(go);else go(null)}
 window.runSplash=runSplash;
 
+/* Wischen vom linken Rand = zurück */
+(()=>{let on=false,sx=0,sy=0,dx=0,t0=0,app=null,btn=null,dirOk=null;
+ const reset=()=>{if(!app)return;app.style.transition='transform .22s cubic-bezier(.2,.8,.2,1),opacity .22s';app.style.transform='';app.style.opacity='';const a=app;setTimeout(()=>{a.style.transition=''},240)};
+ document.addEventListener('touchstart',e=>{on=false;if(e.touches.length!==1||ui.modal||document.querySelector('.intro,.tapstart,.joincover,.invsheet'))return;const t=e.touches[0];if(t.clientX>26)return;
+  app=document.getElementById('app');btn=app&&app.querySelector('.backbtn');if(!btn||btn.dataset.a==='mpleave')return;on=true;sx=t.clientX;sy=t.clientY;dx=0;dirOk=null;t0=Date.now()},{passive:true});
+ document.addEventListener('touchmove',e=>{if(!on)return;const t=e.touches[0];dx=t.clientX-sx;const dy=t.clientY-sy;
+  if(dirOk===null&&(Math.abs(dx)>8||Math.abs(dy)>8))dirOk=Math.abs(dx)>Math.abs(dy)&&dx>0;if(dirOk===false){on=false;reset();return}if(!dirOk)return;
+  e.preventDefault();const x=Math.max(0,dx);app.style.transition='none';app.style.transform='translateX('+x+'px)';app.style.opacity=String(1-Math.min(.5,x/innerWidth*.6))},{passive:false});
+ const end=()=>{if(!on)return;on=false;const v=dx/Math.max(1,Date.now()-t0);if(dirOk&&(dx>innerWidth*.3||(dx>50&&v>.5))){const a=app,b=btn;a.style.transition='transform .2s ease-out,opacity .2s';a.style.transform='translateX('+innerWidth+'px)';a.style.opacity='0';
+   setTimeout(()=>{a.style.transition='none';a.style.transform='translateX(-24px)';a.style.opacity='0';b.click();requestAnimationFrame(()=>requestAnimationFrame(()=>{a.style.transition='transform .22s ease-out,opacity .22s';a.style.transform='';a.style.opacity='';setTimeout(()=>{a.style.transition=''},240)}))},190)}else reset()};
+ document.addEventListener('touchend',end,{passive:true});document.addEventListener('touchcancel',()=>{if(on){on=false;reset()}},{passive:true})})();
+
 render();
 initCloud().then(afterCloud);
 </script>
