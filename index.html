@@ -694,7 +694,7 @@ function kniffelBonus(p,id,raw,ctx){const kOk=kniffelEligible(p,id),keOk=keEligi
  else if(c.face){five=raw>0&&raw===c.face*5;six=raw>0&&raw===c.face*6}
  else if(id==='ke'){six=raw===75}
  else{six=!!ctx.ke;five=!six&&!!ctx.kb}
- if(six)return keOk?75:0;if(five)return kOk?50:0;return 0}
+ if(six)return keOk?75:(kOk?50:0);if(five)return kOk?50:0;return 0}
 const kbLabel=a=>a===75?'Kniffel-Extreme-Bonus +75':'Kniffel-Bonus +50';
 
 /* ---------- Ziehen: jede Karte je Spieler max. 1×, Pflichtwurf max. 3× ---------- */
@@ -883,7 +883,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  const entry={raw:r,final:b.f,tag:b.parts.join(' ')};
  const __undo=JSON.stringify(S);const __ps=S.potOn?potSnap():null,__sc=S.cur,__hs0=potSnap();
  p.half=false;
- {const c0=CAT[id];let six,five;if(dig||ctx.dice){const mc=maxC(t.dice);six=mc>=6;five=mc>=5}else{six=(id==='ke'&&raw===75)||(c0.face&&raw===c0.face*6)||!!ctx.ke;five=six||(id==='kn'&&raw===50)||(c0.face&&raw>=c0.face*5)||!!ctx.kb}if(five){const n=kniffelCount();S.kc=n.k+(six?0:1);S.kec=n.e+(six?1:0);const struck=six?(id!=='ke'&&p.sc.ke&&p.sc.ke.raw!==75):(id!=='kn'&&p.sc.kn&&p.sc.kn.raw!==50);if(!struck){S.fxseq=(S.fxseq||0)+1;S.fx={seq:S.fxseq,kind:six?'ke':'kn',who:p.name,uid:p.uid||null}}}}
+ {const c0=CAT[id];let six,five;if(dig||ctx.dice){const mc=maxC(t.dice);six=mc>=6;five=mc>=5}else{six=(id==='ke'&&raw===75)||(c0.face&&raw===c0.face*6)||!!ctx.ke;five=six||(id==='kn'&&raw===50)||(c0.face&&raw>=c0.face*5)||!!ctx.kb}if(five){const n=kniffelCount();S.kc=n.k+(six?0:1);S.kec=n.e+(six?1:0);const keStr=id!=='ke'&&p.sc.ke&&p.sc.ke.raw!==75,knStr=id!=='kn'&&p.sc.kn&&p.sc.kn.raw!==50;let kind=null;if(six&&!keStr)kind='ke';else if(!knStr)kind='kn';if(kind){S.fxseq=(S.fxseq||0)+1;S.fx={seq:S.fxseq,kind,who:p.name,uid:p.uid||null}}}}
  const kb=kniffelBonus(p,id,raw,ctx);if(kb){p.kb=(p.kb||0)+kb;entry.kbon=kb}
  let res=null;if(after)res=applyAfter(entry,after,target,ctx,p);
  p.sc[target]=entry;
