@@ -1705,7 +1705,7 @@ setInterval(()=>{if(!S||S.screen!=='game'){ui.wasMyTurn=null;return}const t=S.tu
  if(ui.wasMyTurn!==key){ui.wasMyTurn=key;ui.lastAct=Date.now();ui.lastRemind=0;return}
  const need=S.mode==='digital'?true:(!t.drawn);if(!need)return;
  if(ui.modal||document.querySelector('.kfx,.bfx'))return;
- const now=Date.now();if(now-ui.lastAct>10000&&now-(ui.lastRemind||0)>10000){ui.lastRemind=now;sfx.ping();toast(S.online||S.players.filter(q=>!q.bot).length<2?'Du bist dran!':cp.name+' ist dran!');document.body.classList.add('remind');setTimeout(()=>document.body.classList.remove('remind'),1600)}},1000);
+ const now=Date.now(),first=!ui.lastRemind||ui.lastRemind<ui.lastAct;if(now-ui.lastAct>(first?20000:10000)&&now-(ui.lastRemind||0)>10000){ui.lastRemind=now;sfx.ping();toast(S.online||S.players.filter(q=>!q.bot).length<2?'Du bist dran!':cp.name+' ist dran!');document.body.classList.add('remind');setTimeout(()=>document.body.classList.remove('remind'),1600)}},1000);
 document.addEventListener('pointerdown',()=>{ui.lastAct=Date.now();audio()},true);
 /* Statistik */
 function statsHTML(){const fin=Object.values(GAMES).map(g=>{try{return JSON.parse(g.json)}catch(e){return null}}).filter(s=>s&&s.screen==='end');
