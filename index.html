@@ -2041,11 +2041,13 @@ function musStart(now){if(!MUS.on||MUS.src||MUS.starting)return;const A=actx();i
  musRender().then(buf=>{MUS.starting=false;if(!buf||!MUS.on||MUS.src)return;const go=()=>{const s=A.createBufferSource();s.buffer=buf;s.loop=true;const g=A.createGain();g.gain.setValueAtTime(0.0001,A.currentTime);g.gain.linearRampToValueAtTime(musGain(),A.currentTime+(now?1.5:4));s.connect(g);g.connect(A.destination);s.start();MUS.src=s;MUS.g=g};if(A.state!=='running'&&A.resume)A.resume().then(go,go);else go()})}
 function musStop(){const s=MUS.src,g=MUS.g;MUS.src=null;MUS.g=null;if(!s||!AC)return;try{g.gain.cancelScheduledValues(AC.currentTime);g.gain.setTargetAtTime(0.0001,AC.currentTime,.25)}catch(e){}setTimeout(()=>{try{s.stop()}catch(e){}},1400)}
 document.addEventListener('click',()=>{if(MUS.on&&!MUS.src&&!ui.splashLock&&!document.documentElement.classList.contains('splash'))musStart()},true);
-document.addEventListener('visibilitychange',()=>{if(!AC)return;try{if(document.visibilityState==='hidden'){ui.audioStale=true;ui.musWas=!!MUS.src;if(MUS.src)AC.suspend()}else{const p=AC.resume&&AC.resume();if(p&&p.catch)p.catch(()=>{})}}catch(e){}});
+document.addEventListener('visibilitychange',()=>{if(!AC)return;try{if(document.visibilityState==='hidden'){ui.audioStale=true;if(MUS.src)AC.suspend()}else{ui.audioStale=true}}catch(e){}});
 function audioWake(){if(!AC||(!SND.on&&!MUS.on))return;if(AC.state==='running'&&!ui.audioStale){if(MUS.on&&!MUS.src&&!ui.splashLock)musStart(true);return}
- const restart=()=>{ui.audioStale=false;if(MUS.on&&!MUS.src&&!ui.splashLock)musStart(true)};
- if(AC.state!=='running'){try{AC.close()}catch(e){}AC=null;MIX=null;MUS.src=null;MUS.g=null;actx();restart();return}
- restart()}
+ ui.audioStale=false;const old=AC,ms=MUS.src;AC=null;MIX=null;MUS.src=null;MUS.g=null;try{if(ms)ms.stop()}catch(e){}try{old.close()}catch(e){}
+ try{if(navigator.audioSession){navigator.audioSession.type='auto';navigator.audioSession.type='playback'}}catch(e){}
+ const A=actx();if(A){try{const b=A.createBuffer(1,1,22050),s0=A.createBufferSource();s0.buffer=b;s0.connect(A.destination);s0.start(0)}catch(e){}}
+ if(MUS.on&&!ui.splashLock)musStart(true)}
+addEventListener('pageshow',e=>{if(e.persisted)ui.audioStale=true});
 ['touchend','click'].forEach(n=>document.addEventListener(n,audioWake,true));
 /* ---------- Verbindungsanzeige ---------- */
 function onlineCtx(){return !!((S&&S.online)||view==='lobby'||view==='join'||MP)}
