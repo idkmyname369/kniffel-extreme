@@ -1297,7 +1297,7 @@ function updatePreview(){const m=ui.modal;if(!m||m.type!=='input')return;const e
  const v=+m.val,L=effectLines(p,t,v,m.rolls,m.id,{kb:m.kb,ke:m.ke});
  el.innerHTML=(v?'Eingabe '+v:'Die Kategorie wird gestrichen.')+'<div class="big">'+L.b.f+' Punkte</div>'+L.html}
 
-function renderModal(){const o=document.getElementById('ov');if(!ui.modal){o.innerHTML='';ui.lastModal=null;if(S&&S.screen==='end'&&!ui.cerDone[S.id])render();return}
+function renderModal(){const o=document.getElementById('ov');if(ui.modal&&['need','pick','gamble','rcount','bet'].includes(ui.modal.type)&&S&&!S.online&&S.players[S.cur]&&S.players[S.cur].bot&&!(ui.modal.type==='pick'&&ui.modal.kind==='oppforce'&&S.turn&&S.turn.decider!=null&&!S.players[S.turn.decider].bot)){o.innerHTML='';ui.lastModal=null;return}if(!ui.modal){o.innerHTML='';ui.lastModal=null;if(S&&S.screen==='end'&&!ui.cerDone[S.id])render();return}
  const dismiss=!['pick','reveal','need','gamble','duel','bet','rcount'].includes(ui.modal.type)||ui.modal.type==='pick'||(ui.modal.type==='need'&&['gift','thief'].includes(ui.modal.need));
  const old=o.querySelector('.sheet'),same=old&&ui.lastModal===ui.modal;const st=same?[old,...old.querySelectorAll('*')].filter(e=>e.scrollTop>0).map(e=>[e===old?'.sheet':(e.className?'.'+String(e.className).trim().split(/\s+/).join('.'):null),e.scrollTop]).filter(x=>x[0]):[];ui.lastModal=ui.modal;
  o.innerHTML='<div class="ov'+(same?' keep':'')+'" '+(dismiss?'data-bg="1"':'')+'><div class="sheet">'+modalHTML()+'</div></div>';
