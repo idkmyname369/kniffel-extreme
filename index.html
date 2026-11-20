@@ -696,7 +696,7 @@ function baseFinal(p,t,raw,rolls,id){const ev=evOf(t),parts=[],c=id?CAT[id]:null
  return{f,parts}}
 function kniffelEligible(p,id){return id!=='kn'&&p.sc.kn&&p.sc.kn.raw===50}
 function keEligible(p,id){return id!=='ke'&&p.sc.ke&&p.sc.ke.raw===75}
-function kniffelBonus(p,id,raw,ctx){if(id==='ke'||id==='kn')return 0;const kOk=kniffelEligible(p,id),keOk=keEligible(p,id);if(!kOk&&!keOk)return 0;const c=CAT[id];let five=false,six=false;
+function kniffelBonus(p,id,raw,ctx){if(id==='ke'||id==='kn'||!(raw>0))return 0;const kOk=kniffelEligible(p,id),keOk=keEligible(p,id);if(!kOk&&!keOk)return 0;const c=CAT[id];let five=false,six=false;
  if(S.mode==='digital'||ctx.dice){const mc=maxC(S.turn.dice);five=mc===5;six=mc>=6}
  else if(c.face){five=raw>0&&raw===c.face*5;six=raw>0&&raw===c.face*6}
  else if(id==='ke'){six=raw===75}
