@@ -1941,11 +1941,11 @@ function inviteText(code){return'Spiel mit mir Kniffel Royale! 🎲 Tippe hier, 
 function frLoad(){try{return JSON.parse(localStorage.getItem('kx-friends'))||{}}catch(e){return{}}}
 function frSave(f){try{localStorage.setItem('kx-friends',JSON.stringify(f))}catch(e){}cloudQueue()}
 function frRecord(seats){if(!seats||!UID)return;const f=frLoad();let ch=false;
- for(const u in seats){const s=seats[u];if(!s||u===UID||!s.name)continue;const nm=String(s.name).trim(),k=nm.toLowerCase();if(!k)continue;const e=f[k]||(f[k]={name:nm,uids:[],fav:false,last:0});
+ const mine=myUids();for(const u in seats){const s=seats[u];if(!s||u===UID||mine.includes(u)||!s.name)continue;const nm=String(s.name).trim(),k=nm.toLowerCase();if(!k)continue;const e=f[k]||(f[k]={name:nm,uids:[],fav:false,last:0});
   if(e.uids[0]!==u){e.uids=[u].concat(e.uids.filter(x=>x!==u)).slice(0,3);ch=true}if(Date.now()-e.last>300000){e.last=Date.now();e.name=nm;ch=true}}
  if(ch)frSave(f)}
 function frList(){return Object.entries(frLoad()).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>(b.fav-a.fav)||(b.last-a.last))}
-function friendsHTML(seats){const fl=frList(),here=new Set(seats.map(x=>x[0]));
+function friendsHTML(seats){const mine=new Set(myUids().concat(UID?[UID]:[])),mySeat=(seats.find(x=>x[0]===UID)||[])[1]||{},myK=String(mySeat.name||setup.myName||'').trim().toLowerCase(),fl=frList().filter(f=>f.k!==myK&&!(f.uids||[]).some(u=>mine.has(u))),here=new Set(seats.map(x=>x[0]));
  let h='<div class="block"><div class="gtitle">Mitspieler einladen</div>';
  if(!fl.length)return h+'<div class="group"><div class="cell cs">Hier erscheinen alle, mit denen du schon online gespielt hast.</div></div></div>';
  h+='<div class="group">'+fl.map(f=>{const inL=f.uids.some(u=>here.has(u)),st=ui.invSent&&ui.invSent[f.k],sent=st&&Date.now()-st<15000,again=st&&!sent;
