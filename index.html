@@ -1282,7 +1282,7 @@ function modalHTML(){const m=ui.modal;
   (canRetry&&!m.raw?'<button class="btn tint" data-a="retry" style="margin-bottom:10px">Rettungsring: Zug wiederholen</button>':'')+
   '<div class="btnrow"><button class="btn gray" data-a="'+(m.fromDice?'opendice':'close')+'">'+(m.fromDice?'Zurück':'Abbrechen')+'</button><button class="btn '+(m.raw?'':'red')+'" data-a="ok">'+(m.raw?'Eintragen':'Streichen')+'</button></div>'}
  if(m.type==='input'){let q=[];if(c.face)q=[0,1,2,3,4,5,6].map(k=>k*c.face);else if(c.fixed)q=[0,c.fixed];
-  const noK=['ks','gs','hw','fh'].includes(m.id);const kbBox=kniffelEligible(p,m.id)&&!c.face&&m.id!=='ke'&&m.id!=='dpa'&&m.id!=='zd'&&m.id!=='gfh'&&!noK,keBox=keEligible(p,m.id)&&!c.face&&m.id!=='kn'&&!noK;
+  const noK=['ks','gs','hw'].includes(m.id);const kbBox=kniffelEligible(p,m.id)&&!c.face&&m.id!=='ke'&&m.id!=='dpa'&&m.id!=='zd'&&m.id!=='gfh'&&!noK,keBox=keEligible(p,m.id)&&!c.face&&m.id!=='kn'&&!noK;
   const fx=!!c.fixed&&!c.face;if(fx&&m.val!=='0')m.val=String(c.fixed);
   return'<div class="grab"></div><h2>'+c.name+'</h2><p class="muted">'+c.hint+'</p>'+(c.face?'<div class="quick">'+[1,2,3,4,5,6].map(k=>k*c.face).map(v=>'<button data-a="qv" data-v="'+v+'" class="'+(String(v)===m.val?'on':'')+'">'+v+'</button>').join('')+'</div>':'')+(fx?'':'<div class="field"><input type="number" inputmode="numeric" id="numin" placeholder="Gewürfelte Punkte" value="'+(m.val==='0'?'':m.val)+'"></div>')+
   (ev&&ev.cost?'<div class="gtitle" style="padding:6px 2px">Wie oft hast du gewürfelt?</div><div class="seg" style="margin:0 0 10px">'+Array.from({length:t.max},(_,i)=>i+1).map(n=>'<button class="'+(m.rolls===n?'on':'')+'" data-a="mrolls" data-v="'+n+'">'+n+'×</button>').join('')+'</div>':'')+
