@@ -26,6 +26,11 @@ button:disabled{cursor:default}
 .large{font-size:34px;font-weight:700;letter-spacing:-.025em;margin:2px 0 4px;line-height:1.1}
 .lead{color:var(--sec);font-size:15px;margin:0 0 26px;line-height:1.4}
 .gtitle{display:flex;justify-content:space-between;align-items:flex-end;font-size:13px;color:var(--sec);text-transform:uppercase;letter-spacing:.03em;padding:0 16px 7px}
+.secbtn{width:100%;background:none;border:0;font-family:inherit;cursor:pointer;align-items:center;-webkit-tap-highlight-color:transparent}
+.secchev{display:inline-block;font-size:24px;line-height:1;color:var(--sec);text-transform:none;transition:transform .2s;transform:rotate(0deg);margin-right:2px}
+.secchev.open{transform:rotate(90deg)}
+.secrow{width:100%;display:flex;align-items:center;gap:10px;border-radius:14px;background:var(--card,#2c2c2e);border:0;color:var(--text,#fff);font:inherit;font-size:17px;padding:15px 16px;text-align:left;cursor:pointer}
+.secrow b{font-weight:600}.secrow b.ok{color:var(--green,#30d158)}
 .gtitle .links button{color:var(--blue);font-size:15px;text-transform:none;letter-spacing:-.01em;margin-left:14px}
 .gfoot{font-size:13px;color:var(--ter);padding:7px 16px 0;line-height:1.4}
 .group{background:var(--card);border-radius:14px;overflow:hidden}
@@ -1131,7 +1136,8 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=isDig();con
 
 function sheetHTML(p,t){const dig=isDig();let h='';
  for(const [s,label] of [['oben','Oberer Teil'],['unten','Unterer Teil']]){
-  h+='<div class="block"><div class="gtitle"><span>'+label+'</span></div><div class="group">';
+  if(foldOpen('secc-'+s)){const up=s==='oben'?totals(p):null;h+='<div class="block"><button class="cell secrow" data-a="fold" data-k="secc-'+s+'"><span class="grow">'+label+(up?': <b class="'+(up.bonus?'ok':'')+'">'+fmtN(up.upAcc)+' / '+p.bt+'</b>':'')+'</span><span class="secchev">›</span></button></div>';continue}
+  h+='<div class="block"><button class="gtitle secbtn" data-a="fold" data-k="secc-'+s+'"><span>'+label+'</span><span class="secchev open">›</span></button><div class="group">';
   for(const c of CATS.filter(c=>c.sec===s)){const e=p.sc[c.id];let val,cls='';const live=!!t;
    if(e){cls='done';val=(e.prot?'<span class="tag prot">Schild</span>':'')+(e.kbon?'<span class="tag kbt">+'+e.kbon+' '+(e.kbon===75?'KE':'Kniffel')+'</span>':'')+'<span class="val'+(e.final<0?' negv':'')+'">'+(e.final===0&&e.tag==='✕'?'—':fmtN(e.final))+'</span>'+(e.tag&&e.tag!=='✕'?'<span class="tag'+(/[½−→]/.test(e.tag)?' neg':'')+'">'+e.tag+'</span>':'')}
    else if(!live)val='<span class="cs">offen</span>';
