@@ -539,6 +539,8 @@ const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
 const BONUS_T=73,BONUS_P=45;
 
 /* ---------- Ereigniskarten ---------- */
+const HARM=new Set(['half','bet','teuer','teuer10','force','oppforce','b100','b0','uam15','strike','swap','backlash','sacrifice','gamble','duel','tax','collapse','umsonst','fate','down10','ones','twos','threes','pionier','thief','gift','share','mix','bomb','revenge','don','nexthalf']);
+const isHarm=id=>HARM.has(id)||id.startsWith('pf_');
 const GROUPS=[['wuerfe','Würfe & Würfel'],['wertung','Wertung'],['bonus','Bonus & Konto oben'],['spezial','Gegner & Spezial'],['pflicht','Pflichtwurf'],['verdeckt','Verdeckt – Aufdecken nach der Wertung'],['topf','Tresor']];
 const EVENTS=[
  {id:'extra',g:'wuerfe',gl:'+1',title:'Extra-Wurf',text:'Du hast diese Runde 4 Würfe.',rolls:4},
@@ -1063,6 +1065,7 @@ function setupHTML(){
  h+='<div class="block"><div class="gtitle">Würfel</div><div class="group"><div class="seg"><button class="'+(setup.mode==='digital'?'on':'')+'" data-a="mode" data-m="digital">Digital würfeln</button><button class="'+(setup.mode==='manual'?'on':'')+'" data-a="mode" data-m="manual">Eigene Würfel</button></div></div><div class="gfoot">'+(setup.mode==='digital'?'Gewürfelt wird hier in der App. Würfel antippen zum Halten, die Punkte werden automatisch berechnet.':'Ihr würfelt mit echten Würfeln und tragt die Punkte selbst ein. Würfel-Karten wie Joker oder Spiegelwürfel führt ihr mit euren Würfeln aus.')+'</div></div>';
  const isSolo=!on&&setup.n<2;
  {const po=setup.sel.includes('topf');h+='<div class="block"><div class="gtitle">Tresor</div><div class="group"><button class="cell" data-a="tog" data-id="topf"><div class="glyph g-topf">🔑</div><div class="grow"><div class="ct">Mit Tresor spielen</div><div class="cs">Alle Punkte, die verloren gehen, wandern in den Tresor. Wer die Karte „Tresorschlüssel“ zieht, bekommt den Schlüssel – und alles, was drin liegt.</div></div>'+sw(po)+'</button></div></div>'}
+ {const hs=EVENTS.filter(e=>isHarm(e.id)),hon=!hs.some(e=>setup.sel.includes(e.id));h+='<div class="block"><div class="group"><button class="cell" data-a="harmtog"><div class="glyph" style="background:rgba(48,209,88,.18);color:#30d158">☮</div><div class="grow"><div class="ct">Ohne Minus- &amp; Streichkarten</div><div class="cs">Schaltet alle '+hs.length+' Karten aus, durch die du oder ein Mitspieler Punkte verlieren oder etwas streichen müsste.</div></div>'+sw(hon)+'</button></div></div>'}
  h+='<div class="block"><div class="gtitle"><span>Ereigniskarten · '+setup.sel.length+' aktiv</span><span class="links"><button data-a="selall">Alle</button><button data-a="selnone">Keine</button></span></div><div class="group">';
  const row=e=>{const on=setup.sel.includes(e.id),off=isSolo&&e.multi;return'<button class="cell '+(off?'off':'')+'" data-a="tog" data-id="'+e.id+'">'+glyph(e)+'<div class="grow"><div class="ct">'+e.title+'</div><div class="cs">'+e.text+(off?' (ab 2 Spielern)':'')+'</div></div>'+sw(on)+'</button>'};
  for(const [g,label] of GROUPS){if(g==='topf')continue;h+='<div class="sub-h">'+label+'</div>';const list=EVENTS.filter(e=>e.g===g);
@@ -1418,7 +1421,8 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'tog':{const id=b.dataset.id,i=setup.sel.indexOf(id);if(i<0)setup.sel.push(id);else setup.sel.splice(i,1);saveSel();render();break}
   case'pfall':{const ids=EVENTS.filter(e=>e.g==='pflicht').map(e=>e.id);const all=ids.every(id=>setup.sel.includes(id));setup.sel=setup.sel.filter(id=>!ids.includes(id));if(!all)setup.sel.push(...ids);saveSel();render();break}
   case'pfopen':setup.pfOpen=!setup.pfOpen;render();break;
-  case'selall':setup.sel=EVENTS.map(e=>e.id);saveSel();render();break;
+  case'harmtog':{const ids=EVENTS.filter(e=>isHarm(e.id)).map(e=>e.id);const anyOn=ids.some(id=>setup.sel.includes(id));setup.sel=setup.sel.filter(id=>!ids.includes(id));if(!anyOn)setup.sel.push(...ids);saveSel();render();toast(anyOn?ids.length+' Minus- & Streichkarten ausgeschaltet':'Minus- & Streichkarten wieder an');break}
+   case'selall':setup.sel=EVENTS.map(e=>e.id);saveSel();render();break;
   case'selnone':setup.sel=[];saveSel();render();break;
   case'start':{const nb=setup.online?0:(setup.bots||0);const names=setup.names.slice(0,setup.n).map((n,i)=>n.trim()||'Spieler '+(i+1)).concat((setup.botNames||BOT_NAMES).slice(0,nb).map((n,i)=>(n||'').trim()||'Bot '+(i+1)));{const lc=names.map(x=>x.toLowerCase());const dup=names.find((x,i)=>lc.indexOf(x.toLowerCase())!==i);if(dup){toast('„'+dup+'“ kommt doppelt vor – jeder Name nur einmal');break}}newGame(names,nb?'digital':setup.mode,setup.sel.slice(),names.map((_,i)=>i>=setup.n),names.map((_,i)=>i<setup.n?(setup.colors||[])[i]:(setup.botColors||[])[i-setup.n]),names.map((_,i)=>i<setup.n?null:((setup.botLvl||[])[i-setup.n]??1)));window.scrollTo(0,0);break}
   case'new':setup.online=false;{const mn=(setup.myName||'').trim();if(mn&&(!setup.names[0]||/^Spieler \d$/.test(setup.names[0])))setup.names[0]=mn}view='setup';render();window.scrollTo(0,0);break;
