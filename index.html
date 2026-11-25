@@ -672,6 +672,8 @@ const solo=()=>S.players.length<2;
 const activeIds=()=>S.events.filter(id=>EV[id]&&(!EV[id].multi||!solo()));
 function freshTurn(){return{drawn:!activeIds().length,ev:null,note:'',pending:null,lock:null,blocked:null,dice:[1,1,1,1,1,1],held:[false,false,false,false,false,false],fixed:-1,startPick:false,rolls:0,max:3,jokerN:0,jokerDice:[],jokerUsed:false,tool:null,mirUsed:false,rerollUsed:false,retryUsed:false}}
 function newGame(names,mode,events,botFlags,colors,lvls){S={id:newId(),created:Date.now(),screen:'game',mode,events,players:names.map(n=>({name:n,sc:{},bt:BONUS_T,bf:1,ua:0,kb:0,adj:0,half:false,got:[],pf:0})),cur:0};S.potOn=(events||[]).includes('topf');S.pot=0;S.hist=[{tot:names.map(()=>0)}];if(botFlags){let bs=0;S.players.forEach((q,i)=>{if(botFlags[i]){q.bot=true;q.bslot=bs++;q.lvl=lvls&&lvls[i]!=null?lvls[i]:1}})}{const cl=assignColors(names.map((_,i)=>colors&&colors[i]!=null?colors[i]:null));S.players.forEach((q,i)=>q.color=cl[i])}S.turn=freshTurn();save();render()}
+function digPref(uid){const d=MP&&MP.lobby&&MP.lobby.dig;return d&&uid&&d[uid]!=null?!!d[uid]:null}
+function isDig(pi){if(!S)return false;const p=S.players&&S.players[pi==null?S.cur:pi];if(S.online&&p&&p.uid){const v=digPref(p.uid);if(v!=null)return v}return S.mode==='digital'}
 const evOf=t=>t&&t.ev?EV[t.ev]:null;
 const dOf=t=>t.dice;
 const openCats=p=>CATS.filter(c=>!p.sc[c.id]);
@@ -691,13 +693,13 @@ function baseFinal(p,t,raw,rolls,id){const ev=evOf(t),parts=[],c=id?CAT[id]:null
  if(ev&&ev.fixedMult&&c&&c.fixed){f*=ev.fixedMult;parts.push('×'+ev.fixedMult)}
  if(p.half){f=Math.floor(f/2);parts.push('½')}
  if(ev&&ev.cost&&rolls>1){const k=ev.cost*(rolls-1);f=Math.max(0,f-k);parts.push('−'+k)}
- if(ev&&ev.hattrick&&(['hw','kn','ke'].includes(id)||(S.mode==='digital'&&maxC(t.dice)>=5)||(c&&c.face&&raw>=c.face*5))){f+=100;parts.push('+100')}
+ if(ev&&ev.hattrick&&(['hw','kn','ke'].includes(id)||(isDig()&&maxC(t.dice)>=5)||(c&&c.face&&raw>=c.face*5))){f+=100;parts.push('+100')}
  if(onBet){f+=t.bet.stake;parts.push('Wette +'+t.bet.stake)}
  return{f,parts}}
 function kniffelEligible(p,id){return id!=='kn'&&p.sc.kn&&p.sc.kn.raw===50}
 function keEligible(p,id){return id!=='ke'&&p.sc.ke&&p.sc.ke.raw===75}
 function kniffelBonus(p,id,raw,ctx){if(id==='ke'||id==='kn'||!(raw>0))return 0;const kOk=kniffelEligible(p,id),keOk=keEligible(p,id);if(!kOk&&!keOk)return 0;const c=CAT[id];let five=false,six=false;
- if(S.mode==='digital'||ctx.dice){const mc=maxC(S.turn.dice);five=mc===5;six=mc>=6}
+ if(isDig()||ctx.dice){const mc=maxC(S.turn.dice);five=mc===5;six=mc>=6}
  else if(c.face){five=raw>0&&raw===c.face*5;six=raw>0&&raw===c.face*6}
  else if(id==='ke'){six=raw===75}
  else{six=!!ctx.ke;five=!six&&!!ctx.kb}
@@ -776,7 +778,7 @@ function drawEvent(){const t=S.turn,p=S.players[S.cur];const __ps=S.potOn?potSna
  if(ev.lock)t.lock=ev.lock;
  if(ev.pick==='oppforce'||ev.fremd){t.decider=rnd(S.players.map((_,i)=>i).filter(i=>i!==S.cur));const dn=esc(S.players[t.decider].name);t.note=(S.online||(!S.online&&S.players.some(q=>q.bot)))?(ev.fremd?dn+' bestimmt nach dem ersten Wurf, welche Würfel '+esc(p.name)+' hält.':dn+' entscheidet, in welcher Kategorie '+esc(p.name)+' wertet.'):(ev.fremd?dn+' bestimmt nach deinem ersten Wurf, welche Würfel du hältst.':dn+' entscheidet, in welcher Kategorie du wertest.')}
  if(ev.block){const pool=shuffle3(openCats(p));t.blocked=pool.map(c=>c.id);t.note='Gesperrt: '+pool.map(c=>'„'+c.name+'“').join(', ')+'.'}
- if(ev.start&&S.mode==='digital')t.startPick=true;
+ if(ev.start&&isDig())t.startPick=true;
  if(ev.now==='tax'){const lst=[];S.players.forEach(q=>{if(q===p)return;const l=totals(q).lo,d=Math.floor(Math.max(0,l)*0.1);q.adj=(q.adj||0)-d;lst.push(esc(q.name)+' <b class="negv">−'+d+'</b>')});t.note='Abgezogen: '+lst.join(', ')+'. Jetzt normal würfeln.'}
  else if(ev.now==='dblup'){CATS.filter(c=>c.sec==='oben').forEach(c=>{const e=p.sc[c.id];if(e&&e.final){e.final*=2;addTag(e,'×2')}});p.ua=(p.ua||0)*2;t.note='Deine bonusrelevanten Punkte wurden verdoppelt: Bonus-Konto jetzt '+fmtN(totals(p).upAcc)+' / 100. Dein Wurf zählt diesen Zug ×4.'}
  else if(ev.now==='peek'){p.peekUntil=(CATS.length-openCats(p).length)+3;t.note=S.online?'Nur du siehst jetzt 3 Runden lang die Gesamtpunkte aller Spieler. Dein Wurf zählt diesen Zug ×3.':'Halte in deinen nächsten Zügen oben die Schaltfläche gedrückt, um die Gesamtpunkte zu sehen. Dein Wurf zählt diesen Zug ×3.'}
@@ -827,14 +829,14 @@ function _applyPick(kind,key){const t=S.turn,me=S.players[S.cur];if(kind==='reve
 
 /* ---------- Verdeckte Effekte ---------- */
 const SLOT_SYM=['+25','×2','×3'];
-const FREE_ACT=new Set(['pickcol','setcol','cardinfo','viewp','board','menu','close','home','ddtoggle','askdel','del','new','open','mpnew','mpjoinview','mpcreate','mpjoin','mpstart','mpleave','mpcopy','cards','sound','undo','mprematch','fold','botresetview','botreset','potlog','pnsave','musictog','profile','authview','authmode','authgo','authreset','authprov','logout','logoutok','acctdel','acctdelok','resetask','resetok','reauthgo','rxopen','rxsend','rxtog','askleave','leave','mpwa','mpshare','frfav','frinv','frdel','intro','stats','pushtog','pushtest']);
+const FREE_ACT=new Set(['pickcol','setcol','cardinfo','viewp','board','menu','close','home','ddtoggle','askdel','del','new','open','mpnew','mpjoinview','mpcreate','mpjoin','mpstart','mpleave','mpcopy','cards','sound','undo','mprematch','fold','botresetview','botreset','potlog','pnsave','musictog','digtog','profile','authview','authmode','authgo','authreset','authprov','logout','logoutok','acctdel','acctdelok','resetask','resetok','reauthgo','rxopen','rxsend','rxtog','askleave','leave','mpwa','mpshare','frfav','frinv','frdel','intro','stats','pushtog','pushtest']);
 function spinSlots(m){if(m.spinning)return;m.spinning=true;const btn=document.getElementById('spinbtn');if(btn){btn.disabled=true;btn.textContent='Die Walzen drehen sich …'}
  const reels=[0,1,2].map(()=>rnd(SLOT_SYM));let v=m.amount;const steps=['Start: '+v];
  reels.forEach((res,i)=>{const strip=document.getElementById('strip'+i),win=document.getElementById('reel'+i);if(!strip||!win)return;const H=win.clientHeight;const n=26+i*10;let html='<div>'+strip.textContent+'</div>';for(let k=1;k<n;k++)html+='<div>'+SLOT_SYM[(k+i)%3]+'</div>';html+='<div>'+res+'</div>';strip.style.transition='none';strip.style.transform='translateY(0)';strip.innerHTML=html;void strip.offsetHeight;
   const dur=1.6+i*0.9;requestAnimationFrame(()=>{strip.style.transition='transform '+dur+'s cubic-bezier(.15,.7,.2,1)';strip.style.transform='translateY(-'+(n*H)+'px)'});
   setTimeout(()=>{if(ui.modal!==m)return;win.classList.add('stopped');v=res==='+25'?v+25:v*(res==='×2'?2:3);steps.push(res+' = '+v);const el=document.getElementById('slotcalc');if(el)el.textContent=steps.join(' → ')},dur*1000+60)});
  setTimeout(()=>{if(ui.modal!==m)return;m.ctx.reels=reels;commit(m.id,m.raw,m.ctx)},(1.6+2*0.9)*1000+1100)}
-function applyAfter(entry,kind,cid,ctx,p){const c=CAT[cid],dig=S.mode==='digital',t=S.turn;const res={before:entry.final,text:''};
+function applyAfter(entry,kind,cid,ctx,p){const c=CAT[cid],dig=isDig(),t=S.turn;const res={before:entry.final,text:''};
  const others=S.players.filter(q=>q!==p);
  switch(kind){
   case'umsonst':entry.raw=0;entry.final=0;entry.tag='✕';res.text='Die Kategorie wird gestrichen.';break;
@@ -867,13 +869,13 @@ function catTap(id){const t=S.turn,p=S.players[S.cur],c=CAT[id];if(p.sc[id])retu
  if(!t.drawn){toast('Zieh zuerst deine Ereigniskarte');return}
  if(t.pending){openPending();return}
  if(!allowed(p,t,c)){toast(t.lock?'Diese Runde nur „'+CAT[t.lock].name+'“':'„'+c.name+'“ ist diese Runde gesperrt');return}
- if(S.mode==='digital'){if(t.startPick){toast('Wähle zuerst deinen Startwürfel');return}if(t.rolls===0){toast('Erst würfeln');return}if(t.tool){toast('Beende zuerst die Würfel-Aktion');return}ui.modal={type:'confirm',id,raw:c.calc(dOf(t))}}
+ if(isDig()){if(t.startPick){toast('Wähle zuerst deinen Startwürfel');return}if(t.rolls===0){toast('Erst würfeln');return}if(t.tool){toast('Beende zuerst die Würfel-Aktion');return}ui.modal={type:'confirm',id,raw:c.calc(dOf(t))}}
  else ui.modal={type:'input',id,val:'',rolls:t.max,kb:false};
  renderModal()}
 
 function nextIndex(){const n=S.players.length;for(let k=1;k<=n;k++){const i=(S.cur+k)%n;if(openCats(S.players[i]).length)return i}return -1}
 
-function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evOf(t),dig=S.mode==='digital';const after=ev&&ev.after;
+function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evOf(t),dig=isDig();const after=ev&&ev.after;
  if(after==='retry'&&!t.retryUsed&&!(raw>0)){t.retryRevealed=true;t.note='Rettungsring! Du hättest streichen müssen – stattdessen wiederholst du den ganzen Zug.';ui.modal=null;renderModal();sfx.flip();ui.flip=true;setTimeout(()=>ui.flip=false,850);retryTurn();return}
  if(after==='mix'&&ctx.mixId===undefined){const o=CATS.filter(c=>c.id!==id&&!p.sc[c.id]&&!isBlocked(t,c.id));ctx.mixId=o.length?rnd(o).id:null}
  let need=null;
@@ -916,7 +918,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  if(reveal){sfx.reveal();if(S.lastReveal)ui.seenReveal=S.lastReveal.seq;ui.modal=null;renderModal();if(kb)toast(kbLabel(kb)+' für '+p.name)}
  else{ui.modal=null;renderModal();if(kb)toast(kbLabel(kb)+' für '+p.name)}}
 
-function retryTurn(){const t=S.turn;t.rolls=0;t.mdice=[];t.held=t.held.map((_,i)=>i===t.fixed);t.retryUsed=true;t.jokerUsed=false;t.jokerDice=[];t.mirUsed=false;t.mirDice=[];t.rerollUsed=false;t.tool=null;ui.modal=null;renderModal();save();render();toast(S.mode==='digital'?'Rettungsring: Zug neu beginnen':'Rettungsring: würfle den Zug neu')}
+function retryTurn(){const t=S.turn;t.rolls=0;t.mdice=[];t.held=t.held.map((_,i)=>i===t.fixed);t.retryUsed=true;t.jokerUsed=false;t.jokerDice=[];t.mirUsed=false;t.mirDice=[];t.rerollUsed=false;t.tool=null;ui.modal=null;renderModal();save();render();toast(isDig()?'Rettungsring: Zug neu beginnen':'Rettungsring: würfle den Zug neu')}
 
 function validate(c,v){if(v===''||isNaN(v))return'Bitte eine Zahl eingeben.';v=+v;if(v<0||!Number.isInteger(v))return'Nur ganze Zahlen ab 0.';if(v===0)return'';
  if(c.face){if(v%c.face||v>c.face*6)return c.name+': nur Vielfache von '+c.face+' bis '+c.face*6+'.';return''}
@@ -967,7 +969,7 @@ function mpLeave(){if(MP&&MP.unsub){try{MP.unsub()}catch(e){}}MP=null}
 function mpSubscribe(code){mpLeave();const ref=DB.doc('mp/'+code);const m={code,ref,busy:false,dirty:false,tm:null,lobby:null,warned:false};MP=m;
  m.unsub=ref.onSnapshot(snap=>{if(MP!==m)return;
   if(!snap.exists){m.lobby=null;if(!S&&view==='lobby'&&!snap.metadata.fromCache){toast('Dieses Spiel gibt es nicht mehr');view='home';mpLeave();render()}return}
-  const d=snap.data();m.lobby=d;rxCheck(d);if(d&&d.status&&d.status!=='lobby')frRecord(d.seats);
+  const d=snap.data();m.lobby=d;{const dg=JSON.stringify(d&&d.dig||{});if(m.digS!=null&&m.digS!==dg&&S){m.digS=dg;setTimeout(()=>{if(MP===m&&S){render();if(ui.modal&&ui.modal.type==='menu')renderModal()}},0)}m.digS=dg}rxCheck(d);if(d&&d.status&&d.status!=='lobby')frRecord(d.seats);
   presUpdate(d);
   if(d.next&&d.next!==m.code){const nc=d.next;if(d.nextWhy==='del'){const oid='mp-'+m.code;delete GAMES[oid];persistLocal();remoteDelete(oid);toast('Der Gastgeber hat das Spiel gelöscht – zurück in der Lobby');ui.modal=null;renderModal();view='lobby'}else toast('Revanche gestartet!');ui.seenReveal=0;ui.seenFx=0;S=null;mpSubscribe(nc);return}
   if(d.status==='lobby'){if(!S){view='lobby';render()}return}
@@ -1070,7 +1072,7 @@ function setupHTML(){
  h+='</div><div class="sticky"><button class="btn" data-a="'+(on?'mpcreate':'start')+'">'+(on?'Lobby erstellen':'Spiel starten')+'</button></div>';
  return h}
 
-function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='digital';const done=CATS.length-openCats(p).length;
+function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=isDig();const done=CATS.length-openCats(p).length;
  const vi=(ui.viewP!=null&&ui.viewP!==S.cur&&S.players[ui.viewP])?ui.viewP:S.cur,viewing=vi!==S.cur;
  const act=canAct(),mine=!S.online||act,W=!act||(p&&p.bot),Y=x=>W?youN(x,esc(p.name)):x;
  let h='<div class="top"><div><div class="eyebrow">'+(S.online?'Online · '+esc(S.online.code)+' · ':'')+'Runde '+(done+1)+' von '+CATS.length+'</div></div><div style="display:flex;gap:8px;margin-top:4px">'+(!dig&&!viewing&&mine?'<button class="iconbtn accent" data-a="opendice">Würfel</button>':'')+'<button class="iconbtn" data-a="board">Tabelle</button><button class="iconbtn" data-a="menu">•••</button><button class="iconbtn undo-r" data-a="undo" aria-label="Rückgängig" '+(typeof undoOk==='function'&&undoOk()?'':'disabled')+'><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div></div>';
@@ -1127,7 +1129,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=S.mode==='d
  if(S.online&&rxOn()&&!dig)h+='<button class="rxbtn rxfixed" data-a="rxopen" aria-label="Reaktion">😀</button>';
  return h}
 
-function sheetHTML(p,t){const dig=S.mode==='digital';let h='';
+function sheetHTML(p,t){const dig=isDig();let h='';
  for(const [s,label] of [['oben','Oberer Teil'],['unten','Unterer Teil']]){
   h+='<div class="block"><div class="gtitle"><span>'+label+'</span></div><div class="group">';
   for(const c of CATS.filter(c=>c.sec===s)){const e=p.sc[c.id];let val,cls='';const live=!!t;
@@ -1215,10 +1217,10 @@ function modalHTML(){const m=ui.modal;
   return'<div class="grab"></div><h2>'+c.name+' korrigieren</h2><p class="muted">'+esc(q.name)+' · eingetragen: '+e.final+(e.tag&&e.tag!=='✕'?' ('+e.tag+')':'')+'. Gib die richtigen Punkte ein – Ereignis-Effekte werden dabei nicht neu berechnet.</p>'+(qv.length?'<div class="quick">'+qv.map(v=>'<button data-a="qv" data-v="'+v+'" class="'+(String(v)===m.val?'on':'')+'">'+v+'</button>').join('')+'</div>':'')+
   '<div class="field"><input type="number" inputmode="numeric" id="numin" placeholder="Richtige Punkte" value="'+m.val+'"></div><div class="err" id="err"></div><div class="btnrow" style="margin-bottom:10px"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn" data-a="editok">Speichern</button></div><button class="btn gray" data-a="editdel" style="color:var(--red)">Eintrag entfernen (Kategorie wieder frei)</button>'}
  if(m.type==='cards')return cardsHTML();
- if(m.type==='menu')return'<div class="grab"></div><h2>Menü</h2><p class="muted">Das Spiel wird automatisch gespeichert und kann jederzeit aus der Übersicht fortgesetzt werden.</p><div class="btnrow" style="flex-direction:column"><button class="btn gray" data-a="close">Weiterspielen</button><button class="btn gray" data-a="cards">Ereigniskarten ansehen</button><button class="btn gray" data-a="sound">'+(SND.on?'Soundeffekte: an':'Soundeffekte: aus')+'</button><button class="btn gray" data-a="musictog">'+(MUS.on?'Musik: an':'Musik: aus')+'</button><button class="btn gray" data-a="home">Zur Übersicht</button>'+(S.online&&S.screen!=='end'&&S.online.host!==UID?'<button class="btn red" data-a="askdel" data-id="'+S.id+'">Spiel verlassen</button>':'<button class="btn red" data-a="askdel" data-id="'+S.id+'">Spiel löschen</button>'+(S.online&&S.screen!=='end'&&S.players.length>1?'<button class="btn gray" data-a="askleave" data-id="'+S.id+'" style="color:var(--red,#ff453a)">Nur selbst verlassen</button>':''))+'</div>';
+ if(m.type==='menu')return'<div class="grab"></div><h2>Menü</h2><p class="muted">Das Spiel wird automatisch gespeichert und kann jederzeit aus der Übersicht fortgesetzt werden.</p><div class="btnrow" style="flex-direction:column"><button class="btn gray" data-a="close">Weiterspielen</button><button class="btn gray" data-a="cards">Ereigniskarten ansehen</button><button class="btn gray" data-a="sound">'+(SND.on?'Soundeffekte: an':'Soundeffekte: aus')+'</button><button class="btn gray" data-a="musictog">'+(MUS.on?'Musik: an':'Musik: aus')+'</button>'+(S.online&&S.screen!=='end'&&S.players.some(q=>q.uid===UID)?'<button class="btn gray" data-a="digtog">'+(isDig(S.players.findIndex(q=>q.uid===UID))?'Digital würfeln: an':'Digital würfeln: aus')+'</button>':'')+'<button class="btn gray" data-a="home">Zur Übersicht</button>'+(S.online&&S.screen!=='end'&&S.online.host!==UID?'<button class="btn red" data-a="askdel" data-id="'+S.id+'">Spiel verlassen</button>':'<button class="btn red" data-a="askdel" data-id="'+S.id+'">Spiel löschen</button>'+(S.online&&S.screen!=='end'&&S.players.length>1?'<button class="btn gray" data-a="askleave" data-id="'+S.id+'" style="color:var(--red,#ff453a)">Nur selbst verlassen</button>':''))+'</div>';
  if(m.type==='del'){const g=GAMES[m.id];let nm='';try{nm=JSON.parse(g.json).players.map(p=>p.name).join(', ')}catch(e){}const hl=!m.leave&&hostLive(m.id),ml=m.leave||memberLive(m.id);if(ml)return'<div class="grab"></div><h2>Spiel verlassen?</h2><p class="muted">Deine Punkte und Kategorien werden entfernt, als hättest du nie mitgespielt. Die anderen spielen ohne dich weiter.'+(m.leave?' Der Gastgeber-Platz geht an einen Mitspieler.':'')+'</p><div class="btnrow"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn red" data-a="leave" data-id="'+m.id+'">Verlassen</button></div>';return'<div class="grab"></div><h2>Spiel löschen?</h2><p class="muted">'+esc(nm)+(hl?' – das Spiel wird für alle Mitspieler beendet. Ihr landet zusammen in der Lobby und könnt direkt ein neues Spiel starten.':' – das Spiel wird endgültig gelöscht.')+'</p><div class="btnrow"><button class="btn gray" data-a="close">Abbrechen</button><button class="btn red" data-a="del" data-id="'+m.id+'">Löschen</button></div>'}
  if(m.type==='bet'){const ev=EV.bet;return'<div class="grab"></div><div class="reveal">'+glyph(ev)+'<h2>Wetteinsatz</h2><p class="muted">Wie viel setzt du? Danach bekommst du 3 zufällige offene Kategorien. Schaffst du eine davon, gibt es dort deine Punkte plus den Einsatz. Schaffst du keine, steht der Einsatz als Minus in einer der drei – du wählst, in welcher.</p></div><div class="quick stakes">'+[50,60,70,80,90,100].map(v=>'<button data-a="betv" data-v="'+v+'">'+v+'</button>').join('')+'</div>'}
- if(m.type==='duel'){const ev=EV.duel,dig=S.mode==='digital';let h='<div class="grab"></div><div class="reveal">'+glyph(ev)+'<h2>'+ev.title+(m.round>1&&m.phase!=='done'?' · Stechen':'')+'</h2><p class="muted">'+ev.text+'</p></div>';
+ if(m.type==='duel'){const ev=EV.duel,dig=isDig();let h='<div class="grab"></div><div class="reveal">'+glyph(ev)+'<h2>'+ev.title+(m.round>1&&m.phase!=='done'?' · Stechen':'')+'</h2><p class="muted">'+ev.text+'</p></div>';
   if(m.phase==='tie')h+='<div class="calc" style="color:var(--orange)">Gleichstand! '+m.cont.map(i=>esc(S.players[i].name)).join(' und ')+' würfeln noch mal.</div>';
   h+='<div class="pick" style="max-height:none">';
   S.players.forEach((q,i)=>{const inC=m.cont.includes(i)&&m.phase!=='done',v=m.vals[i]!=null?m.vals[i]:m.last[i];let right='';
@@ -1231,11 +1233,11 @@ function modalHTML(){const m=ui.modal;
   if(dig)return h+'<button class="btn" data-a="dthrow" '+(m.phase==='spin'?'disabled':'')+'>'+(m.round>1?'Stechen würfeln':'Alle würfeln')+'</button>';
   return h+'<div class="gfoot" style="padding:0 0 10px">Jeder wirft einen Würfel – tippe die Ergebnisse an.</div><button class="btn" data-a="deval" '+(m.cont.every(i=>m.vals[i]!=null)?'':'disabled')+'>Auswerten</button>'}
  if(m.type==='rcount'){const ev=EV.rcount;let h='<div class="grab"></div><div class="reveal">'+glyph(ev)+'<h2>'+ev.title+'</h2><p class="muted">'+ev.text+'</p>';
-  if(S.mode==='digital'){h+='<div class="bigdie '+(m.phase==='spin'?'spin':'')+'">'+(m.phase==='ready'?'':pips(m.phase==='spin'?r6():m.d))+'</div><div class="outcome" style="min-height:30px">'+(m.phase==='done'?m.d+(m.d===1?' Wurf':' Würfe')+' in diesem Zug':'')+'</div></div>';
+  if(isDig()){h+='<div class="bigdie '+(m.phase==='spin'?'spin':'')+'">'+(m.phase==='ready'?'':pips(m.phase==='spin'?r6():m.d))+'</div><div class="outcome" style="min-height:30px">'+(m.phase==='done'?m.d+(m.d===1?' Wurf':' Würfe')+' in diesem Zug':'')+'</div></div>';
    return h+'<button class="btn" data-a="rcthrow" '+(m.phase!=='ready'?'disabled':'')+'>Würfel werfen</button>'}
   return h+'</div><div class="calc">Wirf einen Würfel und tippe das Ergebnis an.</div><div class="quick nums">'+[1,2,3,4,5,6].map(v=>'<button data-a="rcval" data-v="'+v+'">'+v+'</button>').join('')+'</div>'}
  if(m.type==='gamble'){const ev=EV.gamble;let h='<div class="grab"></div><div class="reveal">'+glyph(ev)+'<h2>'+ev.title+'</h2><p class="muted">'+ev.text+'</p>';
-  if(S.mode==='digital'){h+='<div class="bigdie '+(m.phase==='spin'?'spin':'')+'">'+(m.phase==='ready'?'':pips(m.phase==='spin'?r6():m.d))+'</div><div class="outcome" style="min-height:30px">'+(m.phase==='done'?(m.d%2?'Ungerade – du streichst bei dir.':'Gerade – du streichst bei einem Gegner.'):'')+'</div></div>';
+  if(isDig()){h+='<div class="bigdie '+(m.phase==='spin'?'spin':'')+'">'+(m.phase==='ready'?'':pips(m.phase==='spin'?r6():m.d))+'</div><div class="outcome" style="min-height:30px">'+(m.phase==='done'?(m.d%2?'Ungerade – du streichst bei dir.':'Gerade – du streichst bei einem Gegner.'):'')+'</div></div>';
    return h+'<button class="btn" data-a="gthrow" '+(m.phase!=='ready'?'disabled':'')+'>Würfel werfen</button>'}
   return h+'</div><div class="calc">Wirf einen Würfel und tippe das Ergebnis an.</div><div class="quick nums">'+[1,2,3,4,5,6].map(v=>'<button data-a="gval" data-v="'+v+'">'+v+'</button>').join('')+'</div>'}
  if(m.type==='pick'){const ev=evOf(S.turn),cfg=PICK[m.kind],opts=pickOptions(m.kind);let lastG='';
@@ -1378,6 +1380,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'botreset':{const now=Date.now(),k=b.dataset.k;let label='';if(k==='all'||k.startsWith('bot#')){const m0=botResetMap();if(k==='all')for(let q=0;q<5;q++)m0[q]=now;else m0[k.slice(4)]=now;try{localStorage.setItem('kx-botreset',JSON.stringify(m0))}catch(err){}}else{const m1=stResetMap();m1[k]=now;try{localStorage.setItem('kx-streset',JSON.stringify(m1))}catch(err){}}
    const it=(ui.stList||[]).find(o=>o.k===k);label=k==='all'?'Alle Bots wurden entfernt':(it?it.name:'Spieler')+' wurde aus der Statistik entfernt';ui.modal=null;renderModal();render();toast(label);break}
   case'fold':{const k=b.dataset.k,o=!foldOpen(k);try{localStorage.setItem('kx-fold-'+k,o?'1':'0')}catch(err){}render();break}
+  case'digtog':{const mi=S&&S.online?S.players.findIndex(q=>q.uid===UID):-1;if(mi<0||!RDB)break;const t=S.turn;if(S.cur===mi&&t&&(t.drawn||t.rolls>0)){toast('Geht erst nach deinem Zug – du hast schon angefangen');break}const v=!isDig(mi);RDB.ref('mp/'+S.online.code+'/dig/'+UID).set(v).then(()=>toast(v?'Du würfelst jetzt digital in der App':'Du würfelst jetzt mit eigenen Würfeln')).catch(()=>toast('Umschalten nicht möglich – keine Verbindung'));break}
   case'musictog':{MUS.on=!MUS.on;try{localStorage.setItem('kx-music',MUS.on?'1':'0')}catch(err){}if(MUS.on)musStart(true);else musStop();if(ui.modal&&ui.modal.type==='menu')renderModal();else render();break}
   case'pnsave':saveProfileName();break;
   case'potlog':ui.modal={type:'potlog'};renderModal();break;
@@ -1455,7 +1458,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'setcol':{const v=+b.dataset.v;if(m.k==='h'){setup.colors=setup.colors||[];setup.colors[m.i]=v}else if(m.k==='b'){setup.botColors=setup.botColors||[];setup.botColors[m.i]=v}else if(m.k==='o'&&MP&&MP.ref){MP.ref.update({seats:{[UID]:{color:v}}}).catch(()=>{})}ui.modal=null;renderModal();render();break}
   case'cardinfo':{const id=b.dataset.id;if(EV[id]){ui.modal={type:'cardinfo',id};renderModal()}break}
   case'donno':{m.ctx.don=0;commit(m.id,m.raw,m.ctx);break}
-  case'dongo':{if(S.mode==='digital'){m.donPhase='spin';renderModal();const mm=m;setTimeout(()=>{if(ui.modal!==mm)return;mm.ctx.donRes=r6();mm.donPhase='done';renderModal();setTimeout(()=>{if(ui.modal!==mm)return;mm.ctx.don=mm.ctx.donRes;commit(mm.id,mm.raw,mm.ctx)},1000)},1200)}else{m.donPhase='enter';renderModal()}break}
+  case'dongo':{if(isDig()){m.donPhase='spin';renderModal();const mm=m;setTimeout(()=>{if(ui.modal!==mm)return;mm.ctx.donRes=r6();mm.donPhase='done';renderModal();setTimeout(()=>{if(ui.modal!==mm)return;mm.ctx.don=mm.ctx.donRes;commit(mm.id,mm.raw,mm.ctx)},1000)},1200)}else{m.donPhase='enter';renderModal()}break}
   case'donv':{m.ctx.don=+b.dataset.v;commit(m.id,m.raw,m.ctx);break}
   case'need':{const v=+b.dataset.v;if(m.need==='fate')m.ctx.fdie=v;else if(m.need==='thief'||m.need==='gift')m.ctx.target=v;else m.ctx.n=v;commit(m.id,m.raw,m.ctx);break}
   case'needmix':{const er=validate(CAT[m.ctx.mixId],m.val);if(er){document.getElementById('err').textContent=er;return}m.ctx.mixVal=+m.val;commit(m.id,m.raw,m.ctx);break}
@@ -1723,7 +1726,7 @@ every(1000,()=>{if(!S||S.screen!=='game'){ui.wasMyTurn=null;return}const t=S.tur
  const mineNow=S.online?(cp.uid===UID&&canAct()):!cp.bot;const key=S.id+'|'+S.cur+'|'+(S.logN||0);
  if(!mineNow){ui.wasMyTurn=null;return}
  if(ui.wasMyTurn!==key){ui.wasMyTurn=key;ui.lastAct=Date.now();ui.lastRemind=0;return}
- const need=S.mode==='digital'?true:(!t.drawn);if(!need)return;
+ const need=isDig()?true:(!t.drawn);if(!need)return;
  if(ui.modal||document.querySelector('.kfx,.bfx'))return;
  const now=Date.now(),first=!ui.lastRemind||ui.lastRemind<ui.lastAct;if(now-ui.lastAct>(first?20000:10000)&&now-(ui.lastRemind||0)>10000){ui.lastRemind=now;sfx.ping();toast(S.online||S.players.filter(q=>!q.bot).length<2?'Du bist dran!':cp.name+' ist dran!');document.body.classList.add('remind');setTimeout(()=>document.body.classList.remove('remind'),1600)}},()=>S&&S.screen==='game');
 document.addEventListener('pointerdown',()=>{ui.lastAct=Date.now();audio()},true);
