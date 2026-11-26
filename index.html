@@ -30,6 +30,10 @@ button:disabled{cursor:default}
 .permi{font-size:11px;font-weight:700;color:#ffd257;background:rgba(255,210,87,.16);border-radius:6px;padding:1px 5px;vertical-align:2px}
 .xcard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:-6px 0 16px;padding:12px 14px;border-radius:16px;background:linear-gradient(rgba(255,69,58,.10),rgba(255,69,58,.10)),var(--card);border:1px solid rgba(255,69,58,.35);color:var(--text);font:inherit}
 .xcard .xt{font-weight:700;font-size:15.5px}.xcard .xs{font-size:13.5px;color:var(--sec);margin-top:2px}
+.oc{flex:none;width:46px;margin-left:2px;padding-left:8px;border-left:1px solid var(--sep);align-self:stretch;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.sumrow.hasoc span{flex:1}.sumrow.hasoc{gap:10px}
+.sumrow .oc{align-self:center;padding:0 0 0 8px;margin-right:-4px}
+.ocn{flex:1;text-align:right;margin-right:10px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:600;max-width:120px;margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .secbtn{width:100%;background:none;border:0;font-family:inherit;cursor:pointer;align-items:center;-webkit-tap-highlight-color:transparent}
 .secchev{display:inline-block;font-size:24px;line-height:1;color:var(--sec);text-transform:none;transition:transform .2s;transform:rotate(0deg);margin-right:2px}
 .secchev.open{transform:rotate(90deg)}
@@ -178,7 +182,7 @@ html.splash,html.splashwait{overflow:hidden}html.splash body,html.splashwait bod
 .rollrow .btn{flex:1}
 .rollrow .jk{flex:0 0 auto;width:auto;padding:0 18px;background:rgba(191,90,242,.18);color:#d18cf7}
 .hint{font-size:13px;color:var(--sec);text-align:center;margin-top:10px;min-height:17px}
-.row{display:flex;align-items:center;width:100%;min-height:54px;padding:9px 16px;gap:12px;text-align:left;position:relative}
+.row{display:flex;align-items:center;width:100%;min-height:49px;padding:7px 16px;gap:12px;text-align:left;position:relative}
 .row+.row::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep)}
 .row .grow{flex:1;min-width:0}
 .rn{font-size:16px;font-weight:500}
@@ -1158,7 +1162,9 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=isDig();con
    else if(ev&&ev.nohold&&t.rolls>0&&left>0)hint='Kein Halten – es werden immer alle Würfel neu geworfen.';
    else if(t.rolls>0)hint=left>0?'Würfel antippen zum Halten · Kategorie oben wählen':'Wähle jetzt eine Kategorie';
    h+='<div class="hint">'+hint+'</div></div>'}diceH=h.slice(__h0);h=h.slice(0,__h0);h+=dd}
- h+=sheetHTML(p,t);
+ {const n=S.players.length;let mi=S.cur;if(n>1){if(S.online){const k=S.players.findIndex(q=>q.uid===UID);if(k>=0)mi=k}else{const hs=S.players.map((q,i)=>q.bot?-1:i).filter(i=>i>=0);if(hs.length===1)mi=hs[0]}}
+   let oi=null;if(n>1){if(mi!==S.cur)oi=S.cur;else{for(let k=1;k<n;k++){const j=(mi+k)%n;if(openCats(S.players[j]).length){oi=j;break}}if(oi==null)oi=(mi+1)%n}}
+   h+=sheetHTML(S.players[mi],mi===S.cur?t:null,oi);}
  if(S.log&&S.log.length){h+='<div class="block"><div class="gtitle">Letzte Aktivitäten</div><div class="group">'+S.log.slice(-3).reverse().map(l=>'<div class="cell"><div class="grow"><div class="ct" style="font-size:15px">'+esc(l.who)+' · '+esc(l.cat)+' = <b class="'+(l.val<0?'negv':'')+'">'+fmtN(l.val)+'</b>'+(l.kb?' <span class="tag kbt">+'+l.kb+'</span>':'')+'</div><div class="cs">'+(l.ev?esc(l.ev):'Keine Karte')+(l.bet?' · Einsatz '+l.bet:'')+(l.res?' · '+esc(l.res):'')+'</div></div></div>').join('')+'</div></div>'}
  h+=diceH;
  if(S.online&&rxOn()&&!dig)h+='<button class="rxbtn rxfixed" data-a="rxopen" aria-label="Reaktion">😀</button>';
@@ -1171,22 +1177,22 @@ function xNote(x){const ci=S.cur,cn=esc(S.players[ci]?S.players[ci].name:''),meC
  return esc(x.note||'')}
 function noteClean(n,txt){if(!n)return'';const T=String(txt||'').replace(/<[^>]*>/g,'').toLowerCase();
  let out=String(n).replace(/\s*–\s*jetzt würfeln\./gi,'.').replace(/([.!])\s+/g,'$1\u0001').split('\u0001').filter(x=>{const y=x.replace(/<[^>]*>/g,'').trim();if(!y)return false;if(/^(jetzt (normal )?würfeln|gilt ab sofort für den rest des spiels)\.?$/i.test(y))return false;return !T.includes(y.toLowerCase().replace(/\.$/,''))}).join(' ');return out.trim()}
-function sheetHTML(p,t){const dig=isDig();let h='';
+function sheetHTML(p,t,oi){const dig=isDig();let h='';const oq=oi!=null?S.players[oi]:null,ocol=oq?(pcolI(oi).l||pcolI(oi).c):'',OC=e=>oq?'<div class="oc" style="color:'+ocol+'">'+(e?(e.final===0&&e.tag==='✕'?'—':fmtN(e.final)):'')+'</div>':'';
  for(const [s,label] of [['oben','Oberer Teil'],['unten','Unterer Teil']]){
   if(foldOpen('secc-'+s)){const up=s==='oben'?totals(p):null;h+='<div class="block"><button class="cell secrow" data-a="fold" data-k="secc-'+s+'"><span class="grow">'+label+(up?': <b class="'+(up.bonus?'ok':'')+'">'+fmtN(up.upAcc)+' / '+p.bt+'</b>':'')+'</span><span class="secchev">›</span></button></div>';continue}
-  h+='<div class="block"><button class="gtitle secbtn" data-a="fold" data-k="secc-'+s+'"><span>'+label+'</span><span class="secchev open">›</span></button><div class="group">';
+  h+='<div class="block"><button class="gtitle secbtn" data-a="fold" data-k="secc-'+s+'"><span>'+label+'</span>'+(oq?'<span class="ocn" style="color:'+ocol+'">'+esc(oq.name)+'</span>':'<span style="flex:1"></span>')+'<span class="secchev open">›</span></button><div class="group">';
   for(const c of CATS.filter(c=>c.sec===s)){const e=p.sc[c.id];let val,cls='';const live=!!t;
    if(e){cls='done';val=(e.prot?'<span class="tag prot">Schild</span>':'')+(e.kbon?'<span class="tag kbt">+'+e.kbon+' '+(e.kbon===75?'KE':'Kniffel')+'</span>':'')+'<span class="val'+(e.final<0?' negv':'')+'">'+(e.final===0&&e.tag==='✕'?'—':fmtN(e.final))+'</span>'+(e.tag&&e.tag!=='✕'?'<span class="tag'+(/[½−→]/.test(e.tag)?' neg':'')+'">'+e.tag+'</span>':'')}
-   else if(!live)val='<span class="cs">offen</span>';
+   else if(!live)val=oq?'':'<span class="cs">offen</span>';
    else{const ok=allowed(p,t,c);if(t.drawn&&!t.pending&&!ok)cls='dim';
     if(isBlocked(t,c.id))val='<span class="blk">Gesperrt</span>';
     else if(dig&&t.rolls>0&&!t.tool){const r=c.calc(dOf(t));const f=baseFinal(p,t,r,t.rolls,c.id).f;val='<span class="pv '+(f>0?'':'zero')+(f<0?' negv':'')+'">'+fmtN(f)+'</span>'}
     else val=(t.lock===c.id?'<span class="tag">Pflicht</span>':'')+'<span class="chev">›</span>'}
-   h+='<button class="row '+cls+'" '+(e?'data-a="edit" data-pi="'+S.players.indexOf(p)+'"':(live?'data-a="cat"':'disabled'))+' data-id="'+c.id+'"><div class="grow"><div class="rn">'+c.name+'</div><div class="rh">'+c.hint+'</div></div><div class="rv">'+val+'</div></button>'}
+   h+='<button class="row '+cls+'" '+(e?'data-a="edit" data-pi="'+S.players.indexOf(p)+'"':(live?'data-a="cat"':'disabled'))+' data-id="'+c.id+'"><div class="grow"><div class="rn">'+c.name+'</div><div class="rh">'+c.hint+'</div></div><div class="rv">'+val+'</div>'+OC(oq&&oq.sc[c.id])+'</button>'}
   if(s==='oben'){const mod=(p.bt!==BONUS_T||p.bf!==1);
    const up=totals(p);
-   h+='<div class="sumrow '+(up.bonus?'ok':'')+'"><span>Bonus-Konto'+(p.ua?'<span style="font-size:12.5px"> · inkl. Karten '+(p.ua>0?'+':'')+p.ua+'</span>':'')+'</span><b>'+fmtN(up.upAcc)+' / '+p.bt+'</b></div>';
-   h+='<div class="sumrow"><span>Bonus</span><b style="color:var(--sec);font-weight:500">'+(up.bonus?'erreicht · ':'')+(BONUS_P*p.bf)+' Punkte ab '+p.bt+(mod?' (Karte)':'')+'</b></div>'}
+   h+='<div class="sumrow '+(up.bonus?'ok':'')+(oq?' hasoc':'')+'"><span>Bonus-Konto'+(p.ua?'<span style="font-size:12.5px"> · inkl. Karten '+(p.ua>0?'+':'')+p.ua+'</span>':'')+'</span><b>'+fmtN(up.upAcc)+' / '+p.bt+'</b>'+(oq?'<div class="oc" style="color:'+ocol+'">'+fmtN(totals(oq).upAcc)+'</div>':'')+'</div>';
+   h+='<div class="sumrow'+(oq?' hasoc':'')+'"><span>Bonus</span><b style="color:var(--sec);font-weight:500">'+(up.bonus?'erreicht · ':'')+(BONUS_P*p.bf)+' Punkte ab '+p.bt+(mod?' (Karte)':'')+'</b>'+(oq?'<div class="oc" style="color:'+ocol+'">'+(totals(oq).bonus?'✓':'')+'</div>':'')+'</div>'}
   else{
    if(p.kb)h+='<div class="sumrow ok"><span>Kniffel-Bonus</span><b>+'+p.kb+'</b></div>';
    if(p.adj)h+='<div class="sumrow"><span>Ereignispunkte</span><b>'+(p.adj>0?'+':'')+p.adj+'</b></div>'}
