@@ -543,7 +543,7 @@ const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
 const BONUS_T=73,BONUS_P=45;
 
 /* ---------- Ereigniskarten ---------- */
-const HARM=new Set(['half','bet','teuer','teuer10','force','oppforce','b100','b0','uam15','strike','swap','backlash','sacrifice','gamble','duel','tax','collapse','umsonst','fate','down10','ones','twos','threes','pionier','thief','gift','share','mix','bomb','revenge','don','nexthalf']);
+const HARM=new Set(['half','bet','teuer10','force','oppforce','b100','b0','uam15','strike','swap','backlash','sacrifice','gamble','duel','tax','collapse','umsonst','fate','down10','ones','twos','threes','pionier','thief','gift','share','mix','bomb','revenge','don','nexthalf']);
 const isHarm=id=>HARM.has(id)||id.startsWith('pf_');
 const GROUPS=[['wuerfe','Würfe & Würfel'],['wertung','Wertung'],['bonus','Bonus & Konto oben'],['spezial','Gegner & Spezial'],['pflicht','Pflichtwurf'],['verdeckt','Verdeckt – Aufdecken nach der Wertung'],['topf','Tresor']];
 const EVENTS=[
@@ -569,7 +569,6 @@ const EVENTS=[
  {id:'golden',g:'wertung',gl:'G×4',title:'Goldene Runde',text:'Kategorien mit festem Wert (Straßen, Full House, Kniffel, Paare …) zählen diese Runde ×4.',fixedMult:4},
  {id:'hattrick',g:'wertung',gl:'+100',title:'Meisterwurf',text:'Wertest du diese Runde Highway, Kniffel oder Kniffel Extreme oder wirfst einen Kniffel, gibt es +100 extra.',hattrick:true},
  {id:'bet',g:'wertung',gl:'€',title:'Wetteinsatz',text:'Setze 50–100 Punkte. Du bekommst 3 zufällige offene Kategorien – schaffst du eine, gibt es den Einsatz obendrauf, sonst steht er als Minus in einer der drei.',pick:'bet'},
- {id:'teuer',g:'wertung',gl:'−5',title:'Teure Runde',text:'Jeder Wurf nach dem ersten kostet 5 Punkte von deiner Wertung.',cost:5},
  {id:'teuer10',g:'wertung',gl:'−10',title:'Sehr teure Runde',text:'Jeder Wurf nach dem ersten kostet 10 Punkte von deiner Wertung.',cost:10},
  {id:'block',g:'wertung',gl:'SP',title:'Gesperrt',text:'Drei zufällige freie Kategorien sind für dich in diesem Zug gesperrt.',block:true},
  {id:'force',g:'wertung',gl:'Z',title:'Zwangswahl',text:'Du musst deine Kategorie wählen, bevor du würfelst – schaffst du sie, zählt sie ×3.',pick:'force',mult:3},
@@ -629,7 +628,7 @@ const EVENTS=[
  {id:'topf',g:'topf',gl:'🔑',title:'Tresorschlüssel',text:'Du hast den Schlüssel zum Tresor gefunden – alle Punkte, die gerade darin liegen, gehören dir. Dein Wurf zählt diesen Zug ×2.',now:'topf',mult:2},
  {id:'nexthalf',g:'verdeckt',gl:'½→',title:'Pechsträhne',text:'Deine nächste Wertung zählt nur die Hälfte.',after:'nexthalf'},
 ];
-{const O=["extra", "extra2", "pech", "two4", "aon6", "aon8", "aon", "rcount", "joker", "joker2", "mirror", "frozen", "nohold", "fremd", "x2", "x3", "x7", "lucky", "golden", "hattrick", "perm", "half", "teuer", "teuer10", "gratis", "force", "oppforce", "block", "bet", "don", "b50", "b100", "b100x2", "bx2", "bx3", "b0", "ua15", "uam15", "crown", "krain", "heal25", "replay", "shield", "peek", "gooddeed", "goodbonus", "strike", "revenge", "sacrifice", "gamble", "swap", "tax", "duel", "backlash", "collapse", "permsteal", "bomb", "ones", "twos", "threes", "fours", "fives", "sixes", "up10", "down10", "jackpot", "wheel", "slots", "fate", "trost", "spiegel", "retry", "pionier", "umsonst", "nexthalf", "mix", "thief", "gift", "share"];const ix=e=>{const i=O.indexOf(e.id);return i<0?999:i};const gi=e=>EVENTS.indexOf(e);const pos=new Map(EVENTS.map((e,i)=>[e,i]));EVENTS.sort((a,b)=>(ix(a)-ix(b))||(pos.get(a)-pos.get(b)))}
+{const O=["extra", "extra2", "pech", "two4", "aon6", "aon8", "aon", "rcount", "joker", "joker2", "mirror", "frozen", "nohold", "fremd", "x2", "x3", "x7", "lucky", "golden", "hattrick", "perm", "half", "teuer10", "gratis", "force", "oppforce", "block", "bet", "don", "b50", "b100", "b100x2", "bx2", "bx3", "b0", "ua15", "uam15", "crown", "krain", "heal25", "replay", "shield", "peek", "gooddeed", "goodbonus", "strike", "revenge", "sacrifice", "gamble", "swap", "tax", "duel", "backlash", "collapse", "permsteal", "bomb", "ones", "twos", "threes", "fours", "fives", "sixes", "up10", "down10", "jackpot", "wheel", "slots", "fate", "trost", "spiegel", "retry", "pionier", "umsonst", "nexthalf", "mix", "thief", "gift", "share"];const ix=e=>{const i=O.indexOf(e.id);return i<0?999:i};const gi=e=>EVENTS.indexOf(e);const pos=new Map(EVENTS.map((e,i)=>[e,i]));EVENTS.sort((a,b)=>(ix(a)-ix(b))||(pos.get(a)-pos.get(b)))}
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 const PIP={1:[4],2:[2,6],3:[2,4,6],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const NEW_IDS=['topf','bomb','revenge','don','x7','teuer10','twos','threes','fives','fours'];
