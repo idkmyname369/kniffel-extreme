@@ -635,7 +635,7 @@ const NEW_IDS=['topf','bomb','revenge','don','x7','teuer10','twos','threes','fiv
 const LSOLD='kniffel-extreme-v3',LSSEL='kniffel-extreme-sel-v3',LSG='kniffel-extreme-games-v1';
 
 let S=null;
-let setup={myName:(()=>{try{return localStorage.getItem('kx-myname')||''}catch(e){return''}})(),bots:0,botLvl:(()=>{try{const v=JSON.parse(localStorage.getItem('kx-botlvl'));if(Array.isArray(v))return v}catch(e){}return[1,1,1,1,1]})(),botNames:(()=>{const d=['Bot 1','Bot 2','Bot 3','Bot 4','Bot 5'];try{const v=JSON.parse(localStorage.getItem('kx-botnames'));if(Array.isArray(v))return d.map((x,i)=>typeof v[i]==='string'?v[i]:x)}catch(e){}return d})(),n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
+let setup={myName:(()=>{try{return localStorage.getItem('kx-myname')||''}catch(e){return''}})(),bots:0,botLvl:(()=>{try{const v=JSON.parse(localStorage.getItem('kx-botlvl'));if(Array.isArray(v))return v}catch(e){}return[1,1,1,1,1]})(),botNames:(()=>{const d=['Bot 1','Bot 2','Bot 3','Bot 4','Bot 5'];try{const v=JSON.parse(localStorage.getItem('kx-botnames'));if(Array.isArray(v))return d.map((x,i)=>typeof v[i]==='string'?v[i]:x)}catch(e){}return d})(),colors:(()=>{try{const v=JSON.parse(localStorage.getItem('kx-colors'));if(Array.isArray(v))return v}catch(e){}return[]})(),botColors:(()=>{try{const v=JSON.parse(localStorage.getItem('kx-botcolors'));if(Array.isArray(v))return v}catch(e){}return[]})(),n:2,names:['Spieler 1','Spieler 2','Spieler 3','Spieler 4','Spieler 5','Spieler 6'],mode:'digital',rules:false,pfOpen:false,sel:loadSel()};
 let ui={modal:null,flip:false,rolling:false,rollIdx:-1};
 let view='home';
 try{saveSel()}catch(e){}
@@ -1051,8 +1051,9 @@ async function mpPush(){const m=MP;if(!m||!S||!S.online)return;if(m.busy){m.dirt
  m.busy=false;if(m.dirty){m.dirty=false;mpPush()}}
 async function mpCreate(){if(!needCloud())return;const name=(setup.myName||'').trim();if(name){const cr=await claimName(name);if(cr==='taken'){infoSheet('Name schon vergeben','„'+name+'“ benutzt schon jemand anderes. Bitte wähle einen anderen Namen.');return}}if(!name){toast('Bitte gib deinen Namen ein');return}if(!setup.sel.length){}
  const code=genCode();const ref=DB.doc('mp/'+code);
- try{await ref.set({kind:'kx-online',code,host:UID,status:'lobby',created:Date.now(),updated:Date.now(),settings:{mode:setup.mode,events:setup.sel.slice()},seats:{[UID]:{name,t:Date.now()}}})}catch(e){infoSheet('Spiel konnte nicht erstellt werden',PERM_TXT);return}
+ try{await ref.set({kind:'kx-online',code,host:UID,status:'lobby',created:Date.now(),updated:Date.now(),settings:{mode:setup.mode,events:setup.sel.slice()},seats:{[UID]:{name,t:Date.now(),color:myCol()}}})}catch(e){infoSheet('Spiel konnte nicht erstellt werden',PERM_TXT);return}
  setup.online=false;mpSubscribe(code);view='lobby';render();window.scrollTo(0,0)}
+function myCol(){const v=(setup.colors||[])[0];return v!=null&&PALETTE[v]?v:null}
 async function mpJoin(){const code=(setup.joinCode||'').toUpperCase().replace(/[^A-Z0-9]/g,''),name=(setup.myName||'').trim();
  if(code.length!==6){toast('Der Code hat 6 Zeichen');return}if(!name){toast('Bitte gib deinen Namen ein');return}if(!needCloud())return;{const cr=await claimName(name);if(cr==='taken'){joinCover(false);infoSheet('Name schon vergeben','„'+name+'“ benutzt schon jemand anderes. Bitte wähle einen anderen Namen.');return}}
  let ref=DB.doc('mp/'+code);let snap;try{snap=await ref.get()}catch(e){snap={exists:false}}
@@ -1061,7 +1062,7 @@ async function mpJoin(){const code=(setup.joinCode||'').toUpperCase().replace(/[
  if(!snap.exists){toast('Kein Spiel mit diesem Code gefunden');return}const d=snap.data(),seats=d.seats||{},mine=seats[UID];
  if(d.status!=='lobby'){if(mine){mpSubscribe(code);return}toast('Dieses Spiel hat schon begonnen');return}
  if(!mine&&Object.values(seats).filter(Boolean).length>=6){toast('Das Spiel ist schon voll (6 Spieler)');return}
- try{await ref.update({seats:{[UID]:{name,t:(mine&&mine.t)||Date.now()}},updated:Date.now()})}catch(e){infoSheet('Beitreten nicht möglich',PERM_TXT);return}
+ try{await ref.update({seats:{[UID]:{name,t:(mine&&mine.t)||Date.now(),color:mine&&mine.color!=null?mine.color:myCol()}},updated:Date.now()})}catch(e){infoSheet('Beitreten nicht möglich',PERM_TXT);return}
  mpSubscribe(code);view='lobby';render();window.scrollTo(0,0)}
 async function mpStart(){const m=MP,d=m&&m.lobby;if(!d||d.host!==UID)return;const seats=Object.entries(d.seats||{}).filter(x=>x[1]).sort((a,b)=>a[1].t-b[1].t);
  if(seats.length<2){toast('Es braucht mindestens 2 Spieler');return}
@@ -1497,7 +1498,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'retry':retryTurn();break;
   case'statsbots':{try{localStorage.setItem('kx-stats-nobots',localStorage.getItem('kx-stats-nobots')==='1'?'0':'1')}catch(e){}render();break}
   case'pickcol':{ui.modal={type:'color',k:b.dataset.k,i:+b.dataset.i};renderModal();break}
-  case'setcol':{const v=+b.dataset.v;if(m.k==='h'){setup.colors=setup.colors||[];setup.colors[m.i]=v}else if(m.k==='b'){setup.botColors=setup.botColors||[];setup.botColors[m.i]=v}else if(m.k==='o'&&MP&&MP.ref){MP.ref.update({seats:{[UID]:{color:v}}}).catch(()=>{})}ui.modal=null;renderModal();render();break}
+  case'setcol':{const v=+b.dataset.v;if(m.k==='h'){setup.colors=setup.colors||[];setup.colors[m.i]=v}else if(m.k==='b'){setup.botColors=setup.botColors||[];setup.botColors[m.i]=v}else if(m.k==='o'&&MP&&MP.ref){MP.ref.update({seats:{[UID]:{color:v}}}).catch(()=>{});setup.colors=setup.colors||[];setup.colors[0]=v}try{localStorage.setItem('kx-colors',JSON.stringify(setup.colors||[]));localStorage.setItem('kx-botcolors',JSON.stringify(setup.botColors||[]))}catch(err){}ui.modal=null;renderModal();render();break}
   case'cardinfo':{const id=b.dataset.id;if(EV[id]){ui.modal={type:'cardinfo',id};renderModal()}break}
   case'donno':{m.ctx.don=0;commit(m.id,m.raw,m.ctx);break}
   case'dongo':{if(isDig()){m.donPhase='spin';renderModal();const mm=m;setTimeout(()=>{if(ui.modal!==mm)return;mm.ctx.donRes=r6();mm.donPhase='done';renderModal();setTimeout(()=>{if(ui.modal!==mm)return;mm.ctx.don=mm.ctx.donRes;commit(mm.id,mm.raw,mm.ctx)},1000)},1200)}else{m.donPhase='enter';renderModal()}break}
