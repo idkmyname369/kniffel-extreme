@@ -1,5 +1,5 @@
 // Kniffel Extreme – Offline-Unterstützung: immer zuerst aus dem Netz laden, ohne Netz aus dem Zwischenspeicher
-const CACHE='kx-v160';
+const CACHE='kx-v161';
 self.addEventListener('install',e=>self.skipWaiting());
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',e=>{

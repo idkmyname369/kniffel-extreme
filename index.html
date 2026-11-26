@@ -743,7 +743,7 @@ function cw(id){if(id==='permsteal')return permStealW();return id==='topf'?Math.
 const XTRA=['permsteal','bomb'];
 function normW(p){const got=p.got||[];const av=activeIds().filter(id=>!XTRA.includes(id)&&(!got.includes(id)||(id==='topf'&&POT_REP))&&applicable(EV[id],p));return av.filter(id=>EV[id].g!=='pflicht').reduce((a,id)=>a+cw(id),0)+(av.some(id=>EV[id].g==='pflicht')&&(p.pf||0)<PF_MAX?1:0)}
 function drawExtras(p,W){const out=[];for(const x of XTRA){if(!activeIds().includes(x)||!applicable(EV[x],p))continue;const w=cw(x);if(w>0&&Math.random()<w/((W||20)+w))out.push(x)}
- return out.map(x=>{if(x==='permsteal'){const from=S.players[S.perm];S.perm=S.cur;return{id:x,note:'Zusätzlich: Du klaust '+esc(from?from.name:'')+' den Dauer-Multiplikator – ab jetzt zählen deine Wertungen ×1,3.'}}
+ return out.map(x=>{if(x==='permsteal'){const fi=S.perm,from=S.players[S.perm];S.perm=S.cur;return{id:x,from:fi,note:'Zusätzlich: Du klaust '+esc(from?from.name:'')+' den Dauer-Multiplikator – ab jetzt zählen deine Wertungen ×1,3.'}}
   const n=S.players.length;S.bomb={holder:S.cur,left:n+1+Math.floor(Math.random()*(2*n))};return{id:x,note:'Zusätzlich: Die Zeitbombe liegt jetzt bei dir und wandert nach deinem Zug weiter.'}})}
 function wpick(c){const tw=c.reduce((a,id)=>a+cw(id),0);let r=Math.random()*tw;for(const id of c){r-=cw(id);if(r<=0)return id}return c[c.length-1]}
 function drawCard(p){p.got=p.got||[];p.pf=p.pf||0;
@@ -1126,7 +1126,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=isDig();con
  else if(!t.drawn)h+=cardBack('button','data-a="draw"','Vor deinem ersten Wurf antippen');
  else if(ev&&ev.after&&!ev.vis&&!t.retryRevealed&&!t.shown)h+=cardFront(HIDDEN,'Verdeckte Karte',Y('Erst würfeln und deine Kategorie wählen – danach wird die Karte aufgedeckt.'),'');
  else if(ev){const nn=noteClean(t.note,ev.text);h+=cardFront(ev,ev.title,ev.text,(nn?'<div class="evnote">'+Y(nn)+'</div>':'')+(t.pending?'<button class="btn" data-a="openpick">Karte ausführen</button>':''))}
-  (t.xtra||[]).forEach(x=>{const xe=EV[x.id];if(xe)h+='<button class="xcard" data-a="cardinfo" data-id="'+xe.id+'">'+glyph(xe)+'<div class="grow"><div class="xt">+ '+xe.title+'</div><div class="xs">'+Y(x.note.replace(/^Zusätzlich: /,''))+'</div></div></button>'});
+  (t.xtra||[]).forEach(x=>{const xe=EV[x.id];if(xe)h+='<button class="xcard" data-a="cardinfo" data-id="'+xe.id+'">'+glyph(xe)+'<div class="grow"><div class="xt">+ '+xe.title+'</div><div class="xs">'+xNote(x)+'</div></div></button>'});
  let dd='';{const oc=openCats(p).filter(c=>!t.drawn||t.pending||allowed(p,t,c));dd+='<div class="opendd'+(ui.openList?' on':'')+'"><button class="ddbtn" data-a="ddtoggle"><span>Noch offene Kategorien</span><span class="ddcount">'+oc.length+'</span><span class="ddchev">'+(ui.openList?'⌃':'⌄')+'</span></button>';
   if(ui.openList){const show=dig&&t.rolls>0&&!t.tool&&t.drawn&&!t.pending;dd+='<div class="ddlist">'+(()=>{const fv=c=>baseFinal(p,t,c.calc(dOf(t)),t.rolls,c.id).f;const good=c=>allowed(p,t,c)&&fv(c)>0;return show?[['Kannst du werten',oc.filter(good)],['Müsstest du streichen',oc.filter(c=>!good(c))]]:[['Oberer Teil',oc.filter(c=>c.sec==='oben')],['Unterer Teil',oc.filter(c=>c.sec==='unten')]]})().map(([lab,l])=>{if(!l.length)return'';return'<div class="sub-h">'+lab+'</div>'+l.map(c=>{const ok=allowed(p,t,c);let r='';if(isBlocked(t,c.id))r='<span class="blk">Gesperrt</span>';else if(t.lock===c.id)r='<span class="tag">Pflicht</span>';else if(show){const raw=c.calc(dOf(t));{const f=baseFinal(p,t,raw,t.rolls,c.id).f;r='<span class="pv '+(f>0?'':'zero')+(f<0?' negv':'')+'">'+fmtN(f)+'</span>'}}
    return'<button class="cell'+(t.drawn&&!t.pending&&!ok?' off':'')+'" data-a="cat" data-id="'+c.id+'"><div class="grow"><div class="ct">'+c.name+'</div></div>'+r+'</button>'}).join('')}).join('')+'</div>'}
@@ -1164,6 +1164,11 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=isDig();con
  if(S.online&&rxOn()&&!dig)h+='<button class="rxbtn rxfixed" data-a="rxopen" aria-label="Reaktion">😀</button>';
  return h}
 
+function isMeIdx(i){const q=S.players[i];if(!q)return false;if(S.online)return q.uid===UID;return !q.bot&&S.players.filter(z=>!z.bot).length===1}
+function xNote(x){const ci=S.cur,cn=esc(S.players[ci]?S.players[ci].name:''),meC=isMeIdx(ci)||(!S.online&&!S.players[ci].bot&&S.players.filter(z=>!z.bot).length>1);
+ if(x.id==='permsteal'){const vn=esc(S.players[x.from]?S.players[x.from].name:'');if(meC)return'Du klaust '+vn+' den Dauer-Multiplikator – ab jetzt zählen deine Wertungen ×1,3.';if(isMeIdx(x.from))return cn+' klaut dir den Dauer-Multiplikator – ab jetzt zählt die Wertung von '+cn+' ×1,3.';return cn+' klaut '+vn+' den Dauer-Multiplikator – ab jetzt zählt die Wertung von '+cn+' ×1,3.'}
+ if(x.id==='bomb')return meC?'Die Zeitbombe liegt jetzt bei dir und wandert nach deinem Zug weiter.':'Die Zeitbombe liegt jetzt bei '+cn+' und wandert nach dem Zug weiter.';
+ return esc(x.note||'')}
 function noteClean(n,txt){if(!n)return'';const T=String(txt||'').replace(/<[^>]*>/g,'').toLowerCase();
  let out=String(n).replace(/\s*–\s*jetzt würfeln\./gi,'.').replace(/([.!])\s+/g,'$1\u0001').split('\u0001').filter(x=>{const y=x.replace(/<[^>]*>/g,'').trim();if(!y)return false;if(/^(jetzt (normal )?würfeln|gilt ab sofort für den rest des spiels)\.?$/i.test(y))return false;return !T.includes(y.toLowerCase().replace(/\.$/,''))}).join(' ');return out.trim()}
 function sheetHTML(p,t){const dig=isDig();let h='';
