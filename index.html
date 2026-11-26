@@ -532,7 +532,7 @@ const CATS=[
  {id:'ks',ab:'KS',name:'Kleine Straße',sec:'unten',hint:'4 in Folge · 30 Punkte',fixed:30,calc:d=>run(d)>=4?30:0},
  {id:'gs',ab:'GS',name:'Große Straße',sec:'unten',hint:'5 in Folge · 40 Punkte',fixed:40,calc:d=>run(d)>=5?40:0},
  {id:'hw',ab:'HW',name:'Highway',sec:'unten',hint:'6 in Folge · 50 Punkte',fixed:50,calc:d=>run(d)>=6?50:0},
- {id:'kn',ab:'K',name:'Kniffel',sec:'unten',hint:'genau 5 gleiche · 50 Punkte',fixed:50,calc:d=>maxC(d)===5?50:0},
+ {id:'kn',ab:'K',name:'Kniffel',sec:'unten',hint:'5 gleiche · 50 Punkte',fixed:50,calc:d=>maxC(d)>=5?50:0},
  {id:'ke',ab:'KE',name:'Kniffel Extreme',sec:'unten',hint:'6 gleiche · 75 Punkte',fixed:75,calc:d=>maxC(d)>=6?75:0},
  {id:'le',ab:'≤10',name:'10 oder weniger',sec:'unten',hint:'Augensumme ≤ 10 · 40 Punkte',fixed:40,calc:d=>sum(d)<=10?40:0},
  {id:'ge',ab:'≥33',name:'33 oder mehr',sec:'unten',hint:'Augensumme ≥ 33 · 40 Punkte',fixed:40,calc:d=>sum(d)>=33?40:0},
