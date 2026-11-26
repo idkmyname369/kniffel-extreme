@@ -715,7 +715,7 @@ function baseFinal(p,t,raw,rolls,id){const ev=evOf(t),parts=[],c=id?CAT[id]:null
  if(ev&&ev.hattrick&&(['hw','kn','ke'].includes(id)||(isDig()&&maxC(t.dice)>=5)||(c&&c.face&&raw>=c.face*5))){f+=100;parts.push('+100')}
  if(onBet){f+=t.bet.stake;parts.push('Wette +'+t.bet.stake)}
  if(S.perm!=null&&S.players[S.perm]===p&&f>0){f=Math.ceil(f*13/10);parts.push('×1,3')}
- if(S.happy&&f>0){f*=2;parts.push('×2 Happy Hour')}
+ if(S.happy&&f>0&&!(ev&&ev.after)){f*=2;parts.push('×2 Happy Hour')}
  return{f,parts}}
 function kniffelEligible(p,id){return id!=='kn'&&p.sc.kn&&p.sc.kn.raw===50}
 function keEligible(p,id){return id!=='ke'&&p.sc.ke&&p.sc.ke.raw===75}
@@ -938,7 +938,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  p.half=false;
  if(!ctx.gratis){const c0=CAT[id];let six,five;if(dig||ctx.dice){const mc=maxC(t.dice);six=mc>=6;five=mc>=5}else{six=(id==='ke'&&raw===75)||(c0.face&&raw===c0.face*6)||!!ctx.ke;five=six||(id==='kn'&&raw===50)||(c0.face&&raw>=c0.face*5)||!!ctx.kb}if(five){const n=kniffelCount();S.kc=n.k+(six?0:1);S.kec=n.e+(six?1:0);const kb0=kniffelBonus(p,id,raw,ctx);let kind=null;if(id==='ke'&&six&&raw>0)kind='ke';else if(id==='kn'&&five&&raw>0)kind='kn';else if(kb0===75)kind='ke';else if(kb0===50)kind='kn';if(kind){S.fxseq=(S.fxseq||0)+1;S.fx={seq:S.fxseq,kind,who:p.name,uid:p.uid||null}}}}
  const kb=ctx.gratis?0:kniffelBonus(p,id,raw,ctx);if(kb){p.kb=(p.kb||0)+kb;entry.kbon=kb}
- let res=null;if(after)res=applyAfter(entry,after,target,ctx,p);
+ let res=null;if(after){res=applyAfter(entry,after,target,ctx,p);if(S.happy&&entry.final>0){entry.final*=2;addTag(entry,'×2');res.after=entry.final;res.text=(res.text||'')+' Happy Hour: ×2 → '+entry.final+'.'}}
  p.sc[target]=entry;
  trackHarm(__hs0,__sc);
  if(__ps){const betM=(t.bet&&t.bet.cats.includes(target)&&!(r>0))?t.bet.stake:0;const pn=potCharge(__ps,after==='gift'||after==='share',__sc,Math.max(0,r)+(kb||0)-betM);if(pn)entry.pot=pn}
