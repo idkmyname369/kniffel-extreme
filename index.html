@@ -28,6 +28,8 @@ button:disabled{cursor:default}
 .gtitle{display:flex;justify-content:space-between;align-items:flex-end;font-size:13px;color:var(--sec);text-transform:uppercase;letter-spacing:.03em;padding:0 16px 7px}
 .rv-tap{font-size:12.5px;color:var(--ter);margin-top:10px;text-align:center}
 .permi{font-size:11px;font-weight:700;color:#ffd257;background:rgba(255,210,87,.16);border-radius:6px;padding:1px 5px;vertical-align:2px}
+.xcard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:-6px 0 16px;padding:12px 14px;border-radius:16px;background:linear-gradient(rgba(255,69,58,.10),rgba(255,69,58,.10)),var(--card);border:1px solid rgba(255,69,58,.35);color:var(--text);font:inherit}
+.xcard .xt{font-weight:700;font-size:15.5px}.xcard .xs{font-size:13.5px;color:var(--sec);margin-top:2px}
 .secbtn{width:100%;background:none;border:0;font-family:inherit;cursor:pointer;align-items:center;-webkit-tap-highlight-color:transparent}
 .secchev{display:inline-block;font-size:24px;line-height:1;color:var(--sec);text-transform:none;transition:transform .2s;transform:rotate(0deg);margin-right:2px}
 .secchev.open{transform:rotate(90deg)}
@@ -596,7 +598,7 @@ const EVENTS=[
  {id:'krain',g:'spezial',gl:'K+',title:'Kniffel-Regen',text:'Für jeden Kniffel, der in diesem Spiel schon gewürfelt wurde (alle Spieler zusammen), bekommst du sofort +50 Punkte, für jeden Kniffel Extreme +75.',now:'krain'},
  {id:'crown',g:'spezial',gl:'♛',title:'Krönung',text:'Deine aktuell höchste Wertung wird verdreifacht.',now:'crown'},
  {id:'peek',g:'spezial',gl:'Σ',title:'Spionage',text:'Du siehst 3 Runden lang die Gesamtpunktzahl aller Spieler. Dein Wurf zählt diesen Zug ×3.',now:'peek',multi:true,mult:3},
- {id:'permsteal',g:'spezial',gl:'⇢1,3',title:'Multiplikator-Raub',text:'Du klaust den Dauer-Multiplikator ×1,3 von dem Spieler, der ihn gerade hat – ab jetzt gilt er für dich.',now:'permsteal',multi:true},
+ {id:'permsteal',g:'spezial',gl:'⇢1,3',title:'Multiplikator-Raub',text:'Kommt zusätzlich zu deiner Ereigniskarte. Du klaust den Dauer-Multiplikator ×1,3 von dem Spieler, der ihn gerade hat – ab jetzt gilt er für dich.',now:'permsteal',multi:true},
  {id:'collapse',g:'spezial',gl:'↓½',title:'Einsturz',text:'Deine höchste Wertung wird halbiert.',now:'collapse'},
  ...CATS.map(c=>({id:'pf_'+c.id,g:'pflicht',gl:c.ab,title:'Pflichtwurf: '+c.name,text:'Du musst diese Runde „'+c.name+'“ werten – schaffst du sie, zählt sie ×3.',lock:c.id,mult:3})),
  {id:'gratis',g:'wertung',gl:'½✓',title:'Ohne Würfeln',text:'Wähle eine offene Kategorie: Du bekommst dort die Hälfte der Höchstpunktzahl, ohne zu würfeln – dann ist der Nächste dran. Oder du lehnst ab, dann zählt dein Wurf diesen Zug ×2.',pick:'gratis',mult:2},
@@ -621,7 +623,7 @@ const EVENTS=[
  {id:'mix',g:'verdeckt',gl:'⤨',title:'Verwechslung',text:'Deine Wertung landet in einer zufälligen anderen freien Kategorie – ist sie dort nicht gültig, als 0.',after:'mix'},
  {id:'wheel',g:'verdeckt',gl:'◎',title:'Glücksrad',text:'Das Rad dreht sich: +10, +25, +50, +100 oder ×2 auf deine Wertung – kein Minus möglich.',after:'wheel'},
  {id:'slots',g:'verdeckt',gl:'777',title:'Jackpot-Maschine',text:'Zieh den Hebel: Drei Walzen mit +25, ×2 oder ×3 bleiben nacheinander stehen. Gerechnet wird von links nach rechts – mindestens +75, höchstens ×27.',after:'slots'},
- {id:'bomb',g:'spezial',gl:'💣',title:'Zeitbombe',text:'Die Zeitbombe tickt: Sie wandert nach jedem Zug zum nächsten Spieler. Wer sie hat, wenn sie hochgeht, verliert 50 Punkte.',now:'bomb',multi:true},
+ {id:'bomb',g:'spezial',gl:'💣',title:'Zeitbombe',text:'Kommt zusätzlich zu deiner Ereigniskarte. Die Zeitbombe tickt: Sie wandert nach jedem Zug zum nächsten Spieler. Wer sie hat, wenn sie hochgeht, verliert 50 Punkte.',now:'bomb',multi:true},
  {id:'revenge',g:'spezial',gl:'⚔',title:'Rache',text:'Streiche eine Wertung bei dem Spieler, der dir zuletzt Punkte genommen hat.',pick:'revenge',multi:true},
  {id:'don',g:'wertung',gl:'2×?',title:'Doppelt oder nichts',text:'Nach dem Eintragen darfst du würfeln: 1–3 = Wertung weg, 4–6 = Wertung doppelt. Oder du verzichtest einfach.',after:'don',vis:true},
  {id:'topf',g:'topf',gl:'🔑',title:'Tresorschlüssel',text:'Du hast den Schlüssel zum Tresor gefunden – alle Punkte, die gerade darin liegen, gehören dir. Dein Wurf zählt diesen Zug ×2.',now:'topf',mult:2},
@@ -738,14 +740,19 @@ function potCharge(ps,transfer,scorer,expect){if(!S.potOn)return 0;let lo=0,ga=0
 function permStealW(){const h=S.perm,me=S.cur;if(h==null||!S.players[h])return 0;const T=S.permT||{},n=S.players.length,left=CATS.length-(CATS.length-openCats(S.players[me]).length);const d=(T[h]||0)-(T[me]||0);return Math.max(.6,Math.min(50,8+d*5+(left<6?2:0)))}
 const CARD_W={perm:6,topf:1,aon:0.6,krain:0.6,crown:0.6,bet:3,retry:4.5,shield:2,b100x2:2,swap:2,sacrifice:2,block:1.15};
 function cw(id){if(id==='permsteal')return permStealW();return id==='topf'?Math.min(POT_WMAX,Math.max(POT_W0,(S.pot||0)/POT_DIV)):(CARD_W[id]||1)}
+const XTRA=['permsteal','bomb'];
+function normW(p){const got=p.got||[];const av=activeIds().filter(id=>!XTRA.includes(id)&&(!got.includes(id)||(id==='topf'&&POT_REP))&&applicable(EV[id],p));return av.filter(id=>EV[id].g!=='pflicht').reduce((a,id)=>a+cw(id),0)+(av.some(id=>EV[id].g==='pflicht')&&(p.pf||0)<PF_MAX?1:0)}
+function drawExtras(p,W){const out=[];for(const x of XTRA){if(!activeIds().includes(x)||!applicable(EV[x],p))continue;const w=cw(x);if(w>0&&Math.random()<w/((W||20)+w))out.push(x)}
+ return out.map(x=>{if(x==='permsteal'){const from=S.players[S.perm];S.perm=S.cur;return{id:x,note:'Zusätzlich: Du klaust '+esc(from?from.name:'')+' den Dauer-Multiplikator – ab jetzt zählen deine Wertungen ×1,3.'}}
+  const n=S.players.length;S.bomb={holder:S.cur,left:n+1+Math.floor(Math.random()*(2*n))};return{id:x,note:'Zusätzlich: Die Zeitbombe liegt jetzt bei dir und wandert nach deinem Zug weiter.'}})}
 function wpick(c){const tw=c.reduce((a,id)=>a+cw(id),0);let r=Math.random()*tw;for(const id of c){r-=cw(id);if(r<=0)return id}return c[c.length-1]}
 function drawCard(p){p.got=p.got||[];p.pf=p.pf||0;
- const avail=activeIds().filter(id=>(!p.got.includes(id)||(id==='topf'&&POT_REP)||id==='permsteal')&&applicable(EV[id],p));
+ const avail=activeIds().filter(id=>!XTRA.includes(id)&&(!p.got.includes(id)||(id==='topf'&&POT_REP))&&applicable(EV[id],p));
  const pf=avail.filter(id=>EV[id].g==='pflicht'),other=avail.filter(id=>EV[id].g!=='pflicht');
  const cands=other.slice();if(pf.length&&p.pf<PF_MAX)cands.push('__pf');
  if(!cands.length){
   // Zu wenige aktive Karten: Einmal-Regel aufheben, Karten dürfen erneut kommen
-  const all=activeIds().filter(id=>applicable(EV[id],p));if(!all.length)return null;
+  const all=activeIds().filter(id=>!XTRA.includes(id)&&applicable(EV[id],p));if(!all.length)return null;
   const apf=all.filter(id=>EV[id].g==='pflicht'),aot=all.filter(id=>EV[id].g!=='pflicht');
   let c2=aot.filter(id=>id!==p.lastRep);if(!c2.length)c2=aot.slice();if(apf.length)c2.push('__pf');
   let id=wpick(c2);if(id==='__pf'){id=rnd(apf.filter(x=>x!==p.lastRep).length?apf.filter(x=>x!==p.lastRep):apf);p.pf++}
@@ -786,7 +793,7 @@ const PICK={
 const CMAX={};function catMax(id){if(CMAX[id]!=null)return CMAX[id];let mx=0;const rec=(d,lo)=>{if(d.length===6){const v=CAT[id].calc(d.slice());if(v>mx)mx=v;return}for(let k=lo;k<=6;k++){d.push(k);rec(d,k);d.pop()}};rec([],1);return CMAX[id]=mx}
 function gratisVal(p,id){const t=S.turn,raw=Math.floor(catMax(id)/2);const sv=t.noMult;t.noMult=true;const f=baseFinal(p,t,raw,1,id).f;t.noMult=sv;return f}
 function kniffelCount(){if(S.kc!=null||S.kec!=null)return{k:S.kc||0,e:S.kec||0};let k=0,e=0;S.players.forEach(q=>{if(q.sc.kn&&q.sc.kn.raw===50)k++;if(q.sc.ke&&q.sc.ke.raw===75)e++});return{k,e}}
-function drawEvent(){const t=S.turn,p=S.players[S.cur];const __ps=S.potOn?potSnap():null,__hs=potSnap();const id=drawCard(p);
+function drawEvent(){const t=S.turn,p=S.players[S.cur];const __ps=S.potOn?potSnap():null,__hs=potSnap();const __W=normW(p);const id=drawCard(p);
  if(!id){t.drawn=true;t.none=true;save();render();return}
  const ev=EV[id];t.ev=id;t.drawn=true;t.max=ev.rolls||3;t.jokerN=ev.joker||0;t.note='';
  const rest='Gilt ab sofort für den Rest des Spiels. Jetzt normal würfeln.';
@@ -811,6 +818,7 @@ function drawEvent(){const t=S.turn,p=S.players[S.cur];const __ps=S.potOn?potSna
   else if(ev.now==='backlash'){const o=best.final;best.final=Math.max(0,o-30);addTag(best,'−30');t.note='„'+bc.name+'“: '+o+' → '+best.final+'. Jetzt normal würfeln.'}
   else{const o=best.final;best.final=Math.floor(o/2);addTag(best,'½');t.note='„'+bc.name+'“: '+o+' → '+best.final+'. Jetzt normal würfeln.'}}
  if(ev.pick){if(ev.pick==='gamble'||ev.pick==='duel'||ev.pick==='bet'||ev.pick==='rcount')t.pending=ev.pick;else if(ev.pick==='sac1'){if(pickOptions('sac2').length&&pickOptions('sac1').length)t.pending='sac1';else{t.voidMult=4;t.note=PICK.sac1.fz+' Dafür zählt dein Wurf diesen Zug ×4.'}}else if(pickOptions(ev.pick).length)t.pending=ev.pick;else{t.voidMult=4;t.note=PICK[ev.pick].fz+' Dafür zählt dein Wurf diesen Zug ×4.'}}
+ {const xs=drawExtras(p,__W);if(xs.length)t.xtra=xs}
  if(__ps&&ev.now!=='topf'&&ev.now!=='bomb')potCharge(__ps,false);
  if(__hs)trackHarm(__hs,S.cur);
  ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip();save();render();
@@ -1117,6 +1125,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=isDig();con
  else if(!t.drawn)h+=cardBack('button','data-a="draw"','Vor deinem ersten Wurf antippen');
  else if(ev&&ev.after&&!ev.vis&&!t.retryRevealed&&!t.shown)h+=cardFront(HIDDEN,'Verdeckte Karte',Y('Erst würfeln und deine Kategorie wählen – danach wird die Karte aufgedeckt.'),'');
  else if(ev)h+=cardFront(ev,ev.title,ev.text,(t.note?'<div class="evnote">'+Y(t.note)+'</div>':'')+(t.pending?'<button class="btn" data-a="openpick">Karte ausführen</button>':''));
+  (t.xtra||[]).forEach(x=>{const xe=EV[x.id];if(xe)h+='<button class="xcard" data-a="cardinfo" data-id="'+xe.id+'">'+glyph(xe)+'<div class="grow"><div class="xt">+ '+xe.title+'</div><div class="xs">'+Y(x.note.replace(/^Zusätzlich: /,''))+'</div></div></button>'});
  let dd='';{const oc=openCats(p).filter(c=>!t.drawn||t.pending||allowed(p,t,c));dd+='<div class="opendd'+(ui.openList?' on':'')+'"><button class="ddbtn" data-a="ddtoggle"><span>Noch offene Kategorien</span><span class="ddcount">'+oc.length+'</span><span class="ddchev">'+(ui.openList?'⌃':'⌄')+'</span></button>';
   if(ui.openList){const show=dig&&t.rolls>0&&!t.tool&&t.drawn&&!t.pending;dd+='<div class="ddlist">'+(()=>{const fv=c=>baseFinal(p,t,c.calc(dOf(t)),t.rolls,c.id).f;const good=c=>allowed(p,t,c)&&fv(c)>0;return show?[['Kannst du werten',oc.filter(good)],['Müsstest du streichen',oc.filter(c=>!good(c))]]:[['Oberer Teil',oc.filter(c=>c.sec==='oben')],['Unterer Teil',oc.filter(c=>c.sec==='unten')]]})().map(([lab,l])=>{if(!l.length)return'';return'<div class="sub-h">'+lab+'</div>'+l.map(c=>{const ok=allowed(p,t,c);let r='';if(isBlocked(t,c.id))r='<span class="blk">Gesperrt</span>';else if(t.lock===c.id)r='<span class="tag">Pflicht</span>';else if(show){const raw=c.calc(dOf(t));{const f=baseFinal(p,t,raw,t.rolls,c.id).f;r='<span class="pv '+(f>0?'':'zero')+(f<0?' negv':'')+'">'+fmtN(f)+'</span>'}}
    return'<button class="cell'+(t.drawn&&!t.pending&&!ok?' off':'')+'" data-a="cat" data-id="'+c.id+'"><div class="grow"><div class="ct">'+c.name+'</div></div>'+r+'</button>'}).join('')}).join('')+'</div>'}
@@ -1359,7 +1368,7 @@ function mountRevHold(a){const H=ui.revHold,L=H.L,ev=EV[L.ev],c=CAT[L.cat],r=L.r
  const wi=S.players.findIndex(q=>q.name===L.who);
  const val=(c&&r.after!=null?'<div class="rs-v">'+c.name+' = <b class="'+(r.after<0?'negv':'')+'">'+fmtN(r.after)+'</b>'+(r.before!=null&&r.before!==r.after?' <span>(vorher '+fmtN(r.before)+')</span>':'')+'</div>':'')+(L.kb?'<div class="kbline" style="margin-top:4px">'+kbLabel(L.kb)+'</div>':'');
  let anim='';if(H.spin)anim=ev.after==='wheel'?'<div class="wheelbox rswheel spin">?</div>':'<div class="bigdie rsdie spin">'+pips(r6())+'</div>';
- const extra='<div class="rv-anim">'+anim+'</div><div class="rv-res'+(H.spin?' hide':'')+'">'+(r.text?'<div class="evnote">'+r.text+'</div>':'')+val+'</div><div class="rv-tap">Tippe auf die Karte zum Schließen</div>';
+ const extra='<div class="rv-anim">'+anim+'</div><div class="rv-res'+(H.spin?' hide':'')+'">'+(r.text?'<div class="evnote">'+r.text+'</div>':'')+val+'</div>';
  ui.flip=true;const html=cardFront(ev,ev.title,ev.text,extra);ui.flip=false;
  const el=a.querySelector('.evcard.c-verdeckt');if(el){const w=el.closest('.flipwrap')||el;w.outerHTML=html}else{const top=a.querySelector('.top');if(top)top.insertAdjacentHTML('afterend',html)}
  sfx.flip();spinFaces();const card=a.querySelector('.flipwrap')||a.querySelector('.evcard.rare,.evcard');if(card)card.scrollIntoView({block:'center',behavior:'smooth'});
