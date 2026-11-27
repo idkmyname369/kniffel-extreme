@@ -1802,14 +1802,14 @@ document.addEventListener('pointerdown',()=>{ui.lastAct=Date.now();audio()},true
 /* Statistik */
 function botResetMap(){try{return JSON.parse(localStorage.getItem('kx-botreset'))||{}}catch(e){return{}}}
 function stResetMap(){try{return JSON.parse(localStorage.getItem('kx-streset'))||{}}catch(e){return{}}}
-function stSkip(s,q,nb){if(!q)return true;if(q.bot&&nb)return true;const T=s.updated||s.created||0;if(q.bot){const r=botResetMap()[stSlot(s,q)];if(r&&T<=r)return true}else{const r=stResetMap()[String(q.name).trim().toLowerCase()];if(r&&T<=r)return true}return false}
+function stSkip(s,q,nb){if(!q)return true;if(q.bot&&nb)return true;const T=s.updated||s.created||0;if(q.bot){const r=botResetMap()[stSlot(s,q)];if(r&&T<=r)return true}else{const M=stResetMap(),r=Math.max(M[stK(s,q)]||0,M[String(q.name).trim().toLowerCase()]||0);if(r&&T<=r)return true}return false}
 function stSlot(s,q){return q.bslot!=null?q.bslot:s.players.filter(x=>x.bot).indexOf(q)}
-function stK(s,q){return q.bot?'bot#'+stSlot(s,q):String(q.name).trim().toLowerCase()}
+function stK(s,q){if(q.bot)return'bot#'+stSlot(s,q);const mi=meIndex(s);if(mi>=0&&s.players[mi]===q)return'me';if(q.uid)return'u:'+q.uid;return String(q.name).trim().toLowerCase()}
 function stN(s,q){if(!q.bot)return String(q.name).trim();const k=stSlot(s,q);return((setup.botNames||[])[k]||'').trim()||'Bot '+(k+1)}
 function statsHTML(){const fin=Object.values(GAMES).map(g=>{try{return JSON.parse(g.json)}catch(e){return null}}).filter(s=>s&&s.screen==='end');
  const P={},cards={},cnt={},csum={},pech={},gl={};let best=null,bestEntry=null,mostKn=null,bigWin=null;const nb=(()=>{try{return localStorage.getItem('kx-stats-nobots')==='1'}catch(e){return false}})();
  fin.forEach(s=>{const r=s.players.map(p=>({p,t:totals(p).total})).sort((a,b)=>b.t-a.t);
-  r.forEach((x,i)=>{if(stSkip(s,x.p,nb))return;const k=stK(s,x.p);const o=P[k]=P[k]||{k,name:stN(s,x.p),bot:!!x.p.bot,g:0,w:0,best:0,sum:0,kn:0};o.g++;o.sum+=x.t;if(i===0&&r.length>1)o.w++;if(x.t>o.best)o.best=x.t;
+  r.forEach((x,i)=>{if(stSkip(s,x.p,nb))return;const k=stK(s,x.p);const o=P[k]=P[k]||{k,name:stN(s,x.p),bot:!!x.p.bot,g:0,w:0,best:0,sum:0,kn:0,d:0};{const T=s.updated||s.created||0;if(T>=o.d){o.d=T;o.name=stN(s,x.p)}}o.g++;o.sum+=x.t;if(i===0&&r.length>1)o.w++;if(x.t>o.best)o.best=x.t;
    CATS.forEach(c=>{const e=x.p.sc[c.id];if(!e)return;if((c.id==='kn'&&e.raw===50)||(c.id==='ke'&&e.raw===75))o.kn++;if(e.kbon)o.kn++;if(!bestEntry||e.final>bestEntry.v)bestEntry={v:e.final,who:stN(s,x.p),cat:c.name}});
    if(!best||x.t>best.t)best={t:x.t,who:stN(s,x.p),d:s.updated||s.created};
    {let kc=0;CATS.forEach(c=>{const e=x.p.sc[c.id];if(!e)return;if((c.id==='kn'&&e.raw===50)||(c.id==='ke'&&e.raw===75))kc++;if(e.kbon)kc++});if(kc>=2&&(!mostKn||kc>mostKn.n))mostKn={n:kc,who:stN(s,x.p)}}});
