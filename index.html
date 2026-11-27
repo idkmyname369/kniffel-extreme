@@ -1804,9 +1804,12 @@ function botResetMap(){try{return JSON.parse(localStorage.getItem('kx-botreset')
 function stResetMap(){try{return JSON.parse(localStorage.getItem('kx-streset'))||{}}catch(e){return{}}}
 function stSkip(s,q,nb){if(!q)return true;if(q.bot&&nb)return true;const T=s.updated||s.created||0;if(q.bot){const r=botResetMap()[stSlot(s,q)];if(r&&T<=r)return true}else{const M=stResetMap(),r=Math.max(M[stK(s,q)]||0,M[String(q.name).trim().toLowerCase()]||0);if(r&&T<=r)return true}return false}
 function stSlot(s,q){return q.bslot!=null?q.bslot:s.players.filter(x=>x.bot).indexOf(q)}
-function stK(s,q){if(q.bot)return'bot#'+stSlot(s,q);const mi=meIndex(s);if(mi>=0&&s.players[mi]===q)return'me';if(q.uid)return'u:'+q.uid;return String(q.name).trim().toLowerCase()}
+let STUF={};function stFind(x){while(STUF[x]&&STUF[x]!==x)x=STUF[x];return x}
+function stUnion(a,b){a=stFind(a);b=stFind(b);if(a!==b)STUF[b]=a}
+let STME=new Set();function stBuild(fin){STUF={};STME=new Set();fin.forEach(s=>{const mi=meIndex(s);if(mi>=0&&s.players[mi])STME.add(String(s.players[mi].name).trim().toLowerCase())});fin.forEach(s=>{const mi=meIndex(s);s.players.forEach((q,i)=>{if(q.bot||i===mi||(!s.online&&STME.has(String(q.name).trim().toLowerCase())))return;const n='n:'+String(q.name).trim().toLowerCase();if(!STUF[n])STUF[n]=n;if(q.uid){const u='u:'+q.uid;if(!STUF[u])STUF[u]=u;stUnion(n,u)}})})}
+function stK(s,q){if(q.bot)return'bot#'+stSlot(s,q);const mi=meIndex(s);if(mi>=0&&s.players[mi]===q)return'me';if(!s.online&&STME.has(String(q.name).trim().toLowerCase()))return'me';const n='n:'+String(q.name).trim().toLowerCase();return stFind(STUF[n]?n:(q.uid?'u:'+q.uid:n))}
 function stN(s,q){if(!q.bot)return String(q.name).trim();const k=stSlot(s,q);return((setup.botNames||[])[k]||'').trim()||'Bot '+(k+1)}
-function statsHTML(){const fin=Object.values(GAMES).map(g=>{try{return JSON.parse(g.json)}catch(e){return null}}).filter(s=>s&&s.screen==='end');
+function statsHTML(){const fin=Object.values(GAMES).map(g=>{try{return JSON.parse(g.json)}catch(e){return null}}).filter(s=>s&&s.screen==='end');stBuild(fin);
  const P={},cards={},cnt={},csum={},pech={},gl={};let best=null,bestEntry=null,mostKn=null,bigWin=null;const nb=(()=>{try{return localStorage.getItem('kx-stats-nobots')==='1'}catch(e){return false}})();
  fin.forEach(s=>{const r=s.players.map(p=>({p,t:totals(p).total})).sort((a,b)=>b.t-a.t);
   r.forEach((x,i)=>{if(stSkip(s,x.p,nb))return;const k=stK(s,x.p);const o=P[k]=P[k]||{k,name:stN(s,x.p),bot:!!x.p.bot,g:0,w:0,best:0,sum:0,kn:0,d:0};{const T=s.updated||s.created||0;if(T>=o.d){o.d=T;o.name=stN(s,x.p)}}o.g++;o.sum+=x.t;if(i===0&&r.length>1)o.w++;if(x.t>o.best)o.best=x.t;
