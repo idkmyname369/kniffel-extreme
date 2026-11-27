@@ -33,7 +33,7 @@ button:disabled{cursor:default}
 .oc{flex:none;width:46px;margin-left:2px;padding-left:8px;border-left:1px solid var(--sep);align-self:stretch;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
 .sumrow.hasoc span{flex:1}.sumrow.hasoc{gap:10px}
 .sumrow .oc{align-self:center;padding:0 0 0 8px;margin-right:-4px}
-.ocn{flex:1;text-align:right;margin-right:10px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:600;max-width:120px;margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ocn{flex:none;text-align:right;margin-right:4px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .secbtn{width:100%;background:none;border:0;font-family:inherit;cursor:pointer;align-items:center;-webkit-tap-highlight-color:transparent}
 .secchev{display:inline-block;font-size:24px;line-height:1;color:var(--sec);text-transform:none;transition:transform .2s;transform:rotate(0deg);margin-right:2px}
 .secchev.open{transform:rotate(90deg)}
@@ -1120,8 +1120,9 @@ function setupHTML(){
  h+='</div><div class="sticky"><button class="btn" data-a="'+(on?'mpcreate':'start')+'">'+(on?'Lobby erstellen':'Spiel starten')+'</button></div>';
  return h}
 
+function myIdx(){const n=S.players.length;let mi=S.cur;if(n>1){if(S.online){const k=S.players.findIndex(q=>q.uid===UID);if(k>=0)mi=k}else{const hs=S.players.map((q,i)=>q.bot?-1:i).filter(i=>i>=0);if(hs.length===1)mi=hs[0]}}return mi}
 function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=isDig();const done=CATS.length-openCats(p).length;
- const vi=(ui.viewP!=null&&ui.viewP!==S.cur&&S.players[ui.viewP])?ui.viewP:S.cur,viewing=vi!==S.cur;
+ const MI=myIdx(),viewing=ui.viewP!=null&&ui.viewP!==MI&&!!S.players[ui.viewP],vi=viewing?ui.viewP:S.cur;
  const act=canAct(),mine=!S.online||act,W=!act||(p&&p.bot),Y=x=>W?youN(x,esc(p.name)):x;
  let h='<div class="top"><div><div class="eyebrow">'+(S.online?'Online · '+esc(S.online.code)+' · ':'')+'Runde '+(done+1)+' von '+CATS.length+'</div></div><div style="display:flex;gap:8px;margin-top:4px">'+(!dig&&!viewing&&mine?'<button class="iconbtn accent" data-a="opendice">Würfel</button>':'')+'<button class="iconbtn" data-a="board">Tabelle</button><button class="iconbtn" data-a="menu">•••</button><button class="iconbtn undo-r" data-a="undo" aria-label="Rückgängig" '+(typeof undoOk==='function'&&undoOk()?'':'disabled')+'><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div></div>';
  
@@ -1133,7 +1134,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=isDig();con
  else if(S.bomb&&S.players[S.bomb.holder])h+='<div class="bombbar"><span class="bombi">💣</span>Die Zeitbombe tickt bei '+nmC(S.bomb.holder)+'</div>';
  if(S.happy)h+='<div class="bombbar" style="background:linear-gradient(90deg,rgba(255,200,60,.18),rgba(255,200,60,.04)),var(--bg);border-color:rgba(255,200,60,.35);color:#ffd98a"><span class="bombi">🍹</span>Happy Hour: alle Wertungen ×2 · noch '+S.happy.left+' '+(S.happy.left===1?'Zug':'Züge')+'</div>';
  if(S.potOn){const pv=S.pot||0;h+='<button class="potbar'+(ui.lastPot!=null&&ui.lastPot!==pv?' bump':'')+'" data-a="potlog"><span class="glyph g-topf" style="width:24px;height:24px;border-radius:7px;font-size:13px">🔑</span>Im Tresor<span class="potinfo">ⓘ</span><b>'+pv+'</b></button>';ui.lastPot=pv}
- if(viewing){const q=S.players[vi];h+='<div class="viewbar"><div class="grow"><div class="evt">Wertung von '+esc(q.name)+'</div><div class="evx">Hier kannst du dir die Wertung ansehen. Tippe eine eingetragene Wertung an, um einen Tippfehler zu korrigieren.</div></div></div><button class="btn tint" data-a="viewp" data-i="'+S.cur+'" style="margin-bottom:20px">Zurück zu '+esc(p.name)+' (am Zug)</button>'+sheetHTML(q,null);return h}
+ if(viewing){const q=S.players[vi];h+='<div class="viewbar"><div class="grow"><div class="evt">Wertung von '+esc(q.name)+'</div><div class="evx">Hier kannst du dir die Wertung ansehen. Tippe eine eingetragene Wertung an, um einen Tippfehler zu korrigieren.</div></div></div><button class="btn tint" data-a="viewp" data-i="'+MI+'" style="margin-bottom:20px">'+(MI===S.cur?'Zurück zu '+esc(p.name)+' (am Zug)':'Zurück zu deiner Wertung')+'</button>'+sheetHTML(q,null);return h}
  if(p.half)h+='<div class="banner">'+Y('Pechsträhne: Deine Wertung zählt diesmal nur die Hälfte.')+'</div>';
  if(t.drawn&&t.none)h+=cardFront({g:'wertung',gl:'–'},'Keine Karte mehr',Y('Du hast alle aktiven Ereigniskarten schon bekommen. Normal weiterspielen.'),'');
  if(!t.drawn&&S.online&&!act)h+=cardBack('div','',esc(p.name)+' zieht gleich eine Karte');
@@ -1172,7 +1173,7 @@ function gameHTML(){const p=S.players[S.cur],t=S.turn,ev=evOf(t),dig=isDig();con
    else if(ev&&ev.nohold&&t.rolls>0&&left>0)hint='Kein Halten – es werden immer alle Würfel neu geworfen.';
    else if(t.rolls>0)hint=left>0?'Würfel antippen zum Halten · Kategorie oben wählen':'Wähle jetzt eine Kategorie';
    h+='<div class="hint">'+hint+'</div></div>'}diceH=h.slice(__h0);h=h.slice(0,__h0);h+=dd}
- {const n=S.players.length;let mi=S.cur;if(n>1){if(S.online){const k=S.players.findIndex(q=>q.uid===UID);if(k>=0)mi=k}else{const hs=S.players.map((q,i)=>q.bot?-1:i).filter(i=>i>=0);if(hs.length===1)mi=hs[0]}}
+ {const n=S.players.length,mi=MI;
    let oi=null;if(n>1){if(mi!==S.cur)oi=S.cur;else{for(let k=1;k<n;k++){const j=(mi+k)%n;if(openCats(S.players[j]).length){oi=j;break}}if(oi==null)oi=(mi+1)%n}}
    h+=sheetHTML(S.players[mi],mi===S.cur?t:null,oi);}
  if(S.log&&S.log.length){h+='<div class="block"><div class="gtitle">Letzte Aktivitäten</div><div class="group">'+S.log.slice(-3).reverse().map(l=>'<div class="cell"><div class="grow"><div class="ct" style="font-size:15px">'+esc(l.who)+' · '+esc(l.cat)+' = <b class="'+(l.val<0?'negv':'')+'">'+fmtN(l.val)+'</b>'+(l.kb?' <span class="tag kbt">+'+l.kb+'</span>':'')+'</div><div class="cs">'+(l.ev?esc(l.ev):'Keine Karte')+(l.bet?' · Einsatz '+l.bet:'')+(l.res?' · '+esc(l.res):'')+'</div></div></div>').join('')+'</div></div>'}
@@ -1192,7 +1193,7 @@ function noteClean(n,txt){if(!n)return'';const T=String(txt||'').replace(/<[^>]*
 function sheetHTML(p,t,oi){const dig=isDig();let h='';const oq=oi!=null?S.players[oi]:null,ocol=oq?(pcolI(oi).l||pcolI(oi).c):'',OC=e=>oq?'<div class="oc" style="color:'+ocol+'">'+(e?(e.final===0&&e.tag==='✕'?'—':fmtN(e.final)):'')+'</div>':'';
  for(const [s,label] of [['oben','Oberer Teil'],['unten','Unterer Teil']]){
   if(foldOpen('secc-'+s)){const up=s==='oben'?totals(p):null;h+='<div class="block"><button class="cell secrow" data-a="fold" data-k="secc-'+s+'"><span class="grow">'+label+(up?': <b class="'+(up.bonus?'ok':'')+'">'+fmtN(up.upAcc)+' / '+p.bt+'</b>':'')+'</span><span class="secchev">›</span></button></div>';continue}
-  h+='<div class="block"><button class="gtitle secbtn" data-a="fold" data-k="secc-'+s+'"><span>'+label+'</span>'+(oq?'<span class="ocn" style="color:'+ocol+'">'+esc(oq.name)+'</span>':'<span style="flex:1"></span>')+'<span class="secchev open">›</span></button><div class="group">';
+  h+='<div class="block"><button class="gtitle secbtn" data-a="fold" data-k="secc-'+s+'"><span>'+label+'</span>'+(oq?'<span class="secchev open" style="margin-left:auto;margin-right:8px">›</span><span class="ocn" style="color:'+ocol+'">'+esc(oq.name)+'</span>':'<span style="flex:1"></span><span class="secchev open">›</span>')+'</button><div class="group">';
   for(const c of CATS.filter(c=>c.sec===s)){const e=p.sc[c.id];let val,cls='';const live=!!t;
    if(e){cls='done';val=(e.prot?'<span class="tag prot">Schild</span>':'')+(e.kbon?'<span class="tag kbt">+'+e.kbon+' '+(e.kbon===75?'KE':'Kniffel')+'</span>':'')+'<span class="val'+(e.final<0?' negv':'')+'">'+(e.final===0&&e.tag==='✕'?'—':fmtN(e.final))+'</span>'+(e.tag&&e.tag!=='✕'?'<span class="tag'+(/[½−→]/.test(e.tag)?' neg':'')+'">'+e.tag+'</span>':'')}
    else if(!live)val=oq?'':'<span class="cs">offen</span>';
@@ -1507,7 +1508,7 @@ document.addEventListener('click',e=>{ui.lastAct=Date.now();if(e.target.dataset&
   case'tool':{const t=S.turn,k=b.dataset.t;if(t.tool===k){t.tool=null;if(k==='joker'&&t.jokerDice.length)t.jokerUsed=true;if(k==='mirror'&&(t.mirDice||[]).length)t.mirUsed=true}else t.tool=k;save();render();break}
   case'cat':catTap(b.dataset.id);break;
   case'ddtoggle':ui.openList=!ui.openList;render();break;
-  case'viewp':{const i=+b.dataset.i;ui.viewP=(i===S.cur)?null:i;render();window.scrollTo(0,0);break}
+  case'viewp':{const i=+b.dataset.i;ui.viewP=(i===myIdx())?null:i;render();window.scrollTo(0,0);break}
   case'edit':{const pi=+b.dataset.pi,e=S.players[pi].sc[b.dataset.id];if(!e)return;ui.modal={type:'edit',pi,id:b.dataset.id,val:String(e.final)};renderModal();break}
   case'editok':{const v=m.val;if(v===''||isNaN(v)||!Number.isInteger(+v)){document.getElementById('err').textContent='Bitte eine ganze Zahl eingeben.';return}
    const q=S.players[m.pi],e=q.sc[m.id],n=+v;if(n!==e.final){e.final=n;e.raw=n;e.tag=n===0?'✕':'✎'}ui.modal=null;renderModal();save();render();toast('Wertung geändert');break}
