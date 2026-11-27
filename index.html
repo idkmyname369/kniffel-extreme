@@ -717,8 +717,8 @@ function baseFinal(p,t,raw,rolls,id){const ev=evOf(t),parts=[],c=id?CAT[id]:null
  if(S.perm!=null&&S.players[S.perm]===p&&f>0){f=Math.ceil(f*13/10);parts.push('×1,3')}
  if(S.happy&&f>0&&!(ev&&ev.after)){f*=2;parts.push('×2 Happy Hour')}
  return{f,parts}}
-function kniffelEligible(p,id){return id!=='kn'&&p.sc.kn&&p.sc.kn.raw===50}
-function keEligible(p,id){return id!=='ke'&&p.sc.ke&&p.sc.ke.raw===75}
+function kniffelEligible(p,id){return id!=='kn'&&p.sc.kn&&(p.sc.kn.raw===50||(p.sc.kn.gratis&&p.sc.kn.raw>0))}
+function keEligible(p,id){return id!=='ke'&&p.sc.ke&&(p.sc.ke.raw===75||(p.sc.ke.gratis&&p.sc.ke.raw>0))}
 function kniffelBonus(p,id,raw,ctx){if(id==='ke'||id==='kn'||!(raw>0))return 0;const kOk=kniffelEligible(p,id),keOk=keEligible(p,id);if(!kOk&&!keOk)return 0;const c=CAT[id];let five=false,six=false;
  if(isDig()||ctx.dice){const mc=maxC(S.turn.dice);five=mc===5;six=mc>=6}
  else if(c.face){five=raw>0&&raw===c.face*5;six=raw>0&&raw===c.face*6}
@@ -933,7 +933,7 @@ function commit(id,raw,ctx){ctx=ctx||{};const t=S.turn,p=S.players[S.cur],ev=evO
  if(!need&&after==='thief'&&ctx.target==null&&b.f>0)need='thief';
  if(!need&&after==='gift'&&ctx.target==null&&b.f>0)need='gift';
  if(need){if(ev&&ev.after&&!ev.vis&&!t.shown){t.shown=true;ui.flip=true;setTimeout(()=>ui.flip=false,850);sfx.flip();save();render()}ui.modal={type:'need',need,id,raw,ctx,val:'',amount:b.f};renderModal();return}
- const entry={raw:r,final:b.f,tag:b.parts.join(' ')};
+ const entry={raw:r,final:b.f,tag:b.parts.join(' ')};if(ctx.gratis)entry.gratis=true;
  const __undo=JSON.stringify(S);const __ps=S.potOn?potSnap():null,__sc=S.cur,__hs0=potSnap();
  p.half=false;
  if(!ctx.gratis){const c0=CAT[id];let six,five;if(dig||ctx.dice){const mc=maxC(t.dice);six=mc>=6;five=mc>=5}else{six=(id==='ke'&&raw===75)||(c0.face&&raw===c0.face*6)||!!ctx.ke;five=six||(id==='kn'&&raw===50)||(c0.face&&raw>=c0.face*5)||!!ctx.kb}if(five){const n=kniffelCount();S.kc=n.k+(six?0:1);S.kec=n.e+(six?1:0);const kb0=kniffelBonus(p,id,raw,ctx);let kind=null;if(id==='ke'&&six&&raw>0)kind='ke';else if(id==='kn'&&five&&raw>0)kind='kn';else if(kb0===75)kind='ke';else if(kb0===50)kind='kn';if(kind){S.fxseq=(S.fxseq||0)+1;S.fx={seq:S.fxseq,kind,who:p.name,uid:p.uid||null}}}}
