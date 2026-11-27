@@ -34,6 +34,13 @@
         ".read": "auth != null",
         ".write": "auth != null && (!data.exists() || data.val() === auth.uid) && (!newData.exists() || newData.val() === auth.uid)"
       }
+    },
+    "hist": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "auth != null && !data.exists()",
+        ".validate": "newData.isString() && newData.val().length < 200000"
+      }
     }
   }
 }
